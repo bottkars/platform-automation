@@ -1,2 +1,8 @@
 ---
+jobs:
+- name: test
+  plan:
+    - task: test
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/test.yml
 
