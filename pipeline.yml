@@ -101,3 +101,4 @@ jobs:
       file: platform-automation-tasks/tasks/download-product.yml
       params:
         CONFIG_FILE: foundation/download-ops-manager.yml
+        ENV_FILE: foundation/env.yml
