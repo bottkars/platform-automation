@@ -39,8 +39,8 @@ jobs:
         CREDHUB_CLIENT: ((credhub-client))
         CREDHUB_SECRET: ((credhub-secret))
         CREDHUB_SERVER: https://plane.control.labbuildr.com
-        PREFIX: /concourse/main/foundation
-        INTERPOLATION_PATHS: "./foundation" 
+        PREFIX: /concourse/main/((foundation))
+        INTERPOLATION_PATHS: ((foundation))
       input_mapping:
         files: env
       output_mapping:
