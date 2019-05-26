@@ -93,7 +93,7 @@ jobs:
         PREFIX: /concourse/main/foundation
         INTERPOLATION_PATHS: foundation 
       input_mapping:
-        files: env.yml
+        files: env
       output_mapping:
         interpolated-files: interpolated-config
     - task: download-product
