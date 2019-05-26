@@ -15,7 +15,58 @@ resources:
   type: git
   source:
     uri: ((pipeline-repo))
-    private_key: ((plat-auto-pipes-deploy-key))
+    private_key: |
+     -----BEGIN RSA PRIVATE KEY-----
+     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
+     -----END RSA PRIVATE KEY----- 
     branch: master
 jobs:
 - name: install-ops-manager

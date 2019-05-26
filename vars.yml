@@ -1,3 +1,4 @@
-platform-automation-bucket: plartform-automation
+platform-automation-bucket: platform-automation
 credhub-server: https://plane.control.labbuildr.com
 opsman-url: https://plane.control.labbuildr.com
+pipeline-repo: git@github.com:bottkars/platform-automation
