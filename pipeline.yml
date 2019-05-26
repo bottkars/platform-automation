@@ -102,3 +102,5 @@ jobs:
       params:
         CONFIG_FILE: foundation/download-ops-manager.yml
         ENV_FILE: foundation/env.yml
+      input_mapping:
+        config: interpolated-config        
