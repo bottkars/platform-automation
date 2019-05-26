@@ -91,9 +91,9 @@ jobs:
         CREDHUB_SECRET: ((credhub-secret))
         CREDHUB_SERVER: https://plane.control.labbuildr.com
         PREFIX: /concourse/main/foundation
-        INTERPOLATION_PATHS: foundation # contains download-ops-manager.yml
+        INTERPOLATION_PATHS: foundation 
       input_mapping:
-        files: env
+        files: env.yml
       output_mapping:
         interpolated-files: interpolated-config
     - task: download-product
