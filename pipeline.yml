@@ -90,7 +90,7 @@ jobs:
         CREDHUB_CLIENT: ((credhub-client))
         CREDHUB_SECRET: ((credhub-secret))
         CREDHUB_SERVER: https://plane.control.labbuildr.com
-        PREFIX: /concourse/your-team-name/foundation
+        PREFIX: /concourse/main/foundation
         INTERPOLATION_PATHS: foundation # contains download-ops-manager.yml
       input_mapping:
         files: env
