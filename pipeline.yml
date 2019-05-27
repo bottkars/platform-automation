@@ -42,7 +42,7 @@ jobs:
         PREFIX: /concourse/main/((foundation))
         INTERPOLATION_PATHS: ((foundation))
       input_mapping:
-        files: env
+        files: config
       output_mapping:
         interpolated-files: interpolated-config
     - task: download-product
@@ -50,6 +50,5 @@ jobs:
       file: platform-automation-tasks/tasks/download-product.yml
       params:
         CONFIG_FILE: foundation/download-ops-manager.yml
-        ENV_FILE: foundation/env.yml
       input_mapping:
         config: interpolated-config        
