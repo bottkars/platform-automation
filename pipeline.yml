@@ -38,7 +38,7 @@ jobs:
       params:
         CREDHUB_CLIENT: ((credhub-client))
         CREDHUB_SECRET: ((credhub-secret))
-        CREDHUB_SERVER: https://plane.control.labbuildr.com:8844
+        CREDHUB_SERVER: ((credhub-server))
         CREDHUB_CA_CERT: |
           -----BEGIN CERTIFICATE-----
           MIIDNzCCAh+gAwIBAgIUbHXdLLOhfmyWEqwHj633UaWtehgwDQYJKoZIhvcNAQEL
