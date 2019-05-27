@@ -10,7 +10,7 @@ resources:
   type: pivnet
   source:
     product_slug: platform-automation
-    api_token: ((pivnet-refresh-token))
+    api_token: ((pivnet-token))
 - name: config
   type: git
   source:
@@ -72,4 +72,7 @@ jobs:
       params:
         CONFIG_FILE: ((foundation))/download-ops-manager.yml
       input_mapping:
-        config: interpolated-config        
+        config: interpolated-config
+    - task: create-vm
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/create-vm.yml            
