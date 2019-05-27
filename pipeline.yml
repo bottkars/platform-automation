@@ -70,6 +70,6 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product.yml
       params:
-        CONFIG_FILE: foundation/download-ops-manager.yml
+        CONFIG_FILE: ((foundation))/download-ops-manager.yml
       input_mapping:
         config: interpolated-config        
