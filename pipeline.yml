@@ -39,6 +39,27 @@ jobs:
         CREDHUB_CLIENT: ((credhub-client))
         CREDHUB_SECRET: ((credhub-secret))
         CREDHUB_SERVER: https://plane.control.labbuildr.com
+        CREDHUB_CA_CERT: |
+          -----BEGIN CERTIFICATE-----
+          MIIDNzCCAh+gAwIBAgIUbHXdLLOhfmyWEqwHj633UaWtehgwDQYJKoZIhvcNAQEL
+          BQAwGTEXMBUGA1UEAxMOY29udHJvbHBsYW5lY2EwHhcNMTkwNTE3MjI1NjQ4WhcN
+          MjAwNTE2MjI1NjQ4WjAcMRowGAYDVQQDExFjb250cm9sLXBsYW5lLXRsczCCASIw
+          DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKCOAGcGvNAhZpaWaNoMAt6Cv+vW
+          TfJP8TP7E5FpTedv5mV21yG7BfrIOsrlPjaq3qnOP+soAd2b3GMe8RYBdKsHSiY3
+          VQusVty7lWq+1xCYlvkK1ruAoUNxw2YSS6XGqKbZ3bqQd9552nWONUa6O9309lN9
+          cYEHlj5/a5ulD1jRMh0SaNegJGJyT6XmDTitDSjoastK94N5rfv0ypu7pCqxDeZd
+          vvV7LfwVeJkJF0ubUjKwqFZSI67v48oUjwxsJSK7vJFn4HadxiykFWbZIzHNiZJ5
+          A8SdRVq6Tic22s2C4c+zk1smwqFzmA5bYxnNJ3fBVcMsjzZL3IfSz5stsnkCAwEA
+          AaN0MHIwHQYDVR0OBBYEFIURsVznrEKXCv17KhQRjNzUySkoMCIGA1UdEQQbMBmC
+          FyouY29udHJvbC5sYWJidWlsZHIuY29tMB8GA1UdIwQYMBaAFHW2XzlvLi+JV40E
+          xMmqcfu1JOPvMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQELBQADggEBACxaaGZI
+          tqZ7kAGAjsGqDP3LYBuGCKb5ezqt2NSRUdu9Kn5WNoKHPzyjmGO2H8wodIa/zgeM
+          w3cJ+isdWtcMP3xRQNRpJZ8UEsO06pRhX3ob00OQxjrsucs4HdZbiqLh6I7ojQSt
+          ACReBsP0R+jkiTi1aDJkOCqtV0bPO8wSAadXYhdm5rqclveY/4qR1S+Sbx3sQu82
+          d/32RqNOFaN+d2sj0rZ/zt7zfEYHG5Z53FxzZv3I1PExsdKishGve5InX3K3mksx
+          lSwR4NKFKPrDv6h6NcWMHRiHxDxX7EYAh+tBYBDMIe4uzEXNLMu02CHz1g2e3D6V
+          88pWkJoz6Bjx3vw=
+          -----END CERTIFICATE-----
         PREFIX: /concourse/main/((foundation))
         INTERPOLATION_PATHS: ((foundation))
       input_mapping:
