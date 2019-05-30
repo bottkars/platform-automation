@@ -228,7 +228,7 @@ credhub-interpolate-all-vars: &credhub-interpolate-all-vars
 
 credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-configs
   image: platform-automation-image
-  file: platform-automation-tasksazure/credhub-interpolate.yml
+  file: platform-automation-tasks-azure/credhub-interpolate.yml
   params:
     CREDHUB_CLIENT: ((credhub-client))
     CREDHUB_SECRET: ((credhub-secret))
