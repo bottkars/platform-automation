@@ -57,6 +57,18 @@ resources:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
+- name: configuration
+  type: git
+  source:
+    uri: ((pipeline-repo))
+    private_key: ((plat-auto-pipes-deploy-key.private_key))
+    branch: master
+- name: variable
+  type: git
+  source:
+    uri: ((pipeline-repo))
+    private_key: ((plat-auto-pipes-deploy-key.private_key))
+    branch: master        
 jobs:
 - name: fetch-platform-automation
   plan:
@@ -86,7 +98,7 @@ jobs:
     <<: *credhub-interpolate-all-product-configs
   - task: download-pas-product-and-stemcell
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product.yml
+    file: platform-automation-tasks/download-product.yml
     params:
       CONFIG_FILE: ((foundation))/download-pas.yml
     input_mapping:
@@ -112,7 +124,7 @@ jobs:
         unpack: true
   - task: test-resources
     image: platform-automation-image-azure
-    file: platform-automation-tasks-azure/tasks/test.yml
+    file: platform-automation-tasks/tasks/test.yml
 - name: install-ops-manager
   serial: true
   plan:
@@ -129,7 +141,7 @@ jobs:
     - get: config
     - task: credhub-interpolate
       image: platform-automation-image-azure
-      file: platform-automation-tasks/tasks/credhub-interpolate.yml
+      file: platform-automation-tasks/credhub-interpolate.yml
       params:
         CREDHUB_CLIENT: ((credhub-client))
         CREDHUB_SECRET: ((credhub-secret))
@@ -163,14 +175,14 @@ jobs:
         interpolated-files: interpolated-config
     - task: download-product
       image: platform-automation-image-azure
-      file: platform-automation-tasks/tasks/download-product.yml
+      file: platform-automation-tasks/download-product.yml
       params:
         CONFIG_FILE: ((foundation))/download-ops-manager.yml
       input_mapping:
         config: interpolated-config
     - task: create-vm
       image: platform-automation-image-azure
-      file: platform-automation-tasks/tasks/create-vm.yml
+      file: platform-automation-tasks/create-vm.yml
       params:
         OPSMAN_CONFIG_FILE: ((foundation))/opsman.yml
         STATE_FILE: ((foundation))/state.yml
@@ -182,7 +194,7 @@ jobs:
         do:
           - task: make-commit
             image: platform-automation-image-azure
-            file: platform-automation-tasks/tasks/make-git-commit.yml
+            file: platform-automation-tasks/make-git-commit.yml
             input_mapping:
               repository: config
               file-source: generated-state
@@ -201,7 +213,7 @@ jobs:
 
 credhub-interpolate-all-vars: &credhub-interpolate-all-vars
   image: platform-automation-image
-  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  file: platform-automation-tasks-azure/credhub-interpolate.yml
   params:
     CREDHUB_CLIENT: ((credhub-client))
     CREDHUB_SECRET: ((credhub-secret))
@@ -216,7 +228,7 @@ credhub-interpolate-all-vars: &credhub-interpolate-all-vars
 
 credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-configs
   image: platform-automation-image
-  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  file: platform-automation-tasks/credhub-interpolate.yml
   params:
     CREDHUB_CLIENT: ((credhub-client))
     CREDHUB_SECRET: ((credhub-secret))
