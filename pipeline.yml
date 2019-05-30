@@ -141,7 +141,7 @@ jobs:
     - get: config
     - task: credhub-interpolate
       image: platform-automation-image-azure
-      file: platform-automation-tasks/credhub-interpolate.yml
+      file: platform-automation-tasks-azure/credhub-interpolate.yml
       params:
         CREDHUB_CLIENT: ((credhub-client))
         CREDHUB_SECRET: ((credhub-secret))
@@ -175,7 +175,7 @@ jobs:
         interpolated-files: interpolated-config
     - task: download-product
       image: platform-automation-image-azure
-      file: platform-automation-tasks/download-product.yml
+      file: platform-automation-tasks-azure/download-product.yml
       params:
         CONFIG_FILE: ((foundation))/download-ops-manager.yml
       input_mapping:
@@ -213,7 +213,7 @@ jobs:
 
 credhub-interpolate-all-vars: &credhub-interpolate-all-vars
   image: platform-automation-image
-  file: platform-automation-tasks/credhub-interpolate.yml
+  file: platform-automation-tasks-azure/credhub-interpolate.yml
   params:
     CREDHUB_CLIENT: ((credhub-client))
     CREDHUB_SECRET: ((credhub-secret))
@@ -228,7 +228,7 @@ credhub-interpolate-all-vars: &credhub-interpolate-all-vars
 
 credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-configs
   image: platform-automation-image
-  file: platform-automation-tasks/credhub-interpolate.yml
+  file: platform-automation-tasksazure/credhub-interpolate.yml
   params:
     CREDHUB_CLIENT: ((credhub-client))
     CREDHUB_SECRET: ((credhub-secret))
