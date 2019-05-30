@@ -97,7 +97,7 @@ jobs:
   - task: credhub-interpolate
     <<: *credhub-interpolate-all-product-configs
   - task: download-pas-product-and-stemcell
-    image: platform-automation-image
+    image: platform-automation-image-azure
     file: platform-automation-tasks-azure/download-product.yml
     params:
       CONFIG_FILE: ((foundation))/download-pas.yml
@@ -128,7 +128,7 @@ jobs:
 - name: install-ops-manager
   serial: true
   plan:
-    - get: platform-automation-image
+    - get: platform-automation-image-azure
       resource: platform-automation
       params:
         globs: ["*image*.tgz"]
@@ -212,7 +212,7 @@ jobs:
               merge: true                
 
 credhub-interpolate-all-vars: &credhub-interpolate-all-vars
-  image: platform-automation-image
+  image: platform-automation-image-azure
   file: platform-automation-tasks-azure/credhub-interpolate.yml
   params:
     CREDHUB_CLIENT: ((credhub-client))
@@ -227,7 +227,7 @@ credhub-interpolate-all-vars: &credhub-interpolate-all-vars
     interpolated-files: variable
 
 credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-configs
-  image: platform-automation-image
+  image: platform-automation-image-azure
   file: platform-automation-tasks-azure/credhub-interpolate.yml
   params:
     CREDHUB_CLIENT: ((credhub-client))
