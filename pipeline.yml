@@ -74,10 +74,10 @@ jobs:
   - aggregate:
     # - get: daily
     #   trigger: true
-    - get: platform-automation-image
+    - get: platform-automation-image-azure
       params:
         unpack: true
-    - get: platform-automation-tasks
+    - get: platform-automation-tasks-azure
       params:
         unpack: true
     - get: configuration
