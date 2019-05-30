@@ -44,7 +44,13 @@ resources:
     storage_account_name: ((storage_account_name))
     container: products
     regexp: pas/cf-(.*).pivotal
-
+- name: pas-stemcell
+  type: azure-blobstore
+  source:
+    storage_account_key: ((storage_account_key))
+    storage_account_name: ((storage_account_name))
+    container: stemcells
+    regexp: pas-stemcell/bosh-stemcell-(.*).tgz
 - name: config
   type: git
   source:
