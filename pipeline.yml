@@ -63,7 +63,7 @@ resources:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
-- name: config
+- name: variable
   type: git
   source:
     uri: ((pipeline-repo))
@@ -93,16 +93,16 @@ jobs:
       params:
         unpack: true
     - get: configuration
-    - get: config
+    - get: variable
   - task: credhub-interpolate
-    <<: *credhub-interpolate-all-product-config
+    <<: *credhub-interpolate-all-product-configs
   - task: download-pas-product-and-stemcell
     image: platform-automation-image-azure
     file: platform-automation-tasks-azure/download-product.yml
     params:
       CONFIG_FILE: ((foundation))/download-pas.yml
     input_mapping:
-      config: config
+      config: variable
     output_mapping:
       downloaded-stemcell: pas-stemcell
   - aggregate:
@@ -222,11 +222,11 @@ credhub-interpolate-all-vars: &credhub-interpolate-all-vars
     PREFIX: ((credhub-interpolation-prefix))
     INTERPOLATION_PATHS: "nonprod/vars"
   input_mapping:
-    files: config
+    files: variable
   output_mapping:
-    interpolated-files: config
+    interpolated-files: variable
 
-credhub-interpolate-all-product-config: &credhub-interpolate-all-product-config
+credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-configs
   image: platform-automation-image-azure
   file: platform-automation-tasks-azure/credhub-interpolate.yml
   params:
@@ -257,6 +257,6 @@ credhub-interpolate-all-product-config: &credhub-interpolate-all-product-config
     PREFIX: /concourse/main/((foundation))
     INTERPOLATION_PATHS: ((foundation))  
   input_mapping:
-    files: config
+    files: variable
   output_mapping:
-    interpolated-files: config
+    interpolated-files: variable
