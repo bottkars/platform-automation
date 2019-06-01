@@ -411,6 +411,7 @@ groups:
   - fetch-pas  
   - fetch-pas-windows
   - fetch-p-spring-cloud-services
+  - fetch-pivotal-mysql
 - name: install-ops-man
   jobs:
   - install-ops-manager
