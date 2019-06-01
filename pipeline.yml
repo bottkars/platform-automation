@@ -265,3 +265,9 @@ groups:
   jobs:
   - fetch-platform-automation
   - fetch-pas  
+- name: install-ops-man
+  jobs:
+  - install-ops-manager
+- name: test
+  jobs:  
+  - test-resources
