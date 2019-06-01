@@ -92,7 +92,7 @@ jobs:
     - get: platform-automation-tasks-azure
       params:
         unpack: true
-    - get: configuration
+    - get: config
     - get: variable
   - task: credhub-interpolate
     <<: *credhub-interpolate-all-product-configs
