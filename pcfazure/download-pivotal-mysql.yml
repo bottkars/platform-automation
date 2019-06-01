@@ -1,4 +1,4 @@
-pivnet-api-token: ((pivnet_token))
+pivnet-api-token: ((pivnet-token))
 pivnet-file-glob: "*mysql*.pivotal"
 pivnet-product-slug: pivotal-mysql
 product-version-regex: ^2\.5\..*$
