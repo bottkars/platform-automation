@@ -68,7 +68,7 @@ resources:
     storage_account_key: ((storage_account_key))
     storage_account_name: ((storage_account_name))
     container: stemcells
-    regexp: pas-stemcell/bosh-stemcell-(.*).tgz
+    regexp: pas-stemcell/bosh-stemcell-250(.*).tgz
 
 - name: p-spring-cloud-services-stemcell
   type: azure-blobstore
