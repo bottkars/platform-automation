@@ -68,7 +68,7 @@ resources:
     storage_account_key: ((storage_account_key))
     storage_account_name: ((storage_account_name))
     container: products
-    regexp: pivotal-mysql-product/p_spring-cloud-services-(.*).pivotal
+    regexp: pivotal-mysql-product/pivotal-mysql-(.*).pivotal
 
 - name: pas-stemcell
   type: azure-blobstore
