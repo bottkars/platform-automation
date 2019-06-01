@@ -98,7 +98,7 @@ jobs:
     <<: *credhub-interpolate-all-product-configs
   - task: download-pas-product-and-stemcell
     image: platform-automation-image-azure
-    file: platform-automation-tasks-azure/download-product.yml
+    file: platform-automation-tasks-azure/tasks/download-product.yml
     params:
       CONFIG_FILE: ((foundation))/download-pas.yml
     input_mapping:
@@ -194,7 +194,7 @@ jobs:
         do:
           - task: make-commit
             image: platform-automation-image-azure
-            file: platform-automation-tasks-azure/make-git-commit.yml
+            file: platform-automation-tasks-azure/tasks/make-git-commit.yml
             input_mapping:
               repository: config
               file-source: generated-state
