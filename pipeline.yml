@@ -84,7 +84,7 @@ resources:
     storage_account_key: ((storage_account_key))
     storage_account_name: ((storage_account_name))
     container: stemcells
-    regexp: pas-windows-stemcell/bosh-stemcell-(.*).tgz
+    regexp: pas-windows-stemcell/light-bosh-stemcell-(.*).tgz
 
 - name: config
   type: git
