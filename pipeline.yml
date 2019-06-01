@@ -67,12 +67,7 @@ resources:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
-- name: configuration
-  type: git
-  source:
-    uri: ((pipeline-repo))
-    private_key: ((plat-auto-pipes-deploy-key.private_key))
-    branch: master
+
 - name: variable
   type: git
   source:
