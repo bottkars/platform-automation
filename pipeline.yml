@@ -43,7 +43,7 @@ resources:
     storage_account_key: ((storage_account_key))
     storage_account_name: ((storage_account_name))
     container: products
-    regexp: pas-windows-product/(.*).pivotal
+    regexp: pas-windows-product/pas-windows-(.*).pivotal
 
 
 - name: pas-product
