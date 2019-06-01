@@ -1,5 +1,5 @@
 pivnet-api-token: ((pivnet-token))
 pivnet-file-glob: "*.pivotal"
-pivnet-product-slug: p-spring-cloud-service
+pivnet-product-slug: p-spring-cloud-services
 product-version-regex: ^3\.0\..*$
 stemcell-iaas: azure
