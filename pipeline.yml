@@ -62,6 +62,14 @@ resources:
     container: products
     regexp: p-spring-cloud-services-product/p_spring-cloud-services-(.*).pivotal
 
+- name: pivotal-mysql-product
+  type: azure-blobstore
+  source:
+    storage_account_key: ((storage_account_key))
+    storage_account_name: ((storage_account_name))
+    container: products
+    regexp: pivotal-mysql-product/p_spring-cloud-services-(.*).pivotal
+
 - name: pas-stemcell
   type: azure-blobstore
   source:
@@ -77,6 +85,14 @@ resources:
     storage_account_name: ((storage_account_name))
     container: stemcells
     regexp: p-spring-cloud-services-stemcell/bosh-stemcell-(.*).tgz
+
+- name: pivotal-mysql-stemcell
+  type: azure-blobstore
+  source:
+    storage_account_key: ((storage_account_key))
+    storage_account_name: ((storage_account_name))
+    container: stemcells
+    regexp: pivotal-mysql-stemcell/bosh-stemcell-(.*).tgz
 
 - name: pas-windows-stemcell
   type: azure-blobstore
@@ -174,6 +190,39 @@ jobs:
     - put: p-spring-cloud-services-stemcell
       params:
         file: p-spring-cloud-services-stemcell/*.tgz
+
+- name: fetch-pivotal-mysql
+  plan:
+  - aggregate:
+    # - get: daily
+    #   trigger: true
+    - get: platform-automation-image-azure
+      params:
+        unpack: true
+    - get: platform-automation-tasks-azure
+      params:
+        unpack: true
+    - get: config
+    - get: variable
+  - task: credhub-interpolate
+    <<: *credhub-interpolate-all-product-configs
+  - task: download-pivotal-mysql-product-and-stemcell
+    image: platform-automation-image-azure
+    file: platform-automation-tasks-azure/tasks/download-product.yml
+    params:
+      CONFIG_FILE: ((foundation))/download-pivotal-mysql.yml
+    input_mapping:
+      config: variable
+    output_mapping:
+      downloaded-stemcell: pivotal-mysql-stemcell
+  - aggregate:
+    - put: pivotal-mysql-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: pivotal-mysql-stemcell
+      params:
+        file: pivotal-mysql-stemcell/*.tgz
+
 
 - name: fetch-pas-windows
   plan:
