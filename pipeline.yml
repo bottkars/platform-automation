@@ -60,7 +60,7 @@ resources:
     storage_account_key: ((storage_account_key))
     storage_account_name: ((storage_account_name))
     container: products
-    regexp: p-spring-cloud-services-product/cf-(.*).pivotal
+    regexp: p-spring-cloud-services-product/p_spring-cloud-services-(.*).pivotal
 
 - name: pas-stemcell
   type: azure-blobstore
