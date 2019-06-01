@@ -43,9 +43,16 @@ resources:
     storage_account_key: ((storage_account_key))
     storage_account_name: ((storage_account_name))
     container: products
-    regexp: pas-windows-product/cf-(.*).pivotal
+    regexp: pas-windows-product/(.*).pivotal
 
 
+- name: pas-product
+  type: azure-blobstore
+  source:
+    storage_account_key: ((storage_account_key))
+    storage_account_name: ((storage_account_name))
+    container: products
+    regexp: pas-product/cf-(.*).pivotal
 
 - name: pas-stemcell
   type: azure-blobstore
