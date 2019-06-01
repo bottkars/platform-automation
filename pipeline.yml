@@ -54,6 +54,14 @@ resources:
     container: products
     regexp: pas-product/cf-(.*).pivotal
 
+- name: p-spring-cloud-services-product
+  type: azure-blobstore
+  source:
+    storage_account_key: ((storage_account_key))
+    storage_account_name: ((storage_account_name))
+    container: products
+    regexp: p-spring-cloud-services-product/cf-(.*).pivotal
+
 - name: pas-stemcell
   type: azure-blobstore
   source:
@@ -61,6 +69,15 @@ resources:
     storage_account_name: ((storage_account_name))
     container: stemcells
     regexp: pas-stemcell/bosh-stemcell-(.*).tgz
+
+- name: p-spring-cloud-services-stemcell
+  type: azure-blobstore
+  source:
+    storage_account_key: ((storage_account_key))
+    storage_account_name: ((storage_account_name))
+    container: stemcells
+    regexp: p-spring-cloud-services-stemcell/bosh-stemcell-(.*).tgz
+
 - name: pas-windows-stemcell
   type: azure-blobstore
   source:
@@ -125,6 +142,38 @@ jobs:
     - put: pas-stemcell
       params:
         file: pas-stemcell/*.tgz
+
+- name: fetch-p-spring-cloud-services
+  plan:
+  - aggregate:
+    # - get: daily
+    #   trigger: true
+    - get: platform-automation-image-azure
+      params:
+        unpack: true
+    - get: platform-automation-tasks-azure
+      params:
+        unpack: true
+    - get: config
+    - get: variable
+  - task: credhub-interpolate
+    <<: *credhub-interpolate-all-product-configs
+  - task: download-p-spring-cloud-services-product-and-stemcell
+    image: platform-automation-image-azure
+    file: platform-automation-tasks-azure/tasks/download-product.yml
+    params:
+      CONFIG_FILE: ((foundation))/download-p-spring-cloud-services.yml
+    input_mapping:
+      config: variable
+    output_mapping:
+      downloaded-stemcell: p-spring-cloud-services-stemcell
+  - aggregate:
+    - put: p-spring-cloud-services-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-spring-cloud-services-stemcell
+      params:
+        file: p-spring-cloud-services-stemcell/*.tgz
 
 - name: fetch-pas-windows
   plan:
@@ -312,6 +361,7 @@ groups:
   - fetch-platform-automation
   - fetch-pas  
   - fetch-pas-windows
+  - fetch-p-spring-cloud-services
 - name: install-ops-man
   jobs:
   - install-ops-manager
