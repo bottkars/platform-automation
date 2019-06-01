@@ -148,7 +148,7 @@ jobs:
     output_mapping:
       downloaded-stemcell: pas-stemcell
   - aggregate:
-    - put: pas-product
+    - put: pas-windows-product
       params:
         file: downloaded-product/*.pivotal
 
