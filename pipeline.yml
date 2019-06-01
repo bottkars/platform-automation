@@ -255,7 +255,7 @@ credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-config
         88pWkJoz6Bjx3vw=
         -----END CERTIFICATE-----
     PREFIX: /concourse/main/((foundation))
-    INTERPOLATION_PATHS: ((foundation))/config  
+    INTERPOLATION_PATHS: ((foundation))  
   input_mapping:
     files: variable
   output_mapping:
