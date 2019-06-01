@@ -260,6 +260,7 @@ credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-config
     files: variable
   output_mapping:
     interpolated-files: variable
+groups:    
 - name: fetch
   jobs:
   - fetch-platform-automation
