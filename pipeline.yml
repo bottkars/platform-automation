@@ -37,13 +37,16 @@ resources:
   source:
     product_slug: platform-automation
     api_token: ((pivnet-token))
-- name: pas-product
+- name: pas-windows-product
   type: azure-blobstore
   source:
     storage_account_key: ((storage_account_key))
     storage_account_name: ((storage_account_name))
     container: products
-    regexp: pas/cf-(.*).pivotal
+    regexp: pas-windows-product/cf-(.*).pivotal
+
+
+
 - name: pas-stemcell
   type: azure-blobstore
   source:
@@ -112,6 +115,36 @@ jobs:
     - put: pas-stemcell
       params:
         file: pas-stemcell/*.tgz
+
+- name: fetch-pas-windows
+  plan:
+  - aggregate:
+    # - get: daily
+    #   trigger: true
+    - get: platform-automation-image-azure
+      params:
+        unpack: true
+    - get: platform-automation-tasks-azure
+      params:
+        unpack: true
+    - get: config
+    - get: variable
+  - task: credhub-interpolate
+    <<: *credhub-interpolate-all-product-configs
+  - task: download-pas-windows-product
+    image: platform-automation-image-azure
+    file: platform-automation-tasks-azure/tasks/download-product.yml
+    params:
+      CONFIG_FILE: ((foundation))/download-pas-windows.yml
+    input_mapping:
+      config: variable
+    output_mapping:
+      downloaded-stemcell: pas-stemcell
+  - aggregate:
+    - put: pas-product
+      params:
+        file: downloaded-product/*.pivotal
+
 
 - name: test-resources
   plan:
@@ -265,6 +298,7 @@ groups:
   jobs:
   - fetch-platform-automation
   - fetch-pas  
+  - fetch-pas-windows
 - name: install-ops-man
   jobs:
   - install-ops-manager
