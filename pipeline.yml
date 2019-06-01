@@ -116,7 +116,7 @@ resources:
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master        
 jobs:
-- name: fetch-platform-automation
+- name: get-platform-automation
   plan:
   - get: platform-automation-pivnet
     # trigger: true
@@ -127,7 +127,7 @@ jobs:
     - put: platform-automation-image-azure
       params:
         file: platform-automation-pivnet/*image*.tgz
-- name: fetch-pas
+- name: get-pas
   plan:
   - aggregate:
     # - get: daily
@@ -159,7 +159,7 @@ jobs:
       params:
         file: pas-stemcell/*.tgz
 
-- name: fetch-p-spring-cloud-services
+- name: get-p-spring-cloud-services
   plan:
   - aggregate:
     # - get: daily
@@ -191,7 +191,7 @@ jobs:
       params:
         file: p-spring-cloud-services-stemcell/*.tgz
 
-- name: fetch-pivotal-mysql
+- name: get-pivotal-mysql
   plan:
   - aggregate:
     # - get: daily
@@ -224,7 +224,7 @@ jobs:
         file: pivotal-mysql-stemcell/*.tgz
 
 
-- name: fetch-pas-windows
+- name: get-pas-windows
   plan:
   - aggregate:
     # - get: daily
@@ -407,11 +407,11 @@ credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-config
 groups:    
 - name: fetch
   jobs:
-  - fetch-platform-automation
-  - fetch-pas  
-  - fetch-pas-windows
-  - fetch-p-spring-cloud-services
-  - fetch-pivotal-mysql
+  - get-platform-automation
+  - get-pas  
+  - get-pas-windows
+  - get-p-spring-cloud-services
+  - get-pivotal-mysql
 - name: install-ops-man
   jobs:
   - install-ops-manager
