@@ -45,7 +45,6 @@ resources:
     container: products
     regexp: pas-windows-product/pas-windows-(.*).pivotal
 
-
 - name: pas-product
   type: azure-blobstore
   source:
