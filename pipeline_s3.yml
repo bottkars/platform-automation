@@ -425,7 +425,7 @@ interpolate-creds: &interpolate-creds
     INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs
     SKIP_MISSING: true
   input_mapping:
-    files: configuration
+    files: config
   output_mapping:
     interpolated-files: interpolated-creds
 credhub-interpolate-all-vars: &credhub-interpolate-all-vars
