@@ -262,8 +262,59 @@ jobs:
         file: downloaded-product/*.pivotal
     - put: pas-windows-stemcell
       params:
-        file: pas-windows-stemcell/*.tgz    
+        file: pas-windows-stemcell/*.tgz 
 
+- name: upload-and-stage-pas
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+#            passed:
+#              - upgrade-opsman
+#            trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: config
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-pas
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/pas.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: pas-product
+        downloaded-stemcell: pas-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: pas-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-pas-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: interpolated-creds
+        stemcell: pas-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: pas-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
 
 - name: test-resources
   plan:
@@ -361,8 +412,22 @@ jobs:
           - put: config
             params:
               repository: config-commit
-              merge: true                
+              merge: true   
 
+interpolate-creds: &interpolate-creds
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    CREDHUB_CLIENT: ((credhub-client))
+    CREDHUB_SECRET: ((credhub-secret))
+    CREDHUB_SERVER: ((credhub-server))
+    PREFIX: /concourse/main/((foundation))
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs
+    SKIP_MISSING: true
+  input_mapping:
+    files: configuration
+  output_mapping:
+    interpolated-files: interpolated-creds
 credhub-interpolate-all-vars: &credhub-interpolate-all-vars
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -433,13 +498,16 @@ credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-config
   output_mapping:
     interpolated-files: variable
 groups:    
-- name: fetch
+- name: get-products
   jobs:
   - get-platform-automation
   - get-pas  
   - get-pas-windows
   - get-p-spring-cloud-services
   - get-pivotal-mysql
+- name: upgrade-products
+  jobs:
+  - upload-and-stage-pas
 - name: install-ops-man
   jobs:
   - install-ops-manager
