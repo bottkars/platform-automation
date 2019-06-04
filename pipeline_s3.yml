@@ -1,0 +1,424 @@
+---
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+resources:
+- name: platform-automation-pivnet
+  type: pivnet
+  source:
+    api_token: ((pivnet-token))
+    product_slug: platform-automation
+    product_version: 3\.0\.(.*)
+    sort_by: semver
+
+- name: platform-automation-tasks
+  type: s3
+  source:
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_products))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: platform-automation-tasks-(.*).zip
+
+- name: platform-automation-image
+  type: s3
+  source:
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_products))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: platform-automation-image-(.*).tgz
+
+
+- name: platform-automation
+  type: pivnet
+  source:
+    product_slug: platform-automation
+    api_token: ((pivnet-token))
+- name: pas-windows-product
+  type: s3
+  source:
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_products))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: pas-windows-product/pas-windows-(.*).pivotal
+
+- name: pas-product
+  type: s3
+  source:
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_products))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: pas-product/cf-(.*).pivotal
+
+- name: p-spring-cloud-services-product
+  type: s3
+  source:
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_products))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: p-spring-cloud-services-product/p_spring-cloud-services-(.*).pivotal
+
+- name: pivotal-mysql-product
+  type: s3
+  source:
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_products))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: pivotal-mysql-product/pivotal-mysql-(.*).pivotal
+
+- name: pas-stemcell
+  type: s3
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_stemcells))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: pas-stemcell/bosh-stemcell-(.*).tgz
+
+- name: p-spring-cloud-services-stemcell
+  type: s3
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_stemcells))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: p-spring-cloud-services-stemcell/bosh-stemcell-(.*).tgz
+
+- name: pivotal-mysql-stemcell
+  type: s3
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_stemcells))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: pivotal-mysql-stemcell/bosh-stemcell-(.*).tgz
+
+- name: pas-windows-stemcell
+  type: s3
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets.pivnet_stemcells))
+    endpoint:  ((s3_endpoint))
+    secret_access_key: ((s3.secret_access_key))
+    regexp: pas-windows-stemcell/light-bosh-stemcell-(.*).tgz
+
+- name: config
+  type: git
+  source:
+    uri: ((pipeline-repo))
+    private_key: ((plat-auto-pipes-deploy-key.private_key))
+    branch: master
+
+- name: variable
+  type: git
+  source:
+    uri: ((pipeline-repo))
+    private_key: ((plat-auto-pipes-deploy-key.private_key))
+    branch: master        
+jobs:
+- name: get-platform-automation
+  plan:
+  - get: platform-automation-pivnet
+    # trigger: true
+  - aggregate:
+    - put: platform-automation-tasks
+      params:
+        file: platform-automation-pivnet/*tasks*.zip
+    - put: platform-automation-image
+      params:
+        file: platform-automation-pivnet/*image*.tgz
+- name: get-pas
+  plan:
+  - aggregate:
+    # - get: daily
+    #   trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: config
+    - get: variable
+  - task: credhub-interpolate
+    <<: *credhub-interpolate-all-product-configs
+  - task: download-pas-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: ((foundation))/download-pas.yml
+    input_mapping:
+      config: variable
+    output_mapping:
+      downloaded-stemcell: pas-stemcell
+  - aggregate:
+    - put: pas-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: pas-stemcell
+      params:
+        file: pas-stemcell/*.tgz
+
+- name: get-p-spring-cloud-services
+  plan:
+  - aggregate:
+    # - get: daily
+    #   trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: config
+    - get: variable
+  - task: credhub-interpolate
+    <<: *credhub-interpolate-all-product-configs
+  - task: download-p-spring-cloud-services-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: ((foundation))/download-p-spring-cloud-services.yml
+    input_mapping:
+      config: variable
+    output_mapping:
+      downloaded-stemcell: p-spring-cloud-services-stemcell
+  - aggregate:
+    - put: p-spring-cloud-services-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-spring-cloud-services-stemcell
+      params:
+        file: p-spring-cloud-services-stemcell/*.tgz
+
+- name: get-pivotal-mysql
+  plan:
+  - aggregate:
+    # - get: daily
+    #   trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: config
+    - get: variable
+  - task: credhub-interpolate
+    <<: *credhub-interpolate-all-product-configs
+  - task: download-pivotal-mysql-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: ((foundation))/download-pivotal-mysql.yml
+    input_mapping:
+      config: variable
+    output_mapping:
+      downloaded-stemcell: pivotal-mysql-stemcell
+  - aggregate:
+    - put: pivotal-mysql-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: pivotal-mysql-stemcell
+      params:
+        file: pivotal-mysql-stemcell/*.tgz
+
+
+- name: get-pas-windows
+  plan:
+  - aggregate:
+    # - get: daily
+    #   trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: config
+    - get: variable
+  - task: credhub-interpolate
+    <<: *credhub-interpolate-all-product-configs
+  - task: download-pas-windows-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: ((foundation))/download-pas-windows.yml
+    input_mapping:
+      config: variable
+    output_mapping:
+      downloaded-stemcell: pas-windows-stemcell
+  - aggregate:
+    - put: pas-windows-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: pas-windows-stemcell
+      params:
+        file: pas-windows-stemcell/*.tgz    
+
+
+- name: test-resources
+  plan:
+  - aggregate:
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+  - task: test-resources
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test.yml
+- name: install-ops-manager
+  serial: true
+  plan:
+    - get: platform-automation-image
+      resource: platform-automation
+      params:
+        globs: ["*image*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      resource: platform-automation
+      params:
+        globs: ["*tasks*.zip"]
+        unpack: true
+    - get: config
+    - task: credhub-interpolate
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/credhub-interpolate.yml
+      params:
+        CREDHUB_CLIENT: ((credhub-client))
+        CREDHUB_SECRET: ((credhub-secret))
+        CREDHUB_SERVER: ((credhub-server))
+        CREDHUB_CA_CERT: |
+            -----BEGIN CERTIFICATE-----
+            MIIDPTCCAiWgAwIBAgIUMUeMUa3dP6QtQZrPFM3pzrRBO4EwDQYJKoZIhvcNAQEL
+            BQAwGTEXMBUGA1UEAxMOY29udHJvbHBsYW5lY2EwHhcNMTkwNjA0MDgzNjMzWhcN
+            MjAwNjAzMDgzNjMzWjAcMRowGAYDVQQDExFjb250cm9sLXBsYW5lLXRsczCCASIw
+            DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOvFe1QNtnJjzPn7f8LWbh+BPwAt
+            ClYWL7m/tnQAZjj20W+KstBXYzW33PyxZ3GofT82De2bFxrAx4nZgrd1dFc9K/Ie
+            tte5pcTpOyGZxineOYCVtQNuxdAcddKjRpbygorFGVLJZ5KjdQ9vmdhR3hobh7pS
+            GY85uAt+tecpE3CtFdjY2OLO4u1rQ1ZpBqwidNoM2gODkDNn7LStpYhR7/Yo/RZl
+            xRVqsa/ZzsE4hMUl+9RVUyiyrlnaPypEvSBTxOqD9OKKehjWzCiwBYorA3/hGfke
+            vtAnyG0VeBn+ABVI5kkmeU047oP5HN6wBmaW/pG6K7DKdXxFMk3nv0onPvsCAwEA
+            AaN6MHgwHQYDVR0OBBYEFAyfm/+vREPGAxK/7EhZA/0uE+1rMCgGA1UdEQQhMB+C
+            HSouY29udHJvbC53ZXN0dXMuc3RhY2twb2MuY29tMB8GA1UdIwQYMBaAFHbx2GnU
+            qW4COFv/B/zs1nk+QVdeMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQELBQADggEB
+            AFXwfF0XNsG+dZjwEXiIoM/WzM047J9JKFLF2OOWiHWxuT5mWu1oGuwRZOnFWoIx
+            L/OMw5WF86nByxhHz9+HdfpBE+PYJaU681Ue9OModZxi9dgJsqbIZTX7kx+ZRHaz
+            lVu80+Cyik8MlqXmXX4qH8myH1USZlc833JwhCfMkjDkcKo6co9jgSyBx+jOua5a
+            H0uxsFHfIIuCr14TFmVr25mdPBXLX51uAt9IQ/l8/4m6hhRd6LZG1pbQLhlLT+b4
+            04qOVLEiV07acExsnPumxmLyvKyGWXCVqs+acuqfZ/otDlsv0LGgP9Wgb6/leWOe
+            bvRZAa/bDJfySrUOSPi1amk=
+            -----END CERTIFICATE-----
+        PREFIX: /concourse/main/((foundation))
+        INTERPOLATION_PATHS: ((foundation))
+      input_mapping:
+        files: config
+      output_mapping:
+        interpolated-files: interpolated-config
+    - task: download-product
+      image: platform-automation-image
+      file: platform-automation-tasks/download-product.yml
+      params:
+        CONFIG_FILE: ((foundation))/download-ops-manager.yml
+      input_mapping:
+        config: interpolated-config
+    - task: create-vm
+      image: platform-automation-image
+      file: platform-automation-tasks/create-vm.yml
+      params:
+        OPSMAN_CONFIG_FILE: ((foundation))/opsman.yml
+        STATE_FILE: ((foundation))/state.yml
+      input_mapping:
+        config: interpolated-config
+        state: config
+        image: downloaded-product
+      ensure:
+        do:
+          - task: make-commit
+            image: platform-automation-image
+            file: platform-automation-tasks/tasks/make-git-commit.yml
+            input_mapping:
+              repository: config
+              file-source: generated-state
+            output_mapping:
+              repository-commit: config-commit
+            params:
+              FILE_SOURCE_PATH: state.yml
+              FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+              GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@labbuildr.com"
+              GIT_AUTHOR_NAME: "Platform Automation Bot"
+              COMMIT_MESSAGE: 'Update state file'
+          - put: config
+            params:
+              repository: config-commit
+              merge: true                
+
+credhub-interpolate-all-vars: &credhub-interpolate-all-vars
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    CREDHUB_CLIENT: ((credhub-client))
+    CREDHUB_SECRET: ((credhub-secret))
+    CREDHUB_SERVER: ((credhub-server))
+    CREDHUB_CA_CERT: ((credhub-ca-cert.ca))
+    PREFIX: ((credhub-interpolation-prefix))
+    INTERPOLATION_PATHS: ((foundation))/vars
+  input_mapping:
+    files: variable
+  output_mapping:
+    interpolated-files: variable
+
+credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-configs
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    CREDHUB_CLIENT: ((credhub-client))
+    CREDHUB_SECRET: ((credhub-secret))
+    CREDHUB_SERVER: ((credhub-server))
+    CREDHUB_CA_CERT: |
+        -----BEGIN CERTIFICATE-----
+        MIIDPTCCAiWgAwIBAgIUMUeMUa3dP6QtQZrPFM3pzrRBO4EwDQYJKoZIhvcNAQEL
+        BQAwGTEXMBUGA1UEAxMOY29udHJvbHBsYW5lY2EwHhcNMTkwNjA0MDgzNjMzWhcN
+        MjAwNjAzMDgzNjMzWjAcMRowGAYDVQQDExFjb250cm9sLXBsYW5lLXRsczCCASIw
+        DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOvFe1QNtnJjzPn7f8LWbh+BPwAt
+        ClYWL7m/tnQAZjj20W+KstBXYzW33PyxZ3GofT82De2bFxrAx4nZgrd1dFc9K/Ie
+        tte5pcTpOyGZxineOYCVtQNuxdAcddKjRpbygorFGVLJZ5KjdQ9vmdhR3hobh7pS
+        GY85uAt+tecpE3CtFdjY2OLO4u1rQ1ZpBqwidNoM2gODkDNn7LStpYhR7/Yo/RZl
+        xRVqsa/ZzsE4hMUl+9RVUyiyrlnaPypEvSBTxOqD9OKKehjWzCiwBYorA3/hGfke
+        vtAnyG0VeBn+ABVI5kkmeU047oP5HN6wBmaW/pG6K7DKdXxFMk3nv0onPvsCAwEA
+        AaN6MHgwHQYDVR0OBBYEFAyfm/+vREPGAxK/7EhZA/0uE+1rMCgGA1UdEQQhMB+C
+        HSouY29udHJvbC53ZXN0dXMuc3RhY2twb2MuY29tMB8GA1UdIwQYMBaAFHbx2GnU
+        qW4COFv/B/zs1nk+QVdeMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQELBQADggEB
+        AFXwfF0XNsG+dZjwEXiIoM/WzM047J9JKFLF2OOWiHWxuT5mWu1oGuwRZOnFWoIx
+        L/OMw5WF86nByxhHz9+HdfpBE+PYJaU681Ue9OModZxi9dgJsqbIZTX7kx+ZRHaz
+        lVu80+Cyik8MlqXmXX4qH8myH1USZlc833JwhCfMkjDkcKo6co9jgSyBx+jOua5a
+        H0uxsFHfIIuCr14TFmVr25mdPBXLX51uAt9IQ/l8/4m6hhRd6LZG1pbQLhlLT+b4
+        04qOVLEiV07acExsnPumxmLyvKyGWXCVqs+acuqfZ/otDlsv0LGgP9Wgb6/leWOe
+        bvRZAa/bDJfySrUOSPi1amk=
+        -----END CERTIFICATE-----
+    PREFIX: /concourse/main/((foundation))
+    INTERPOLATION_PATHS: ((foundation))  
+  input_mapping:
+    files: variable
+  output_mapping:
+    interpolated-files: variable
+groups:    
+- name: fetch
+  jobs:
+  - get-platform-automation
+  - get-pas  
+  - get-pas-windows
+  - get-p-spring-cloud-services
+  - get-pivotal-mysql
+- name: install-ops-man
+  jobs:
+  - install-ops-manager
+- name: test
+  jobs:  
+  - test-resources
