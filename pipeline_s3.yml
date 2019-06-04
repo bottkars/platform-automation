@@ -443,7 +443,7 @@ interpolate-creds: &interpolate-creds
         04qOVLEiV07acExsnPumxmLyvKyGWXCVqs+acuqfZ/otDlsv0LGgP9Wgb6/leWOe
         bvRZAa/bDJfySrUOSPi1amk=
         -----END CERTIFICATE-----
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env ((foundation))/download-product-configs
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs
     SKIP_MISSING: true
   input_mapping:
     files: config
