@@ -422,6 +422,27 @@ interpolate-creds: &interpolate-creds
     CREDHUB_SECRET: ((credhub-secret))
     CREDHUB_SERVER: ((credhub-server))
     PREFIX: /concourse/main/((foundation))
+    CREDHUB_CA_CERT: |
+        -----BEGIN CERTIFICATE-----
+        MIIDPTCCAiWgAwIBAgIUMUeMUa3dP6QtQZrPFM3pzrRBO4EwDQYJKoZIhvcNAQEL
+        BQAwGTEXMBUGA1UEAxMOY29udHJvbHBsYW5lY2EwHhcNMTkwNjA0MDgzNjMzWhcN
+        MjAwNjAzMDgzNjMzWjAcMRowGAYDVQQDExFjb250cm9sLXBsYW5lLXRsczCCASIw
+        DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOvFe1QNtnJjzPn7f8LWbh+BPwAt
+        ClYWL7m/tnQAZjj20W+KstBXYzW33PyxZ3GofT82De2bFxrAx4nZgrd1dFc9K/Ie
+        tte5pcTpOyGZxineOYCVtQNuxdAcddKjRpbygorFGVLJZ5KjdQ9vmdhR3hobh7pS
+        GY85uAt+tecpE3CtFdjY2OLO4u1rQ1ZpBqwidNoM2gODkDNn7LStpYhR7/Yo/RZl
+        xRVqsa/ZzsE4hMUl+9RVUyiyrlnaPypEvSBTxOqD9OKKehjWzCiwBYorA3/hGfke
+        vtAnyG0VeBn+ABVI5kkmeU047oP5HN6wBmaW/pG6K7DKdXxFMk3nv0onPvsCAwEA
+        AaN6MHgwHQYDVR0OBBYEFAyfm/+vREPGAxK/7EhZA/0uE+1rMCgGA1UdEQQhMB+C
+        HSouY29udHJvbC53ZXN0dXMuc3RhY2twb2MuY29tMB8GA1UdIwQYMBaAFHbx2GnU
+        qW4COFv/B/zs1nk+QVdeMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQELBQADggEB
+        AFXwfF0XNsG+dZjwEXiIoM/WzM047J9JKFLF2OOWiHWxuT5mWu1oGuwRZOnFWoIx
+        L/OMw5WF86nByxhHz9+HdfpBE+PYJaU681Ue9OModZxi9dgJsqbIZTX7kx+ZRHaz
+        lVu80+Cyik8MlqXmXX4qH8myH1USZlc833JwhCfMkjDkcKo6co9jgSyBx+jOua5a
+        H0uxsFHfIIuCr14TFmVr25mdPBXLX51uAt9IQ/l8/4m6hhRd6LZG1pbQLhlLT+b4
+        04qOVLEiV07acExsnPumxmLyvKyGWXCVqs+acuqfZ/otDlsv0LGgP9Wgb6/leWOe
+        bvRZAa/bDJfySrUOSPi1amk=
+        -----END CERTIFICATE-----
     INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs
     SKIP_MISSING: true
   input_mapping:
