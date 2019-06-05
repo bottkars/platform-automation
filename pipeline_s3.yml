@@ -285,7 +285,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: ((foundation))/download-product-configs/pas.yml
+        CONFIG_FILE: ((foundation))/pas.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -443,7 +443,7 @@ interpolate-creds: &interpolate-creds
         04qOVLEiV07acExsnPumxmLyvKyGWXCVqs+acuqfZ/otDlsv0LGgP9Wgb6/leWOe
         bvRZAa/bDJfySrUOSPi1amk=
         -----END CERTIFICATE-----
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env 
     SKIP_MISSING: true
   input_mapping:
     files: config
