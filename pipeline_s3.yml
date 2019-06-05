@@ -286,7 +286,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: interpolated-creds/pas.yml
+        CONFIG_FILE: download-product-configs/pas.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
