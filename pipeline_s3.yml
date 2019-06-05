@@ -444,7 +444,7 @@ interpolate-creds: &interpolate-creds
         bvRZAa/bDJfySrUOSPi1amk=
         -----END CERTIFICATE-----
     INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env 
-    SKIP_MISSING: true
+    SKIP_MISSING: false
   input_mapping:
     files: config
   output_mapping:
