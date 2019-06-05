@@ -110,7 +110,7 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: pas-windows-stemcell/light-bosh-stemcell-(.*).tgz
 
-- name: config
+- name: configuration
   type: git
   source:
     uri: ((pipeline-repo))
@@ -135,6 +135,7 @@ jobs:
     - put: platform-automation-image
       params:
         file: platform-automation-pivnet/*image*.tgz
+
 - name: get-pas
   plan:
   - aggregate:
@@ -146,7 +147,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: configuration
     - get: variable
   - task: credhub-interpolate
     <<: *credhub-interpolate-all-product-configs
@@ -178,7 +179,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: configuration
     - get: variable
   - task: credhub-interpolate
     <<: *credhub-interpolate-all-product-configs
@@ -210,7 +211,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: configuration
     - get: variable
   - task: credhub-interpolate
     <<: *credhub-interpolate-all-product-configs
@@ -243,7 +244,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: configuration
     - get: variable
   - task: credhub-interpolate
     <<: *credhub-interpolate-all-product-configs
@@ -277,7 +278,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -341,7 +342,7 @@ jobs:
       params:
         globs: ["*tasks*.zip"]
         unpack: true
-    - get: config
+    - get: configuration
     - task: credhub-interpolate
       image: platform-automation-image
       file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -373,16 +374,16 @@ jobs:
         PREFIX: /concourse/main/((foundation))
         INTERPOLATION_PATHS: ((foundation))
       input_mapping:
-        files: config
+        files: configuration
       output_mapping:
-        interpolated-files: interpolated-config
+        interpolated-files: interpolated-configuration
     - task: download-product
       image: platform-automation-image
       file: platform-automation-tasks/download-product.yml
       params:
         CONFIG_FILE: ((foundation))/download-ops-manager.yml
       input_mapping:
-        config: interpolated-config
+        config: interpolated-configuration
     - task: create-vm
       image: platform-automation-image
       file: platform-automation-tasks/create-vm.yml
@@ -390,8 +391,8 @@ jobs:
         OPSMAN_CONFIG_FILE: ((foundation))/opsman.yml
         STATE_FILE: ((foundation))/state.yml
       input_mapping:
-        config: interpolated-config
-        state: config
+        config: interpolated-configuration
+        state: configuration
         image: downloaded-product
       ensure:
         do:
@@ -409,7 +410,7 @@ jobs:
               GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@labbuildr.com"
               GIT_AUTHOR_NAME: "Platform Automation Bot"
               COMMIT_MESSAGE: 'Update state file'
-          - put: config
+          - put: configuration
             params:
               repository: config-commit
               merge: true   
@@ -421,7 +422,7 @@ interpolate-creds: &interpolate-creds
     CREDHUB_CLIENT: ((credhub-client))
     CREDHUB_SECRET: ((credhub-secret))
     CREDHUB_SERVER: ((credhub-server))
-    PREFIX: /concourse/main/((foundation))
+    PREFIX: '/pipeline/azure'
     CREDHUB_CA_CERT: |
         -----BEGIN CERTIFICATE-----
         MIIDPTCCAiWgAwIBAgIUMUeMUa3dP6QtQZrPFM3pzrRBO4EwDQYJKoZIhvcNAQEL
@@ -443,10 +444,10 @@ interpolate-creds: &interpolate-creds
         04qOVLEiV07acExsnPumxmLyvKyGWXCVqs+acuqfZ/otDlsv0LGgP9Wgb6/leWOe
         bvRZAa/bDJfySrUOSPi1amk=
         -----END CERTIFICATE-----
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env 
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs 
     SKIP_MISSING: false
   input_mapping:
-    files: config
+    files: configuration
   output_mapping:
     interpolated-files: interpolated-creds
 credhub-interpolate-all-vars: &credhub-interpolate-all-vars
