@@ -50,10 +50,10 @@ resources:
 - name: pas-product
   type: s3
   source:
-    access_key_id: ((access_key_id))
-    bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    secret_access_key: ((secret_access_key))
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets_pivnet_products))
+    endpoint:  ((s3.endpoint))
+    secret_access_key: ((s3.secret_access_key))
     regexp: pas-product/cf-(.*).pivotal
 
 - name: p-spring-cloud-services-product
@@ -77,10 +77,10 @@ resources:
 - name: pas-stemcell
   type: s3
   source:
-    access_key_id: ((access_key_id))
-    bucket: ((buckets_pivnet_stemcells))
-    endpoint:  ((s3_endpoint))
-    secret_access_key: ((secret_access_key))
+    access_key_id: ((s3.access_key_id))
+    bucket: ((s3.buckets_pivnet_stemcells))
+    endpoint:  ((s3.endpoint))
+    secret_access_key: ((s3.secret_access_key))
     regexp: pas-stemcell/bosh-stemcell-(.*).tgz
 
 - name: p-spring-cloud-services-stemcell
