@@ -118,7 +118,7 @@ jobs:
 - name: get-platform-automation
   plan:
   - get: platform-automation-pivnet
-    # trigger: true
+    trigger: true
   - aggregate:
     - put: platform-automation-tasks-azure
       params:
@@ -129,8 +129,8 @@ jobs:
 - name: get-pas
   plan:
   - aggregate:
-    # - get: daily
-    #   trigger: true
+    - get: daily
+      trigger: true
     - get: platform-automation-image-azure
       params:
         unpack: true

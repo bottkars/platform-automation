@@ -6,6 +6,12 @@ resource_types:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
 resources:
+# triggers
+- name: daily
+  type: time
+  source:
+    interval: 24h
+#     
 - name: platform-automation-pivnet
   type: pivnet
   source:
@@ -143,7 +149,7 @@ jobs:
 - name: get-platform-automation
   plan:
   - get: platform-automation-pivnet
-    # trigger: true
+    trigger: true
   - aggregate:
     - put: platform-automation-tasks
       params:
