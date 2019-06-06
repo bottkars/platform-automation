@@ -322,7 +322,7 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
 
-- name: test-resources
+- name: deploy-asdk
   plan:
   - aggregate:
     - get: platform-automation-tasks
@@ -331,7 +331,7 @@ jobs:
     - get: platform-automation-image
       params:
         unpack: true
-  - task: test-resources
+  - task: configure-asdk
     image: platform-automation-image
     file: platform-automation-tasks/tasks/test.yml
 - name: install-ops-manager
@@ -572,6 +572,6 @@ groups:
 - name: install-ops-man
   jobs:
   - install-ops-manager
-- name: test
+- name: deploy-asdk
   jobs:  
-  - test-resources
+  - configure-asdk
