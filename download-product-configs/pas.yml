@@ -3,7 +3,7 @@
 pivnet-api-token: ((pivnet_token))
 pivnet-file-glob: "*cf*.pivotal"
 pivnet-product-slug: elastic-runtime
-product-version-regex: ^2\.[5]\.0.*$
+product-version-regex: ^2\.5\.*.*$
 stemcell-iaas: azure
 s3-access-key-id: ((access_key_id))
 s3-secret-access-key: ((secret_access_key))
