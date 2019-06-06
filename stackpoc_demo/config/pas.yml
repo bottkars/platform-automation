@@ -11,3 +11,4 @@ s3.secret-access-key: ((secret_access_key))
 s3.bucket: ((buckets_pivnet_products))
 s3.endpoint: ((s3_endpoint))
 s3.stemcell-path: pas-stemcell
+s3.region-name: ((s3_region_name))

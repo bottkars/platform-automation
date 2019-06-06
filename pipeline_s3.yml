@@ -20,6 +20,7 @@ resources:
     access_key_id: ((access_key_id))
     bucket: ((buckets_pivnet_tasks))
     endpoint:  ((s3_endpoint))
+    region_name: ((s3.region_name))
     secret_access_key: ((secret_access_key))
     regexp: platform-automation-tasks-(.*).zip
 
@@ -29,6 +30,7 @@ resources:
     access_key_id: ((access_key_id))
     bucket: ((buckets_pivnet_image))
     endpoint:  ((s3_endpoint))
+    region_name: ((s3.region_name))
     secret_access_key: ((secret_access_key))
     regexp: platform-automation-image-(.*).tgz
 
@@ -44,6 +46,7 @@ resources:
     access_key_id: ((access_key_id))
     bucket: ((buckets_pivnet_products))
     endpoint:  ((s3_endpoint))
+    region_name: ((s3.region_name))
     secret_access_key: ((secret_access_key))
     regexp: pas-windows-product/pas-windows-(.*).pivotal
 
@@ -62,6 +65,7 @@ resources:
     access_key_id: ((access_key_id))
     bucket: ((buckets_pivnet_products))
     endpoint:  ((s3_endpoint))
+    region_name: ((s3.region_name))
     secret_access_key: ((secret_access_key))
     regexp: p-spring-cloud-services-product/p_spring-cloud-services-(.*).pivotal
 
@@ -71,6 +75,7 @@ resources:
     access_key_id: ((access_key_id))
     bucket: ((buckets_pivnet_products))
     endpoint:  ((s3_endpoint))
+    region_name: ((s3.region_name))
     secret_access_key: ((secret_access_key))
     regexp: pivotal-mysql-product/pivotal-mysql-(.*).pivotal
 
@@ -89,6 +94,7 @@ resources:
     access_key_id: ((access_key_id))
     bucket: ((buckets_pivnet_stemcells))
     endpoint:  ((s3_endpoint))
+    region_name: ((s3.region_name))
     secret_access_key: ((secret_access_key))
     regexp: p-spring-cloud-services-stemcell/bosh-stemcell-(.*).tgz
 
@@ -98,6 +104,7 @@ resources:
     access_key_id: ((access_key_id))
     bucket: ((buckets_pivnet_stemcells))
     endpoint:  ((s3_endpoint))
+    region_name: ((s3.region_name))
     secret_access_key: ((secret_access_key))
     regexp: pivotal-mysql-stemcell/bosh-stemcell-(.*).tgz
 
@@ -107,6 +114,7 @@ resources:
     access_key_id: ((access_key_id))
     bucket: ((buckets_pivnet_stemcells))
     endpoint:  ((s3_endpoint))
+    region_name: ((s3.region_name))
     secret_access_key: ((secret_access_key))
     regexp: pas-windows-stemcell/light-bosh-stemcell-(.*).tgz
 
@@ -422,7 +430,7 @@ interpolate-creds: &interpolate-creds
     CREDHUB_CLIENT: ((credhub-client))
     CREDHUB_SECRET: ((credhub-secret))
     CREDHUB_SERVER: ((credhub-server))
-    PREFIX: '/pipeline/azure'
+    PREFIX: /concourse/main/((foundation))
     CREDHUB_CA_CERT: |
         -----BEGIN CERTIFICATE-----
         MIIDPTCCAiWgAwIBAgIUMUeMUa3dP6QtQZrPFM3pzrRBO4EwDQYJKoZIhvcNAQEL
@@ -445,7 +453,7 @@ interpolate-creds: &interpolate-creds
         bvRZAa/bDJfySrUOSPi1amk=
         -----END CERTIFICATE-----
     INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs 
-    SKIP_MISSING: false
+    SKIP_MISSING: true
   input_mapping:
     files: configuration
   output_mapping:
@@ -478,7 +486,7 @@ credhub-interpolate-all-vars: &credhub-interpolate-all-vars
         04qOVLEiV07acExsnPumxmLyvKyGWXCVqs+acuqfZ/otDlsv0LGgP9Wgb6/leWOe
         bvRZAa/bDJfySrUOSPi1amk=
         -----END CERTIFICATE-----
-    PREFIX: ((credhub-interpolation-prefix))
+    PREFIX: /concourse/main/((foundation))
     INTERPOLATION_PATHS: ((foundation))/vars
   input_mapping:
     files: variable
