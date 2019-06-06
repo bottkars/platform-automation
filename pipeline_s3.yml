@@ -57,7 +57,7 @@ resources:
     bucket: ((buckets_pivnet_products))
     endpoint:  ((s3_endpoint))
     secret_access_key: ((secret_access_key))
-    regexp: pas-product/\[elastic-runtime,(.*)\]cf-.*.pivotal
+    regexp: pas-product/cf-.*.pivotal
 
 - name: p-spring-cloud-services-product
   type: s3
