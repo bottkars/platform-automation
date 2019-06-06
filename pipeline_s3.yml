@@ -148,27 +148,23 @@ jobs:
 - name: get-pas
   plan:
   - aggregate:
-    # - get: daily
-    #   trigger: true
+    - get: daily
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: configuration
-    - get: variable
+    - get: config
   - task: credhub-interpolate
-    <<: *credhub-interpolate-all-product-configs
+    <<: *credhub-interpolate
   - task: download-pas-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: ((foundation))/download-pas.yml
-    input_mapping:
-      config: variable
-    output_mapping:
-      downloaded-stemcell: pas-stemcell
+      CONFIG_FILE: download-product-configs/pas.yml
+    output_mapping: {downloaded-stemcell: pas-stemcell}
   - aggregate:
     - put: pas-product
       params:
