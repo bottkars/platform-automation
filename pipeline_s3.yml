@@ -572,6 +572,6 @@ groups:
 - name: install-ops-man
   jobs:
   - install-ops-manager
-- name: deploy-asdk
+- name: deploy-asdk-1905
   jobs:  
-  - configure-asdk
+  - deploy-asdk
