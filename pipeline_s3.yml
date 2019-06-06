@@ -448,7 +448,7 @@ credhub-interpolate: &credhub-interpolate
         04qOVLEiV07acExsnPumxmLyvKyGWXCVqs+acuqfZ/otDlsv0LGgP9Wgb6/leWOe
         bvRZAa/bDJfySrUOSPi1amk=
         -----END CERTIFICATE-----
-    INTERPOLATION_PATHS: "download-product-configs"
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs
   input_mapping:
     files: config
   output_mapping:
