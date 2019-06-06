@@ -118,7 +118,12 @@ resources:
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
     regexp: pas-windows-stemcell/light-bosh-stemcell-(.*).tgz
-
+- name: configuration #to be removed
+  type: git
+  source:
+    uri: ((pipeline-repo))
+    private_key: ((plat-auto-pipes-deploy-key.private_key))
+    branch: master
 - name: config
   type: git
   source:
