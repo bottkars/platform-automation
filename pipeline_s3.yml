@@ -82,7 +82,7 @@ resources:
 - name: pas-stemcell
   type: s3
   source:
-    access_key_id: ((s3.access_key_id))
+    access_key_id: ((access_key_id))
     bucket: ((buckets_pivnet_stemcells))
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
