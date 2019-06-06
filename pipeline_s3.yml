@@ -54,7 +54,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: pas-windows-product/pas-windows-(.*).pivotal
+    regexp: \[pas-windows,(.*)\]pas-windows-.*.pivotal
 
 - name: pas-product
   type: s3
@@ -63,7 +63,7 @@ resources:
     bucket: ((buckets_pivnet_products))
     endpoint:  ((s3_endpoint))
     secret_access_key: ((secret_access_key))
-    regexp: \[elastic-runtime,(.*)\]cf-.*.pivotal
+    regexp: pas-product/\[elastic-runtime,(.*)\]cf-.*.pivotal
 
 - name: p-spring-cloud-services-product
   type: s3
@@ -73,7 +73,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: p-spring-cloud-services-product/p_spring-cloud-services-(.*).pivotal
+    regexp: \[p-spring-cloud-services,(.*)\]p_spring-cloud-services-.*.pivotal
 
 - name: pivotal-mysql-product
   type: s3
@@ -83,7 +83,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: pivotal-mysql-product/pivotal-mysql-(.*).pivotal
+    regexp: \[pivotal-mysql,(.*)\]pivotal-mysql-.*.pivotal
 
 - name: pas-stemcell
   type: s3
@@ -103,7 +103,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: p-spring-cloud-services-stemcell/bosh-stemcell-(.*).tgz
+    regexp: p-spring-cloud-services-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: pivotal-mysql-stemcell
   type: s3
@@ -113,7 +113,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: pivotal-mysql-stemcell/bosh-stemcell-(.*).tgz
+    regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
 
 - name: pas-windows-stemcell
   type: s3
