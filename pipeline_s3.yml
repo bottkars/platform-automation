@@ -656,6 +656,7 @@ groups:
   - get-pas  
   - get-pas-windows
   - get-p-spring-cloud-services
+  - get-p-rabbitmq
   - get-pivotal-mysql
 - name: upgrade-products
   jobs:
