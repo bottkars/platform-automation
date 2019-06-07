@@ -73,7 +73,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: \[p-spring-cloud-services,(.*)\]p_spring-cloud-services-.*.pivotal
+    regexp: p-spring-cloud-services-product/\[p-spring-cloud-services,(.*)\]p_spring-cloud-services-.*.pivotal
 
 - name: pivotal-mysql-product
   type: s3
@@ -334,7 +334,34 @@ jobs:
         env: interpolated-creds
       params:
         ENV_FILE: ((foundation))/env/env.yml
+## apply
 
+- name: apply-product-changes
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          # passed:
+          #  - configure-healthwatch
+          #  - configure-pas
+          #  - configure-pas-windows
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: apply-product-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-changes.yml
+      input_mapping:
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
 - name: deploy-asdk
   plan:
   - aggregate:
@@ -582,6 +609,7 @@ groups:
 - name: upgrade-products
   jobs:
   - upload-and-stage-pas
+  - apply-product-changes
 - name: install-ops-man
   jobs:
   - install-ops-manager
