@@ -83,7 +83,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: \[pivotal-mysql,(.*)\]pivotal-mysql-.*.pivotal
+    regexp: pivotal-mysql-product/\[pivotal-mysql,(.*)\]pivotal-mysql-.*.pivotal
 
 - name: pas-stemcell
   type: s3

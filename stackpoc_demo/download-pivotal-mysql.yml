@@ -3,3 +3,10 @@ pivnet-file-glob: "*mysql*.pivotal"
 pivnet-product-slug: pivotal-mysql
 product-version-regex: ^2\.5\..*$
 stemcell-iaas: azure
+s3-access-key-id: ((access_key_id))
+s3-secret-access-key: ((secret_access_key))
+s3-bucket: pivnet.products
+s3-endpoint: ((s3_endpoint))
+s3-stemcell-path: pivotal-mysql-stemcell
+s3-product-path: pivotal-mysql-product
+s3-region-name: ((s3_region_name))
