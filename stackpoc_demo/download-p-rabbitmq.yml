@@ -1,7 +1,7 @@
 pivnet-api-token: ((pivnet-token))
 pivnet-file-glob: "*.pivotal"
 pivnet-product-slug: p-rabbitmq
-product-version-regex: ^2\.0\..*$
+product-version-regex: ^1\.16\..*$
 stemcell-iaas: azure
 s3-access-key-id: ((access_key_id))
 s3-secret-access-key: ((secret_access_key))
