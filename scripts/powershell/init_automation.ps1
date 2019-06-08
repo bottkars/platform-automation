@@ -54,7 +54,7 @@ $FOUNDATION=$DIRECTOR_FOUNDATION.PCF_SUBDOMAIN_NAME
 ($CA_CERT | Out-String) | set-content $HOME\credhub_ca_cert
 
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet_token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
-credhub set /name:/concourse/main/$($FOUNDATION)/secret_access_key /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
+credhub set /name:/concourse/main/$($FOUNDATION)/secret_access_key /type:value --value $($env_vars.PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/pivnet_token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet_token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
