@@ -328,8 +328,8 @@ jobs:
 - name: get-pivotal-mysql
   plan:
   - aggregate:
-     - get: after-midnight
-       trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
