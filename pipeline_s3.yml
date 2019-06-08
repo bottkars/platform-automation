@@ -387,7 +387,6 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
 ## apply
-
 - name: apply-product-changes
   serial: true
   plan:
