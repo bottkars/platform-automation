@@ -10,6 +10,6 @@ s3-secret-access-key: ((secret_access_key))
 s3-bucket: pivnet.products
 s3-endpoint: ((s3_endpoint))
 s3-stemcell-path: srt-stemcell
-s3-product-path: srt-product
+s3-product-path: pas-product
 s3-region-name: ((s3_region_name))
 s3-disable-ssl: true
