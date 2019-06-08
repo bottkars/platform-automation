@@ -784,6 +784,7 @@ groups:
   - export-installation
   - upload-and-stage-pas
   - upload-and-stage-srt
+  - upload-and-stage-pivotal-mysql
   - apply-product-changes
 - name: install-ops-man
   jobs:
