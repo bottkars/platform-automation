@@ -535,6 +535,59 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml        
 ## apply
 
+- name: upload-and-stage-pivotal-mysql
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+#            passed:
+#              - upgrade-opsman
+#            trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-pivotal-mysql
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/download-pivotal-mysql.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: pivotal-mysql-product
+        downloaded-stemcell: pivotal-mysql-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: pivotal-mysql-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-pivotal-mysql-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: interpolated-creds
+        stemcell: pivotal-mysql-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: pivotal-mysql-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+## apply
+
 - name: apply-product-changes
   serial: true
   plan:
