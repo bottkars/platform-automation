@@ -11,7 +11,13 @@ resources:
   type: time
   source:
     interval: 24h
-#     
+- name: after-midnight
+  type: time
+  source:
+    start: 12:00 AM
+    stop: 1:00 AM
+    interval: 24h
+    location: Europe/Berlin 
 - name: platform-automation-pivnet
   type: pivnet
   source:
@@ -230,8 +236,8 @@ jobs:
 - name: get-srt
   plan:
   - aggregate:
-    #- get: daily
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -258,7 +264,7 @@ jobs:
 - name: get-p-spring-cloud-services
   plan:
   - aggregate:
-    - get: daily
+    - get: after-midnight
       trigger: true
     - get: platform-automation-image
       params:
@@ -290,7 +296,7 @@ jobs:
 - name: get-p-rabbitmq
   plan:
   - aggregate:
-    - get: daily
+    - get: after-midnight
       trigger: true
     - get: platform-automation-image
       params:
@@ -322,8 +328,8 @@ jobs:
 - name: get-pivotal-mysql
   plan:
   - aggregate:
-    # - get: daily
-    #   trigger: true
+     - get: after-midnight
+       trigger: true
     - get: platform-automation-image
       params:
         unpack: true
