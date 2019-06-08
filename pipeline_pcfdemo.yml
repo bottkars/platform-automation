@@ -236,7 +236,7 @@ jobs:
 - name: get-srt
   plan:
   - aggregate:
-    - get: daily
+    - get: after-midnight
       trigger: true
     - get: platform-automation-image
       params:
