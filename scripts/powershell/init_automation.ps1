@@ -73,6 +73,7 @@ credhub set /name:/concourse/main/$($FOUNDATION)/access_key_id /type:value --val
 credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_tasks /type:value --value tasks
 credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_image /type:value --value image
 credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_products /type:value --value pivnet.products
+credhub set /name:/concourse/main/$($FOUNDATION)/buckets_installation /type:value --value installation
 
 
 credhub set /name:/concourse/main/plat-auto-pipes-deploy-key /type:ssh `
