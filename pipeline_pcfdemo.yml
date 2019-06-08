@@ -217,7 +217,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/pas.yml
+      CONFIG_FILE: download-product-configs/download-pas.yml
     output_mapping: {downloaded-stemcell: pas-stemcell}
   - aggregate:
     - put: pas-product
@@ -245,7 +245,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/srt.yml
+      CONFIG_FILE: download-product-configs/download-srt.yml
     output_mapping: {downloaded-stemcell: srt-stemcell}
   - aggregate:
     - put: srt-product
@@ -405,7 +405,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/pas.yml
+        CONFIG_FILE: download-product-configs/download-pas.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -458,7 +458,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/srt.yml
+        CONFIG_FILE: download-product-configs/download-srt.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:

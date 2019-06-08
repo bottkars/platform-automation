@@ -225,7 +225,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: ((foundation))/download-p-spring-cloud-services.yml
+      CONFIG_FILE: download-product-configs/download-p-spring-cloud-services.yml
     input_mapping:
       config: variable
     output_mapping:
@@ -257,7 +257,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: ((foundation))/download-p-rabbitmq.yml
+      CONFIG_FILE: download-product-configs/download-p-rabbitmq.yml
     input_mapping:
       config: variable
     output_mapping:
@@ -289,7 +289,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: ((foundation))/download-pivotal-mysql.yml
+      CONFIG_FILE: download-product-configs/download-pivotal-mysql.yml
     input_mapping:
       config: variable
     output_mapping:
@@ -322,7 +322,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: ((foundation))/download-pas-windows.yml
+      CONFIG_FILE: download-product-configs/download-pas-windows.yml
     input_mapping:
       config: variable
     output_mapping:
@@ -397,7 +397,7 @@ jobs:
             unpack: true
           # passed:
           #  - configure-healthwatch
-          #  - configure-pas
+          #  - configure-srt
           #  - configure-pas-windows
           trigger: true
         - get: platform-automation-tasks
