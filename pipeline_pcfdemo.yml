@@ -217,7 +217,7 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-       # - get: one-time-trigger
+        #- get: one-time-trigger
           #passed: [ install-opsman ]
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -681,7 +681,7 @@ interpolate-creds: &interpolate-creds
     CREDHUB_SERVER: ((credhub-server))
     PREFIX: /concourse/main/((foundation))
     CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs 
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs
     SKIP_MISSING: true
   input_mapping:
     files: configuration
