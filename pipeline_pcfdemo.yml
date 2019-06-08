@@ -116,15 +116,6 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: pas-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
-- name: pas-stemcell
-  type: s3
-  source:
-    access_key_id: ((access_key_id))
-    bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
-    regexp: pas-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: srt-stemcell
   type: s3
@@ -444,6 +435,59 @@ jobs:
         env: interpolated-creds
       params:
         ENV_FILE: ((foundation))/env/env.yml
+
+
+- name: upload-and-stage-srt
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+#            passed:
+#              - upgrade-opsman
+#            trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-srt
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/srt.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: srt-product
+        downloaded-stemcell: srt-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: srt-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-srt-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: interpolated-creds
+        stemcell: srt-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: srt-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
 ## apply
 
 - name: apply-product-changes
@@ -631,6 +675,7 @@ groups:
 - name: get-products
   jobs:
   - get-platform-automation
+  - get-srt
   - get-pas  
   - get-pas-windows
   - get-p-spring-cloud-services
@@ -638,6 +683,7 @@ groups:
   - get-pivotal-mysql
 - name: upgrade-products
   jobs:
+  - upload-and-stage-pas
   - upload-and-stage-srt
   - apply-product-changes
 - name: install-ops-man

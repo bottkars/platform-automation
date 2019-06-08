@@ -1,7 +1,7 @@
 
 ---
 pivnet-api-token: ((pivnet_token))
-pivnet-file-glob: "*cf*.pivotal"
+pivnet-file-glob: "*srt*.pivotal"
 pivnet-product-slug: elastic-runtime
 product-version-regex: ^2\.5\.*.*$
 stemcell-iaas: azure
