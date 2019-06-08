@@ -15,7 +15,7 @@ resources:
   type: time
   source:
     start: 12:00 AM
-    stop: 1:00 AM
+    #stop: 1:00 AM
     interval: 24h
     location: Europe/Berlin 
 - name: platform-automation-pivnet
