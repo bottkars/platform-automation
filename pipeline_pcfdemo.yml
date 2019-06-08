@@ -7,10 +7,10 @@ resource_types:
     tag: latest-final
 resources:
 # triggers
-# - name: daily
-#  type: time
-#  source:
-#    interval: 24h
+- name: daily
+  type: time
+  source:
+    interval: 24h
 - name: after-midnight
   type: time
   source:
