@@ -36,6 +36,7 @@ Invoke-Expression $(om --env $HOME/om_$($RG).env  bosh-env --ssh-private-key $HO
 
 
 $CREDHUB_URL="https://plane.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME):8844"
+$FLY_URL="https://plane.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME)"
 $CREDHUB_PASSWORD=(credhub get /name:'/p-bosh/control-plane/credhub_admin_client_password' /j | ConvertFrom-Json).value
 $CLIENT_NAME="credhub_admin_client"
 $CA_CERT=credhub get /name:'/p-bosh/control-plane/control-plane-tls' -k certificate
@@ -71,16 +72,18 @@ credhub set /name:/concourse/main/$($FOUNDATION)/s3_endpoint /type:value --value
 credhub set /name:/concourse/main/$($FOUNDATION)/s3_region_name /type:value /value:region
 
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet_token /type:value --value $($env_vars.PIVNET_UAA_TOKEN)
+credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.PIVNET_UAA_TOKEN)
 
-
+# s3 connection
 credhub set /name:/concourse/main/buckets_pivnet_products /type:value --value pivnet.products
-credhub set /name:/concourse/main/buckets_pivnet_stemcells /type:value --value pivnet.stemcells
 credhub set /name:/concourse/main/secret_access_key /type:value --value $($env_vars.PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/access_key_id /type:value --value s3admin
 
 
-((access_key_id))
-    secret_access_key: ((secret_access_key))
+
+
+# change this to arm deployment outputs
+<#
 credhub set /name:/concourse/main/$($FOUNDATION)/subnet /type:value --value $(terraform output management_subnet_name)
 credhub set /name:/concourse/main/$($FOUNDATION)/vnet /type:value --value $(terraform output network_name)
 credhub set /name:/concourse/main/$($FOUNDATION)/ops-manager-private-ip /type:value --value $(terraform output ops_manager_private_ip)
@@ -89,3 +92,4 @@ credhub set /name:/concourse/main/$($FOUNDATION)/resource-group /type:value --va
 credhub set /name:/concourse/main/$($FOUNDATION)/foundation /type:value --value $($FOUNDATION)
 credhub set /name:/concourse/main/$($FOUNDATION)/location /type:value --value ${LOCATION}
 credhub set /name:/concourse/main/$($FOUNDATION)/ops-manager-dns /type:value --value $(terraform output ops_manager_dns)
+#>

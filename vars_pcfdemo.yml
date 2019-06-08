@@ -1,0 +1,5 @@
+platform-automation-bucket: platform-automation
+credhub-server: https://plane.control.local.azurestack.external:8844
+opsman-url: https://plane.control.local.azurestack.external
+pipeline-repo: git@github.com:bottkars/platform-automation
+foundation: pcfdemo

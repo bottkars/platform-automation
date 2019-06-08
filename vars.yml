@@ -1,4 +1,4 @@
 credhub-server: https://plane.control.labbuildr.com:8844
 opsman-url: https://plane.control.labbuildr.com
 pipeline-repo: git@github.com:bottkars/platform-automation
-foundation: pcfazure
+foundation: pcfdemo
