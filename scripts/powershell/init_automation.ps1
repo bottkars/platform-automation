@@ -81,8 +81,8 @@ credhub set /name:/concourse/main/buckets_pivnet_products /type:value --value pi
 
 
 
-# credhub set /name:/concourse/main/s3_endpoint /type:value --value "http://minio.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME):9000"
-# credhub set /name:/concourse/main/s3_region_name /type:value /value:region
+credhub set /name:/concourse/main/s3_endpoint /type:value --value "http://minio.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME):9000"
+credhub set /name:/concourse/main/s3_region_name /type:value /value:region
 credhub set /name:/concourse/main/$($FOUNDATION)/s3_endpoint /type:value --value "http://minio.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME):9000"
 credhub set /name:/concourse/main/$($FOUNDATION)/s3_region_name /type:value /value:region
 
