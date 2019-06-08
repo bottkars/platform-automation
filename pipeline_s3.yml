@@ -197,7 +197,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/pas.yml
+      CONFIG_FILE: download-product-configs/download-pas.yml
     output_mapping: {downloaded-stemcell: pas-stemcell}
   - aggregate:
     - put: pas-product
@@ -356,7 +356,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/pas.yml
+        CONFIG_FILE: download-product-configs/download-pas.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -478,7 +478,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/download-product.yml
       params:
-        CONFIG_FILE: ((foundation))/download-ops-manager.yml
+        CONFIG_FILE: download-product-configs/download-ops-manager.yml
       input_mapping:
         config: interpolated-configuration
     - task: create-vm
