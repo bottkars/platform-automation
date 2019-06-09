@@ -901,7 +901,7 @@ interpolate-creds: &interpolate-creds
     CREDHUB_SERVER: ((credhub-server))
     PREFIX: /concourse/main/((foundation))
     CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env ((foundation))/vars download-product-configs product-configs
     SKIP_MISSING: true
   input_mapping:
     files: configuration
