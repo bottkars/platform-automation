@@ -770,13 +770,13 @@ jobs:
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
-    - task: configure-pas
+    - task: configure-pas-windows
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
         config: interpolated-creds
         env: interpolated-creds
-        vars: variable
+        vars: interpolated-creds
       params:
         CONFIG_FILE: product-configs/pas-windows.yml
         VARS_FILES: ((foundation))/vars/pas-windows-vars.yml
