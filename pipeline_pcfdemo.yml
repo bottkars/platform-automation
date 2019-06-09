@@ -886,7 +886,7 @@ credhub-interpolate: &credhub-interpolate
     CREDHUB_SERVER: ((credhub-server))
     PREFIX: /concourse/main/((foundation))
     CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env download-product-configs
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env ((foundation))/vars download-product-configs product-configs
   input_mapping:
     files: config
   output_mapping:
