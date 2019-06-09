@@ -779,7 +779,7 @@ jobs:
         vars: variable
       params:
         CONFIG_FILE: product-configs/pas-windows.yml
-        VARS_FILES: vars/pas-windows-vars.yml
+        VARS_FILES: ((foundation))vars/pas-windows-vars.yml
         ENV_FILE: ((foundation))/env/env.yml        
 - name: deploy-asdk
   plan:
