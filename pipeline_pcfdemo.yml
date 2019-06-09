@@ -300,38 +300,7 @@ jobs:
       params:
         file: srt-stemcell/*.tgz
 
-- name: get-p-spring-cloud-services
-  plan:
-  - aggregate:
-    - get: after-midnight
-      trigger: true
-    - get: platform-automation-image
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: configuration
-    - get: variable
-  - task: credhub-interpolate
-    <<: *credhub-interpolate-all-product-configs
-  - task: download-p-spring-cloud-services-product-and-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product.yml
-    params:
-      CONFIG_FILE: download-product-configs/download-p-spring-cloud-services.yml
-    input_mapping:
-      config: variable
-    output_mapping:
-      downloaded-stemcell: p-spring-cloud-services-stemcell
-  - aggregate:
-    - put: p-spring-cloud-services-product
-      params:
-        file: downloaded-product/*.pivotal
-    - put: p-spring-cloud-services-stemcell
-      params:
-        file: p-spring-cloud-services-stemcell/*.tgz
-
+- 
 - name: get-p-rabbitmq
   plan:
   - aggregate:
@@ -364,7 +333,35 @@ jobs:
       params:
         file: p-rabbitmq-stemcell/*.tgz
 
-- name: get-pivotal-mysql
+- name: get-p-spring-cloud-servives
+  plan:
+  - aggregate:
+    - get: daily
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: config
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
+  - task: download-p-spring-cloud-servives-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/download-p-spring-cloud-servives.yml
+    output_mapping: {downloaded-stemcell: p-spring-cloud-servives-stemcell}
+  - aggregate:
+    - put: p-spring-cloud-servives-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-spring-cloud-servives-stemcell
+      params:
+        file: p-spring-cloud-servives-stemcell/*.tgz
+
+name: get-pivotal-mysql
   plan:
   - aggregate:
     - get: daily
@@ -391,7 +388,6 @@ jobs:
     - put: pivotal-mysql-stemcell
       params:
         file: pivotal-mysql-stemcell/*.tgz
-
 
 - name: get-pas-windows
   plan:
