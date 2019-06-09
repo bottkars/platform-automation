@@ -534,9 +534,6 @@ jobs:
         - get: platform-automation-image
           params:
             unpack: true
-          passed:
-            - upload-and-stage-pas-windows
-          trigger: true  
         - get: platform-automation-tasks
           params:
             unpack: true
