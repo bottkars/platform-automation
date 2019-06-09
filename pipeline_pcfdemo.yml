@@ -956,6 +956,9 @@ groups:
   - upload-and-stage-p-spring-cloud-services
   - upload-and-stage-p-rabbitmq
   - apply-product-changes
+- name: configure-products
+  jobs:
+  - configure-pas-windows  
 - name: install-ops-man
   jobs:
   - install-ops-manager
