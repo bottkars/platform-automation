@@ -588,6 +588,58 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml        
 ## apply
 
+- name: upload-and-stage-p-spring-cloud-services
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+#            passed:
+#              - upgrade-opsman
+#            trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-p-spring-cloud-services
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/download-p-spring-cloud-services.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: p-spring-cloud-services-product
+        downloaded-stemcell: p-spring-cloud-services-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-spring-cloud-services-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: interpolated-creds
+        stemcell: p-spring-cloud-services-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+## apply
 - name: apply-product-changes
   serial: true
   plan:
@@ -785,6 +837,7 @@ groups:
   - upload-and-stage-pas
   - upload-and-stage-srt
   - upload-and-stage-pivotal-mysql
+  - upload-and-stage-p-spring-cloud-services
   - apply-product-changes
 - name: install-ops-man
   jobs:

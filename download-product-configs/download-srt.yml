@@ -1,4 +1,3 @@
-
 ---
 pivnet-api-token: ((pivnet_token))
 pivnet-file-glob: "*srt*.pivotal"
