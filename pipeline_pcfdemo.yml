@@ -180,7 +180,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-2019.3-azure.*\.tgz
+    regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-2019.*-azure.*\.tgz
 - name: configuration #to be removed
   type: git
   source:
@@ -319,7 +319,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: ((foundation))/download-p-spring-cloud-services.yml
+      CONFIG_FILE: download-product-configs/download-p-spring-cloud-services.yml
     input_mapping:
       config: variable
     output_mapping:
@@ -351,7 +351,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: ((foundation))/download-p-rabbitmq.yml
+      CONFIG_FILE: download-product-configs/download-p-rabbitmq.yml
     input_mapping:
       config: variable
     output_mapping:
@@ -383,7 +383,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: ((foundation))/download-pivotal-mysql.yml
+      CONFIG_FILE: download-product-configs/download-pivotal-mysql.yml
     input_mapping:
       config: variable
     output_mapping:
@@ -416,7 +416,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: ((foundation))/download-pas-windows.yml
+      CONFIG_FILE: download-product-configs/download-pas-windows.yml
     input_mapping:
       config: variable
     output_mapping:
@@ -832,7 +832,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/download-product.yml
       params:
-        CONFIG_FILE: ((foundation))/download-ops-manager.yml
+        CONFIG_FILE: download-product-configs/download-ops-manager.yml
       input_mapping:
         config: interpolated-configuration
     - task: create-vm
