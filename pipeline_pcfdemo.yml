@@ -776,7 +776,7 @@ jobs:
       input_mapping:
         config: interpolated-creds
         env: interpolated-creds
-        vars: interpolated-creds
+        vars: configuration
       params:
         CONFIG_FILE: product-configs/pas-windows.yml
         VARS_FILES: ((foundation))/vars/pas-windows-vars.yml

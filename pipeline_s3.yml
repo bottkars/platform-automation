@@ -342,9 +342,7 @@ jobs:
         - get: platform-automation-image
           params:
             unpack: true
-#            passed:
-#              - upgrade-opsman
-#            trigger: true
+
         - get: platform-automation-tasks
           params:
             unpack: true
