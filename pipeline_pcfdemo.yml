@@ -361,7 +361,7 @@ jobs:
       params:
         file: p-spring-cloud-servives-stemcell/*.tgz
 
-name: get-pivotal-mysql
+- name: get-pivotal-mysql
   plan:
   - aggregate:
     - get: daily
