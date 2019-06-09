@@ -180,7 +180,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-2019.*-azure.*\.tgz
+    regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-2019.3-azure.*\.tgz
 - name: configuration #to be removed
   type: git
   source:
@@ -534,6 +534,57 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 ## apply
+- name: upload-and-stage-pas-windows
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+#            passed:
+#              - upgrade-opsman
+#            trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-pas-windows
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/download-pas-windows.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: pas-windows-product
+        downloaded-stemcell: pas-windows-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: pas-windows-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-pas-windows-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: interpolated-creds
+        stemcell: pas-windows-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: pas-windows-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml      
 
 - name: upload-and-stage-pivotal-mysql
   serial: true
@@ -888,6 +939,7 @@ groups:
   - export-installation
   - upload-and-stage-pas
   - upload-and-stage-srt
+  - upload-and-stage-pas-windows  
   - upload-and-stage-pivotal-mysql
   - upload-and-stage-p-spring-cloud-services
   - upload-and-stage-p-rabbitmq
