@@ -776,10 +776,10 @@ jobs:
       input_mapping:
         config: interpolated-creds
         env: interpolated-creds
-        vars: configuration
+        vars: variable
       params:
         CONFIG_FILE: product-configs/pas-windows.yml
-        VARS_FILES: ((foundation))/vars/pas-windows-vars.yml
+        VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
         ENV_FILE: ((foundation))/env/env.yml        
 - name: deploy-asdk
   plan:
@@ -901,7 +901,7 @@ interpolate-creds: &interpolate-creds
     CREDHUB_SERVER: ((credhub-server))
     PREFIX: /concourse/main/((foundation))
     CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env ((foundation))/vars download-product-configs product-configs
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env  download-product-configs product-configs
     SKIP_MISSING: true
   input_mapping:
     files: configuration
