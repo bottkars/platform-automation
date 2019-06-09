@@ -375,19 +375,15 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: configuration
-    - get: variable
+    - get: config
   - task: credhub-interpolate
-    <<: *credhub-interpolate-all-product-configs
+    <<: *credhub-interpolate
   - task: download-pivotal-mysql-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/download-pivotal-mysql.yml
-    input_mapping:
-      config: variable
-    output_mapping:
-      downloaded-stemcell: pivotal-mysql-stemcell
+    output_mapping: {downloaded-stemcell: pivotal-mysql-stemcell}
   - aggregate:
     - put: pivotal-mysql-product
       params:

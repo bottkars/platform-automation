@@ -40,11 +40,11 @@ $FLY_URL="https://plane.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME)"
 $CREDHUB_PASSWORD=(credhub get /name:'/p-bosh/control-plane/credhub_admin_client_password' /j | ConvertFrom-Json).value
 $CLIENT_NAME="credhub_admin_client"
 $CA_CERT=credhub get /name:'/p-bosh/control-plane/control-plane-tls' -k certificate
-$env:CREDHUB_CLIENT=""
-$env:CREDHUB_CA_CERT=""
-$env:CREDHUB_PROXY=""
-$env:CREDHUB_SERVER=""
-$env:CREDHUB_SECRET=""
+$env:CREDHUB_CLIENT = ""
+$env:CREDHUB_CA_CERT = ""
+$env:CREDHUB_PROXY = ""
+$env:CREDHUB_SERVER = ""
+$env:CREDHUB_SECRET = ""
 credhub login /server:$CREDHUB_URL /client-name:$CLIENT_NAME /client-secret:$credhub_password /skip-tls-validation
 
 $DIRECTOR_FOUNDATION_FILE="$HOME\director_pcf.json"
