@@ -908,7 +908,64 @@ jobs:
       params:
         CONFIG_FILE: product-configs/pivotal-mysql.yml
         VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml                                       
+        ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-p-spring-cloud-service
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-spring-cloud-service
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: configure-p-spring-cloud-service
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/p-spring-cloud-service.yml
+        VARS_FILES: vars/((foundation))/vars/p-spring-cloud-service-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
+- name: configure-srt
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-srt
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: configure-srt
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/srt.yml
+        VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
 - name: deploy-asdk
   plan:
   - get: platform-automation-pivnet
@@ -1003,11 +1060,14 @@ groups:
   - upload-and-stage-pivotal-mysql
   - upload-and-stage-p-spring-cloud-services
   - upload-and-stage-p-rabbitmq
-  - apply-product-changes
 - name: configure-products
   jobs:
+  - configure-srt
   - configure-pas-windows
-  - configure-p-rabbitmq 
+  - configure-p-rabbitmq
+  - configure-pivotal-mysql
+  - configure-p-spring-cloud-services
+  - apply-product-changes
 - name: deploy-asdk-1905
   jobs:  
   - deploy-asdk
