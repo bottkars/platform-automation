@@ -910,7 +910,7 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 
-- name: configure-p-spring-cloud-service
+- name: configure-p-spring-cloud-services
   serial: true
   plan:
     - aggregate:
@@ -918,7 +918,7 @@ jobs:
           params:
             unpack: true
           passed:
-            - upload-and-stage-p-spring-cloud-service
+            - upload-and-stage-p-spring-cloud-services
           trigger: true
         - get: platform-automation-tasks
           params:
@@ -927,7 +927,7 @@ jobs:
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
-    - task: configure-p-spring-cloud-service
+    - task: configure-p-spring-cloud-services
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
@@ -935,8 +935,8 @@ jobs:
         env: interpolated-creds
         vars: variable
       params:
-        CONFIG_FILE: product-configs/p-spring-cloud-service.yml
-        VARS_FILES: vars/((foundation))/vars/p-spring-cloud-service-vars.yml
+        CONFIG_FILE: product-configs/p-spring-cloud-services.yml
+        VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
 - name: configure-srt
   serial: true
