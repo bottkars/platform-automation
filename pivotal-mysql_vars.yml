@@ -1,0 +1,13 @@
+
+        product_name: pivotal-mysql
+        pcf_pas_network: pcf-pas-subnet 
+        pcf_service_network: pcf-services-subnet 
+        singleton_zone: 'Availability Sets'
+        zones_map: 'Availability Sets'
+        azure_storage_access_key: lFQQGNbfDbUmm6VEuWM3RT3dzRBTCBSvF6Zityp5Qg2lCKt8pkHMb//Ws4uOsHSCO0Idr1H0KUpKIDooRVycpA== 
+        azure_account: mysqlstrggnhj3jjciqi2k  
+        global_recipient_email: pcfuser@labbuildr.com
+        blob_store_base_url:  
+        properties.plan1_selector.single_node.az_multi_select: 'Availability Sets'
+        properties.plan2_selector.leader_follower.az_multi_select : 'Availability Sets'
+        
