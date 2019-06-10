@@ -7,10 +7,16 @@ resource_types:
     tag: latest-final
 resources:
 # triggers
-- name: daily
+- name: daily-trigger
   type: time
   source:
     interval: 24h
+
+- name: one-time-trigger
+  type: time
+  source:
+    interval: 999999h
+
 #- name: after-midnight
 #  type: time
 #  source:
@@ -18,6 +24,9 @@ resources:
 #    stop: 6:00 AM
 #    interval: 24h
 #    location: Europe/Berlin 
+
+### opsman ends 
+
 - name: installation
   type: s3
   source:
@@ -55,12 +64,6 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: platform-automation-image-(.*).tgz
 
-
-- name: platform-automation
-  type: pivnet
-  source:
-    product_slug: platform-automation
-    api_token: ((pivnet_token))
 - name: pas-windows-product
   type: s3
   source:
@@ -200,25 +203,133 @@ resources:
   source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
-    branch: master        
+    branch: master
+## opsman starts here
 jobs:
+- name: install-opsman
+  serial: true
+  serial_groups: [ install ]
+  plan:
+    - aggregate:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: one-time-trigger
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: configuration
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-opsman-image
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/opsman.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: opsman-image
+    - get: variable
+    - task: create-vm
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/create-vm.yml
+      input_mapping:
+        image: opsman-image
+        state: configuration
+        config: interpolated-creds
+        vars: variable
+      params:
+        VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
+        STATE_FILE: ((foundation))/state/state.yml
+        OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      ensure: &make-state-commit
+        do:
+          - task: make-commit
+            image: platform-automation-image
+            file: platform-automation-tasks/tasks/make-git-commit.yml
+            input_mapping:
+              repository: configuration
+              file-source: generated-state
+            output_mapping:
+              repository-commit: configuration-commit
+            params:
+              FILE_SOURCE_PATH: state.yml
+              FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+              GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
+              GIT_AUTHOR_NAME: "Platform Automation Bot"
+              COMMIT_MESSAGE: 'Update state file'
+          - put: configuration
+            params:
+              repository: configuration-commit
+              merge: true
+    - task: configure-authentication
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-authentication.yml
+      attempts: 10
+      input_mapping:
+        env: configuration
+        config: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
+    - task: configure-director
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-director.yml
+      input_mapping:
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        VARS_FILES: vars/((foundation))/vars/director-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
+        DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
+    - task: apply-director-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-director-changes.yml
+      input_mapping:
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+
+- name: staged-director-config
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-tasks
+          params: {unpack: true}
+        - get: platform-automation-image
+          params: {unpack: true}
+        - get: configuration
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: staged-director-config
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/staged-director-config.yml
+      input_mapping:
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+      ensure: *make-state-commit
+
 - name: export-installation
   serial: true
   plan:
     - aggregate:
-        - get: daily
+        - get: daily-trigger
           trigger: true
         - get: platform-automation-image
           params:
             unpack: true
-          # passed: [ install-opsman ]
+          passed: [ install-opsman ]
         - get: platform-automation-tasks
           params:
             unpack: true
         - get: configuration
         - get: variable
-        #- get: one-time-trigger
-          #passed: [ install-opsman ]
+        - get: one-time-trigger
+          passed: [ install-opsman ]
     - task: interpolate-creds
       <<: *interpolate-creds
     - task: export-installation
@@ -232,6 +343,72 @@ jobs:
     - put: installation
       params:
         file: installation/installation*.zip
+
+- name: upgrade-opsman
+  serial: true
+  serial_groups: [ install ]
+  plan:
+    - aggregate:
+        - get: one-time-trigger
+          passed: [ export-installation ]
+        - get: platform-automation-image
+          params:
+            unpack: true
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: installation
+          passed: [ export-installation ]
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-opsman-image
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/opsman.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: opsman-image
+    - task: upgrade-opsman
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upgrade-opsman.yml
+      input_mapping:
+        image: opsman-image
+        state: configuration
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
+        OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+        STATE_FILE: ((foundation))/state/state.yml
+      ensure: *make-state-commit
+    - task: configure-director
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-director.yml
+      input_mapping:
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        VARS_FILES: vars/((foundation))/vars/director-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
+        DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
+    - task: apply-director-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-director-changes.yml
+      input_mapping:
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+
+
+
 - name: get-platform-automation
   plan:
   - get: platform-automation-pivnet
@@ -247,7 +424,7 @@ jobs:
 - name: get-pas
   plan:
   - aggregate:
-    #- get: daily
+    #- get: daily-trigger
     #  trigger: true
     - get: platform-automation-image
       params:
@@ -273,9 +450,11 @@ jobs:
         file: pas-stemcell/*.tgz
 
 - name: get-srt
+  serial: true
+  serial_groups: [ get-products ]
   plan:
   - aggregate:
-    - get: daily
+    - get: daily-trigger
       trigger: true
     - get: platform-automation-image
       params:
@@ -301,9 +480,11 @@ jobs:
         file: srt-stemcell/*.tgz
 
 - name: get-p-spring-cloud-services
+  serial: true
+  serial_groups: [ get-products ]
   plan:
   - aggregate:
-    - get: daily
+    - get: daily-trigger
       trigger: true
     - get: platform-automation-image
       params:
@@ -329,9 +510,11 @@ jobs:
         file: p-spring-cloud-services-stemcell/*.tgz
 
 - name: get-pivotal-mysql
+  serial: true
+  serial_groups: [ get-products ]
   plan:
   - aggregate:
-    - get: daily
+    - get: daily-trigger
       trigger: true
     - get: platform-automation-image
       params:
@@ -356,12 +539,12 @@ jobs:
       params:
         file: pivotal-mysql-stemcell/*.tgz
 
-# rabbit
-
 - name: get-p-rabbitmq
+  serial: true
+  serial_groups: [ get-products ]
   plan:
   - aggregate:
-    - get: daily
+    - get: daily-trigger
       trigger: true
     - get: platform-automation-image
       params:
@@ -387,9 +570,11 @@ jobs:
         file: p-rabbitmq-stemcell/*.tgz
 ## pasw
 - name: get-pas-windows
+  serial: true
+  serial_groups: [ get-products ]
   plan:
   - aggregate:
-    - get: daily
+    - get: daily-trigger
       trigger: true
     - get: platform-automation-image
       params:
@@ -765,7 +950,35 @@ jobs:
       params:
         CONFIG_FILE: product-configs/pas-windows.yml
         VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml        
+        ENV_FILE: ((foundation))/env/env.yml 
+- name: configure-p-rabbitmq
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-rabbitmq
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: configure-p-rabbitmq
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/p-rabbitmq.yml
+        VARS_FILES: vars/((foundation))/vars/p-rabbitmq-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml                
 - name: deploy-asdk
   plan:
   - get: platform-automation-pivnet
@@ -777,91 +990,7 @@ jobs:
     - put: platform-automation-image
       params:
         file: platform-automation-pivnet/*image*.tgz   
-- name: install-ops-manager
-  serial: true
-  plan:
-    - get: platform-automation-image
-      resource: platform-automation
-      params:
-        globs: ["*image*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      resource: platform-automation
-      params:
-        globs: ["*tasks*.zip"]
-        unpack: true
-    - get: configuration
-    - task: credhub-interpolate
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/credhub-interpolate.yml
-      params:
-        CREDHUB_CLIENT: ((credhub-client))
-        CREDHUB_SECRET: ((credhub-secret))
-        CREDHUB_SERVER: ((credhub-server))
-        CREDHUB_CA_CERT: |
-            -----BEGIN CERTIFICATE-----
-            MIIDPTCCAiWgAwIBAgIUMUeMUa3dP6QtQZrPFM3pzrRBO4EwDQYJKoZIhvcNAQEL
-            BQAwGTEXMBUGA1UEAxMOY29udHJvbHBsYW5lY2EwHhcNMTkwNjA0MDgzNjMzWhcN
-            MjAwNjAzMDgzNjMzWjAcMRowGAYDVQQDExFjb250cm9sLXBsYW5lLXRsczCCASIw
-            DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOvFe1QNtnJjzPn7f8LWbh+BPwAt
-            ClYWL7m/tnQAZjj20W+KstBXYzW33PyxZ3GofT82De2bFxrAx4nZgrd1dFc9K/Ie
-            tte5pcTpOyGZxineOYCVtQNuxdAcddKjRpbygorFGVLJZ5KjdQ9vmdhR3hobh7pS
-            GY85uAt+tecpE3CtFdjY2OLO4u1rQ1ZpBqwidNoM2gODkDNn7LStpYhR7/Yo/RZl
-            xRVqsa/ZzsE4hMUl+9RVUyiyrlnaPypEvSBTxOqD9OKKehjWzCiwBYorA3/hGfke
-            vtAnyG0VeBn+ABVI5kkmeU047oP5HN6wBmaW/pG6K7DKdXxFMk3nv0onPvsCAwEA
-            AaN6MHgwHQYDVR0OBBYEFAyfm/+vREPGAxK/7EhZA/0uE+1rMCgGA1UdEQQhMB+C
-            HSouY29udHJvbC53ZXN0dXMuc3RhY2twb2MuY29tMB8GA1UdIwQYMBaAFHbx2GnU
-            qW4COFv/B/zs1nk+QVdeMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQELBQADggEB
-            AFXwfF0XNsG+dZjwEXiIoM/WzM047J9JKFLF2OOWiHWxuT5mWu1oGuwRZOnFWoIx
-            L/OMw5WF86nByxhHz9+HdfpBE+PYJaU681Ue9OModZxi9dgJsqbIZTX7kx+ZRHaz
-            lVu80+Cyik8MlqXmXX4qH8myH1USZlc833JwhCfMkjDkcKo6co9jgSyBx+jOua5a
-            H0uxsFHfIIuCr14TFmVr25mdPBXLX51uAt9IQ/l8/4m6hhRd6LZG1pbQLhlLT+b4
-            04qOVLEiV07acExsnPumxmLyvKyGWXCVqs+acuqfZ/otDlsv0LGgP9Wgb6/leWOe
-            bvRZAa/bDJfySrUOSPi1amk=
-            -----END CERTIFICATE-----
-        PREFIX: /concourse/main/((foundation))
-        INTERPOLATION_PATHS: ((foundation))
-      input_mapping:
-        files: configuration
-      output_mapping:
-        interpolated-files: interpolated-configuration
-    - task: download-product
-      image: platform-automation-image
-      file: platform-automation-tasks/download-product.yml
-      params:
-        CONFIG_FILE: download-product-configs/download-ops-manager.yml
-      input_mapping:
-        config: interpolated-configuration
-    - task: create-vm
-      image: platform-automation-image
-      file: platform-automation-tasks/create-vm.yml
-      params:
-        OPSMAN_CONFIG_FILE: ((foundation))/opsman.yml
-        STATE_FILE: ((foundation))/state.yml
-      input_mapping:
-        config: interpolated-configuration
-        state: configuration
-        image: downloaded-product
-      ensure:
-        do:
-          - task: make-commit
-            image: platform-automation-image
-            file: platform-automation-tasks/tasks/make-git-commit.yml
-            input_mapping:
-              repository: config
-              file-source: generated-state
-            output_mapping:
-              repository-commit: config-commit
-            params:
-              FILE_SOURCE_PATH: state.yml
-              FILE_DESTINATION_PATH: ((foundation))/state/state.yml
-              GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@labbuildr.com"
-              GIT_AUTHOR_NAME: "Platform Automation Bot"
-              COMMIT_MESSAGE: 'Update state file'
-          - put: configuration
-            params:
-              repository: config-commit
-              merge: true   
+ 
 credhub-interpolate: &credhub-interpolate
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -921,7 +1050,13 @@ credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-config
     files: variable
   output_mapping:
     interpolated-files: variable
-groups:    
+groups:
+- name: install-ops-manager
+  jobs:
+  - upgrade-opsman
+  - export-installation
+  - staged-director-config 
+  - install-opsman  
 - name: get-products
   jobs:
   - get-platform-automation
@@ -933,7 +1068,7 @@ groups:
   - get-pivotal-mysql
 - name: upgrade-products
   jobs:
-  - export-installation
+  #- export-installation
   - upload-and-stage-pas
   - upload-and-stage-srt
   - upload-and-stage-pas-windows  
@@ -944,9 +1079,6 @@ groups:
 - name: configure-products
   jobs:
   - configure-pas-windows  
-- name: install-ops-man
-  jobs:
-  - install-ops-manager
 - name: deploy-asdk-1905
   jobs:  
   - deploy-asdk

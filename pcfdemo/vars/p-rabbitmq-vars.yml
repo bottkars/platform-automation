@@ -1,0 +1,9 @@
+
+        product_name: p-rabbitmq 
+        pcf_pas_network: pcf-pas-subnet 
+        pcf_service_network: pcf-services-subnet 
+        singleton_zone: 'Availability Sets' 
+        zones_map: 'Availability Sets' 
+        properties.on_demand_broker_plan_1_rabbitmq_az_placement: 'Availability Sets' 
+        server_admin_password: b11279aae7a94f9a9d11c601db0b593e-r 
+        
