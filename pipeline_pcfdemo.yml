@@ -11,13 +11,13 @@ resources:
   type: time
   source:
     interval: 24h
-- name: after-midnight
-  type: time
-  source:
-    start: 12:00 AM
-    stop: 6:00 AM
-    interval: 24h
-    location: Europe/Berlin 
+#- name: after-midnight
+#  type: time
+#  source:
+#    start: 12:00 AM
+#    stop: 6:00 AM
+#    interval: 24h
+#    location: Europe/Berlin 
 - name: installation
   type: s3
   source:
@@ -300,40 +300,7 @@ jobs:
       params:
         file: srt-stemcell/*.tgz
 
-- 
-- name: get-p-rabbitmq
-  plan:
-  - aggregate:
-    - get: after-midnight
-      trigger: true
-    - get: platform-automation-image
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: configuration
-    - get: variable
-  - task: credhub-interpolate
-    <<: *credhub-interpolate-all-product-configs
-  - task: download-p-rabbitmq-product-and-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product.yml
-    params:
-      CONFIG_FILE: download-product-configs/download-p-rabbitmq.yml
-    input_mapping:
-      config: variable
-    output_mapping:
-      downloaded-stemcell: p-rabbitmq-stemcell
-  - aggregate:
-    - put: p-rabbitmq-product
-      params:
-        file: downloaded-product/*.pivotal
-    - put: p-rabbitmq-stemcell
-      params:
-        file: p-rabbitmq-stemcell/*.tgz
-
-- name: get-p-spring-cloud-servives
+- name: get-p-spring-cloud-services
   plan:
   - aggregate:
     - get: daily
@@ -347,19 +314,19 @@ jobs:
     - get: config
   - task: credhub-interpolate
     <<: *credhub-interpolate
-  - task: download-p-spring-cloud-servives-product-and-stemcell
+  - task: download-p-spring-cloud-services-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/download-p-spring-cloud-servives.yml
-    output_mapping: {downloaded-stemcell: p-spring-cloud-servives-stemcell}
+      CONFIG_FILE: download-product-configs/download-p-spring-cloud-services.yml
+    output_mapping: {downloaded-stemcell: p-spring-cloud-services-stemcell}
   - aggregate:
-    - put: p-spring-cloud-servives-product
+    - put: p-spring-cloud-services-product
       params:
         file: downloaded-product/*.pivotal
-    - put: p-spring-cloud-servives-stemcell
+    - put: p-spring-cloud-services-stemcell
       params:
-        file: p-spring-cloud-servives-stemcell/*.tgz
+        file: p-spring-cloud-services-stemcell/*.tgz
 
 - name: get-pivotal-mysql
   plan:
@@ -389,37 +356,63 @@ jobs:
       params:
         file: pivotal-mysql-stemcell/*.tgz
 
-- name: get-pas-windows
+# rabbit
+
+- name: get-p-rabbitmq
   plan:
   - aggregate:
-    # - get: daily
-    #   trigger: true
+    - get: daily
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: configuration
-    - get: variable
+    - get: config
   - task: credhub-interpolate
-    <<: *credhub-interpolate-all-product-configs
+    <<: *credhub-interpolate
+  - task: download-p-rabbitmq-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/download-p-rabbitmq.yml
+    output_mapping: {downloaded-stemcell: p-rabbitmq-stemcell}
+  - aggregate:
+    - put: p-rabbitmq-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-rabbitmq-stemcell
+      params:
+        file: p-rabbitmq-stemcell/*.tgz
+## pasw
+- name: get-pas-windows
+  plan:
+  - aggregate:
+    - get: daily
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: config
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
   - task: download-pas-windows-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/download-pas-windows.yml
-    input_mapping:
-      config: variable
-    output_mapping:
-      downloaded-stemcell: pas-windows-stemcell
+    output_mapping: {downloaded-stemcell: pas-windows-stemcell}
   - aggregate:
     - put: pas-windows-product
       params:
         file: downloaded-product/*.pivotal
     - put: pas-windows-stemcell
       params:
-        file: pas-windows-stemcell/*.tgz 
+        file: pas-windows-stemcell/*.tgz
 
 - name: upload-and-stage-pas
   serial: true
