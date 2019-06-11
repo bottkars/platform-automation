@@ -6,7 +6,7 @@
             "value": "pcfboshstorage1"
         },
         "opsManImageURI": {
-            "value": "https://opsmanagerimage.blob.local.azurestack.external/images/ops-manager-2.5.2-build.172.vhd"
+            "value": "https://opsmanagerimage.blob.local.azurestack.external/images/ops-manager-2.5.4-build.189.vhd"
         },
         "pcflbConnection": {
             "value": "public"
@@ -21,7 +21,7 @@
             "value": "pcf"
         },
         "opsManVHD": {
-            "value": "ops-manager-2.5.2-build.172.vhd"
+            "value": "ops-manager-2.5.4-build.189.vhd"
         },
         "mask": {
             "value": "10.30"
