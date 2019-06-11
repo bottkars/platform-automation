@@ -35,6 +35,6 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/task2.yml  
     params:
-      CA_CERT: ((azs_ca.ca))
+      CA_CERT: root.pem
 
 
