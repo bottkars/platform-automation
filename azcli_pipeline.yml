@@ -63,3 +63,49 @@ jobs:
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: armtemplates/parameters_opsman.json
       RESOURCE_GROUP: concoursedemo
+      LOCATION: local
+
+- name: deploy-opsman-from-arm
+  plan:
+  - get: config
+  - get: azs-concourse
+  - get: az-cli-image
+    passed: [validate-opsman-from-arm]
+    trigger: true  
+  - task: deploy-template
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/deploy-template.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+      PARAMETER_FILE: armtemplates/parameters_opsman.json
+      RESOURCE_GROUP: concoursedemo
+      LOCATION: local
+
+
+- name: delete-resourcegroup
+  plan:
+  - get: config
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: delete-resource-group
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      RESOURCE_GROUP: concoursedemo
+      LOCATION: local
