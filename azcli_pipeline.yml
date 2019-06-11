@@ -26,12 +26,12 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/test-task.yml
 
-- name: run-azcli
+- name: run-azcli-get-vms
   plan:
   - get: cert
   - get: azs-concourse
   - get: az-cli-image
-  - task: task2
+  - task: get-vms
     image: az-cli-image
     file: azs-concourse/ci/tasks/get-vms.yml  
     input_mapping:
