@@ -11,16 +11,24 @@ resources:
   source: 
     repository: microsoft/azure-cli
 
+
 jobs:
-- name: run-azcli
+- name: test-azcli 
   plan:
   - get: azs-concourse
   - get: az-cli-image
   - task: test-azcli
     image: az-cli-image
     file: azs-concourse/ci/tasks/test-task.yml
-  - task: task1
+
+- name: run-azcli
+  plan:
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: task2
     image: az-cli-image
     file: azs-concourse/ci/tasks/task2.yml  
+    params:
+      CA_CERT: ((azs_ca.ca))
 
 

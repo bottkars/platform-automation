@@ -59,7 +59,8 @@ credhub set /name:/concourse/main/pivnet_token /type:value --value $($env_vars.E
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet_token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 
-
+credhub set /name:/concourse/main/azs_ca /type:certificate /root:$HOME/root.pem 
+credhub get /name:/concourse/main/azs_ca -k certificate
 
 credhub set /name:/concourse/main/$($FOUNDATION)/tenant-id /type:value --value $($env_vars.AZURE_TENANT_ID)
 credhub set /name:/concourse/main/$($FOUNDATION)/client-id /type:value --value $($env_vars.AZURE_CLIENT_ID)
