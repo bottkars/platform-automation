@@ -6,3 +6,9 @@ fly -t plane set-pipeline -c pipeline_pcfdemo.yml -l vars_pcfdemo.yml -p $PIPELI
 fly -t plane up -p $PIPELINE
 
 fly -t plane dp -p $PIPELINE
+
+
+
+
+
+fly -t plane set-pipeline -c .\azcli_test\azcli_pipeline.yml -p azcli_test

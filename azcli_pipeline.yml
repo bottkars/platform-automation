@@ -1,0 +1,26 @@
+resources:
+- name: azs-concourse
+  type: git
+  source: 
+    uri: https://github.com/bottkars/azs-concourse
+    branch: master
+    private_key: ((azs-resource-key.private_key))
+
+- name: az-cli-image
+  type: docker-image
+  source: 
+    repository: microsoft/azure-cli
+
+jobs:
+- name: run-azcli
+  plan:
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: test-azcli
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/test-task.yml
+  - task: task1
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/task1.yml  
+
+
