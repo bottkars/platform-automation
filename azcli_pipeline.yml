@@ -70,11 +70,11 @@ jobs:
 - name: deploy-opsman-from-arm
   plan:
   - get: config
+    passed: [validate-opsman-from-arm]
+    trigger: true
   - get: azs-concourse
   - get: az-cli-image
-    passed: [validate-opsman-from-arm]
-    trigger: true  
-  - task: deploy-template
+  - task: deploy-template 
     image: az-cli-image
     file: azs-concourse/ci/tasks/deploy-template.yml  
     input_mapping:
@@ -110,3 +110,26 @@ jobs:
       AZURE_CLIENT_SECRET: ((client-secret))
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       RESOURCE_GROUP: concoursedemo
+
+- name: copy-opsman-image
+  plan:
+  - get: config
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: delete-resource-group
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/copy-blob.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      ACCOUNT_NAME: opsmanagerimage
+      ACCOUNT_KEY: 5Kq7DgYHBCexLKrXtjfhnSUpG+VzNtCONdA03CDUyrBbbLL9B7+OfheF7n+iuACfdzNzWmjAg7/5i8jQHpZ6Zw==
+      DESTINATION_CONTAINER: image
+      DESTINATION_BLOB: ops-manager-2.5.6-build.198.vhd
+      SOURCE_URI: "https://opsmanagerwesteurope.blob.core.windows.net/images/ops-manager-2.5.6-build.198.vhd"
