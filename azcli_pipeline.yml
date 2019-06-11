@@ -14,7 +14,7 @@ resources:
 - name: cert
   type: git
   source:
-    uri: ((pipeline-repo))
+    uri: git@github.com:bottkars/platform-automation.git
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
 jobs:
@@ -35,6 +35,6 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/task2.yml  
     params:
-      CA_CERT: root.pem
+      CA_CERT: cert/root.pem
 
 
