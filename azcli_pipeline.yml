@@ -33,8 +33,13 @@ jobs:
   - get: az-cli-image
   - task: task2
     image: az-cli-image
-    file: azs-concourse/ci/tasks/task2.yml  
+    file: azs-concourse/ci/tasks/get-vms.yml  
+    input_mapping:
+      root_ca: cert
     params:
       CA_CERT: cert/root.pem
-
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
 
