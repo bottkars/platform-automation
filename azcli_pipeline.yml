@@ -11,7 +11,12 @@ resources:
   source: 
     repository: microsoft/azure-cli
 
-
+- name: cert
+  type: git
+  source:
+    uri: ((pipeline-repo))
+    private_key: ((plat-auto-pipes-deploy-key.private_key))
+    branch: master
 jobs:
 - name: test-azcli 
   plan:
@@ -23,6 +28,7 @@ jobs:
 
 - name: run-azcli
   plan:
+  - get: cert
   - get: azs-concourse
   - get: az-cli-image
   - task: task2
