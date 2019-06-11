@@ -21,7 +21,9 @@ jobs:
 - name: test-azcli 
   plan:
   - get: azs-concourse
+    trigger: true
   - get: az-cli-image
+    trigger: true
   - task: test-azcli
     image: az-cli-image
     file: azs-concourse/ci/tasks/test-task.yml
