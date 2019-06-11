@@ -108,4 +108,3 @@ jobs:
       AZURE_CLIENT_SECRET: ((client-secret))
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       RESOURCE_GROUP: concoursedemo
-      LOCATION: local
