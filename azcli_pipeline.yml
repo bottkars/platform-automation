@@ -21,6 +21,6 @@ jobs:
     file: azs-concourse/ci/tasks/test-task.yml
   - task: task1
     image: az-cli-image
-    file: azs-concourse/ci/tasks/task1.yml  
+    file: azs-concourse/ci/tasks/task2.yml  
 
 
