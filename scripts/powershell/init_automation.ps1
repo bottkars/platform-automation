@@ -84,7 +84,6 @@ credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_image /type:valu
 credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_products /type:value --value pivnet.products
 credhub set /name:/concourse/main/buckets_installation /type:value --value installation
 
-
 credhub set /name:/concourse/main/azs-resource-key /type:ssh `
          /private:$HOME\.ssh\azs_resource `
          /public:$HOME\.ssh\git_azs-resource.pub
@@ -92,9 +91,13 @@ credhub set /name:/concourse/main/azs-resource-key /type:ssh `
 credhub set /name:/concourse/main/plat-auto-pipes-deploy-key /type:ssh `
          /private:$HOME\.ssh\git_deploy `
          /public:$HOME\.ssh\git_deploy.pub
+credhub set /name:/concourse/main/$FOUNDATION/plat-auto-pipes-deploy-key /type:ssh `
+         /private:$HOME\.ssh\git_deploy `
+         /public:$HOME\.ssh\git_deploy.pub         
 credhub set /name:/concourse/main/buckets_pivnet_tasks /type:value --value tasks
 credhub set /name:/concourse/main/buckets_pivnet_image /type:value --value image
 credhub set /name:/concourse/main/buckets_pivnet_products /type:value --value pivnet.products
+credhub set /name:/concourse/main/buckets_installation /type:value --value installation
 
 
 
