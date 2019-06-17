@@ -7,8 +7,3 @@ network-properties:
   other_availability_zones: ((zones_map))
   singleton_availability_zone:
     name: ((singleton_zone))
-product-properties:
-  .deploy-service-broker.disable_cert_check:
-    value: "false"
-  .deploy-service-broker.instances_app_push_timeout:
-    value: 60   
