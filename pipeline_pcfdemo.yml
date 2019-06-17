@@ -206,7 +206,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/opsman.yml
+        CONFIG_FILE: download-product-configs/download-opsman.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -325,6 +325,8 @@ jobs:
         file: installation/installation*.zip
 
 - name: upgrade-opsman
+  caches: [ pa-cache]
+
   serial: true
   serial_groups: [ install ]
   plan:
@@ -376,8 +378,10 @@ jobs:
 
 
 - name: get-platform-automation
+  caches: [pa-cache]
   plan:
   - get: platform-automation-pivnet
+    serial: true
     trigger: true
   - aggregate:
     - put: platform-automation-tasks
@@ -391,6 +395,7 @@ jobs:
 
 - name: get-srt
   serial: true
+  caches: [srt-cache, pa-cache]
   serial_groups: [ get-products ]
   plan:
   - aggregate:
