@@ -325,7 +325,6 @@ jobs:
         file: installation/installation*.zip
 
 - name: upgrade-opsman
-  caches: [ pa-cache]
   serial: true
   serial_groups: [ install ]
   plan:
@@ -377,7 +376,6 @@ jobs:
 
 
 - name: get-platform-automation
-  caches: [pa-cache]
   plan:
   - get: platform-automation-pivnet
     serial: true
@@ -394,7 +392,6 @@ jobs:
 
 - name: get-srt
   serial: true
-  caches: [srt-cache, pa-cache]
   serial_groups: [ get-products ]
   plan:
   - aggregate:
@@ -424,7 +421,6 @@ jobs:
         file: srt-stemcell/*.tgz
 
 - name: get-p-spring-cloud-services
-  caches: [p-spring-cloud-servives-cache, pa-cache]
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -455,7 +451,6 @@ jobs:
         file: p-spring-cloud-services-stemcell/*.tgz
 
 - name: get-pivotal-mysql
-  caches: [pivotal-mysql-cache, pa-cache]
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -472,6 +467,9 @@ jobs:
   - task: credhub-interpolate
     <<: *credhub-interpolate
   - task: download-pivotal-mysql-product-and-stemcell
+    caches:
+      - path: downloaded-product/caches
+      - path: platform-automation-tasks/caches
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
@@ -516,7 +514,6 @@ jobs:
         file: p-rabbitmq-stemcell/*.tgz
 ## pasw
 - name: get-pas-windows
-  caches: [pas-windows-cache, pa-cache]
   serial: true
   serial_groups: [ get-products ]
   plan:
