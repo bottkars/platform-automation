@@ -1,0 +1,18 @@
+
+---
+opsman-configuration:
+  azure:
+    subscription_id: ((subscription-id))
+    resource_group: ((resource-group))
+    tenant_id: ((tenant-id))
+    client_id: ((client-id))
+    client_secret: ((client-secret))
+    location: ((location))
+    container: opsmanimage
+    network_security_group: ops-manager-security-group
+    vpc_subnet: /subscriptions/((subscription-id))/resourceGroups/((resource-group))/providers/Microsoft.Network/virtualNetworks/((vnet))/subnets/((subnet))
+    storage_account: opsmanimage                     # used for the Ops Manager image
+    ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDTIpzEQaU082Sj0VqWWizopukQTQ6jRo76Wwelz4vMEBG3YQi0w1iWJLAjDKzyOskrZ+VeBZ2ASGqD39hiF8cZMK8t9FO8rx1N4hQ9cM8d3kbZTguLwxKlIzOkHQw1JhKyj8Q8b3TvEANzE4vtTHosoRZsuP9vc9wwV7EOUiii5l+cyi7yCI3G5t7trbMZ/XjAy1jmwreGW4mm9paFEWkMxfegp7uIPv1EQB5U0OLU8kHRz7EfUh/0PPEkJN+pOG1hvJlivPa5wbv53wdbFZcu8FwesI9gjwSdxg9XQOYLItOCdC1S/rOaRJrR+FGmOFZfwMKzSz3BLXHfX27lld5j bottk@SurfaceBook3
+    vm_name: ops-manager-((foundation))
+    private_ip: ((ops-manager-private-ip))
+    public_ip: ((ops-manager-public-ip))

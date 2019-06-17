@@ -1176,7 +1176,6 @@ groups:
   jobs:
   #- export-installation
   - upload-and-stage-srt
-  - upload-and-stage-pas-windows  
   - upload-and-stage-pivotal-mysql
   - upload-and-stage-p-spring-cloud-services
   - upload-and-stage-p-spring-cloud-services-3
@@ -1184,12 +1183,16 @@ groups:
 - name: configure-products
   jobs:
   - configure-srt
-  - configure-pas-windows
   - configure-p-rabbitmq
   - configure-pivotal-mysql
   - configure-p-spring-cloud-services
   - configure-p-spring-cloud-services-3
   - apply-product-changes
+
+- name: disabled
+  - upload-and-stage-pas-windows  
+  - configure-pas-windows
+
 - name: deploy-asdk-1905
   jobs:  
   - deploy-asdk

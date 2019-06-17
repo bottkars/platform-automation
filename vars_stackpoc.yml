@@ -1,6 +1,5 @@
 platform-automation-bucket: platform-automation
 credhub-server: https://plane.control.westus.stackpoc.com:8844
-opsman-url: https://plane.control.labbuildr.com
+opsman-url: https://plane.control.westus.stackpoc.com
 pipeline-repo: git@github.com:bottkars/platform-automation
 foundation: stackpoc_demo
-pivnet_tokem: b11279aae7a94f9a9d11c601db0b593e-r
