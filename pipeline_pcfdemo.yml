@@ -326,7 +326,6 @@ jobs:
 
 - name: upgrade-opsman
   caches: [ pa-cache]
-
   serial: true
   serial_groups: [ install ]
   plan:
@@ -425,6 +424,7 @@ jobs:
         file: srt-stemcell/*.tgz
 
 - name: get-p-spring-cloud-services
+  caches: [p-spring-cloud-servives-cache, pa-cache]
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -455,6 +455,7 @@ jobs:
         file: p-spring-cloud-services-stemcell/*.tgz
 
 - name: get-pivotal-mysql
+  caches: [pivotal-mysql-cache, pa-cache]
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -515,6 +516,7 @@ jobs:
         file: p-rabbitmq-stemcell/*.tgz
 ## pasw
 - name: get-pas-windows
+  caches: [pas-windows-cache, pa-cache]
   serial: true
   serial_groups: [ get-products ]
   plan:
