@@ -93,6 +93,16 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: p-spring-cloud-services-product/\[p-spring-cloud-services,(.*)\]p-spring-cloud-services-.*.pivotal
 
+- name: p-spring-cloud-services-3-product
+  type: s3
+  source:
+    access_key_id: ((access_key_id))
+    bucket: ((buckets_pivnet_products))
+    endpoint:  ((s3_endpoint))
+    region_name: ((s3_region_name))
+    secret_access_key: ((secret_access_key))
+    regexp: p-spring-cloud-services-3-product/\[p-spring-cloud-services,(.*)\]p-spring-cloud-services-.*.pivotal
+
 
 - name: p-rabbitmq-product
   type: s3
@@ -134,6 +144,17 @@ resources:
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
     regexp: p-spring-cloud-services-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: p-spring-cloud-services-3-stemcell
+  type: s3
+  source:
+    access_key_id: ((access_key_id))
+    bucket: ((buckets_pivnet_products))
+    endpoint:  ((s3_endpoint))
+    region_name: ((s3_region_name))
+    secret_access_key: ((secret_access_key))
+    regexp: p-spring-cloud-services-3-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
 
 - name: p-rabbitmq-stemcell
   type: s3
@@ -450,6 +471,36 @@ jobs:
       params:
         file: p-spring-cloud-services-stemcell/*.tgz
 
+- name: get-p-spring-cloud-services-3
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - aggregate:
+    - get: daily-trigger
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: config
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
+  - task: download-p-spring-cloud-services-3-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/download-p-spring-cloud-services-3.yml
+    output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
+  - aggregate:
+    - put: p-spring-cloud-services-3-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-spring-cloud-services-3-stemcell
+      params:
+        file: p-spring-cloud-services-3-stemcell/*.tgz
+
 - name: get-pivotal-mysql
   serial: true
   serial_groups: [ get-products ]
@@ -739,7 +790,59 @@ jobs:
         product: p-spring-cloud-services-product
         env: interpolated-creds
       params:
-        ENV_FILE: ((foundation))/env/env.yml        
+        ENV_FILE: ((foundation))/env/env.yml   
+
+
+- name: upload-and-stage-p-spring-cloud-services-3
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-p-spring-cloud-services-3
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/download-p-spring-cloud-services-3.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: p-spring-cloud-services-3-product
+        downloaded-stemcell: p-spring-cloud-services-3-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-3-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-spring-cloud-services-3-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: interpolated-creds
+        stemcell: p-spring-cloud-services-3-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-3-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml   
+
 - name: upload-and-stage-p-rabbitmq
   serial: true
   plan:
@@ -930,6 +1033,34 @@ jobs:
         CONFIG_FILE: product-configs/p-spring-cloud-services.yml
         VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
+- name: configure-p-spring-cloud-services-3
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-spring-cloud-services-3
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: configure-p-spring-cloud-services
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/p-spring-cloud-services-3.yml
+        VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml        
 - name: configure-srt
   serial: true
   plan:
@@ -1042,6 +1173,7 @@ groups:
   - get-srt
   - get-pas-windows
   - get-p-spring-cloud-services
+  - get-p-spring-cloud-services-3
   - get-p-rabbitmq
   - get-pivotal-mysql
 - name: upgrade-products
@@ -1051,6 +1183,7 @@ groups:
   - upload-and-stage-pas-windows  
   - upload-and-stage-pivotal-mysql
   - upload-and-stage-p-spring-cloud-services
+  - upload-and-stage-p-spring-cloud-services-3
   - upload-and-stage-p-rabbitmq
 - name: configure-products
   jobs:
@@ -1059,6 +1192,7 @@ groups:
   - configure-p-rabbitmq
   - configure-pivotal-mysql
   - configure-p-spring-cloud-services
+  - configure-p-spring-cloud-services-3
   - apply-product-changes
 - name: deploy-asdk-1905
   jobs:  
