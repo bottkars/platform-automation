@@ -232,7 +232,7 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: \[ops-manager,(.*)\].*.yml
+    regexp: \[ops-manager,(.*)\]ops-manager-azure*.yml
 ## opsman starts here
 jobs:
 - name: install-opsman
