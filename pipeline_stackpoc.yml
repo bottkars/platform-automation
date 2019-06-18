@@ -516,7 +516,6 @@ jobs:
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/download-opsman.yml
-    output_mapping: {downloaded-stemcell: srt-stemcell}
   - aggregate:
     - put: opsman-image
       params:
