@@ -102,15 +102,15 @@ resources:
     regexp: pas-windows-stemcell/light-bosh-stemcell-(.*).tgz
 
 - name: config
-  type: git
-  source:
+  #icon: github-circle
+  type: git  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
 
 - name: variable
-  type: git
-  source:
+  #icon: github-circle
+  type: git  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master        

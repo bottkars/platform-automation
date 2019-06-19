@@ -28,6 +28,7 @@ resources:
 ### opsman ends 
 
 - name: installation
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -45,6 +46,7 @@ resources:
     sort_by: semver
 
 - name: platform-automation-tasks
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -55,6 +57,7 @@ resources:
     regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -65,6 +68,7 @@ resources:
     regexp: platform-automation-image-(.*).tgz
 
 - name: pas-windows-product
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -75,6 +79,7 @@ resources:
     regexp: pas-windows-product/\[pas-windows,(.*)\]pas-windows-.*.pivotal
 
 - name: srt-product
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -84,6 +89,7 @@ resources:
     regexp: srt-product/\[elastic-runtime,(.*)\]srt-.*.pivotal
 
 - name: p-spring-cloud-services-product
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -94,6 +100,7 @@ resources:
     regexp: p-spring-cloud-services-product/\[p-spring-cloud-services,(.*)\]p-spring-cloud-services-.*.pivotal
 
 - name: p-spring-cloud-services-3-product
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -105,6 +112,7 @@ resources:
 
 
 - name: p-rabbitmq-product
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -115,6 +123,7 @@ resources:
     regexp: p-rabbitmq-product/\[p-rabbitmq,(.*)\]p-rabbitmq-.*.pivotal
 
 - name: pivotal-mysql-product
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -126,6 +135,7 @@ resources:
 
 
 - name: srt-stemcell
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -136,6 +146,7 @@ resources:
     regexp: srt-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: p-spring-cloud-services-stemcell
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -146,6 +157,7 @@ resources:
     regexp: p-spring-cloud-services-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: p-spring-cloud-services-3-stemcell
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -157,6 +169,7 @@ resources:
 
 
 - name: p-rabbitmq-stemcell
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -167,6 +180,7 @@ resources:
     regexp: p-rabbitmq-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: pivotal-mysql-stemcell
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -177,6 +191,7 @@ resources:
     regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
 
 - name: pas-windows-stemcell
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -186,22 +201,22 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-2019.*-azure.*\.tgz
 - name: configuration #to be removed
-  type: git
-  source:
+  #icon: github-circle
+  type: git  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
 
 - name: config
-  type: git
-  source:
+  #icon: github-circle
+  type: git  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
 
 - name: variable
-  type: git
-  source:
+  #icon: github-circle
+  type: git  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master

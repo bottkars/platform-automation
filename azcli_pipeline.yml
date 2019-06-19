@@ -1,8 +1,8 @@
 ---
 resources:
 - name: azs-concourse
-  type: git
-  source: 
+  #icon: github-circle
+  type: git  source: 
     uri: https://github.com/bottkars/azs-concourse
     branch: master
     private_key: ((azs-resource-key.private_key))
@@ -14,8 +14,8 @@ resources:
     repository: microsoft/azure-cli
 
 - name: config
-  type: git
-  source:
+  #icon: github-circle
+  type: git  source:
     uri: git@github.com:bottkars/platform-automation.git
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master

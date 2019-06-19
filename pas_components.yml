@@ -1,5 +1,6 @@
 resources:
 - name: pas-product
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
@@ -9,6 +10,7 @@ resources:
     regexp: pas-product/\[elastic-runtime,(.*)\]cf-.*.pivotal
     
 - name: pas-stemcell
+  #icon: amazon-drive
   type: s3
   source:
     access_key_id: ((access_key_id))
