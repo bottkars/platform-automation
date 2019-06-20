@@ -254,8 +254,186 @@ resources:
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
     regexp: ops-manager/\[ops-manager,(.*)\].*azure*.yml
-## opsman starts here
+##
+- name: azs-concourse
+  #icon: github-circle
+  type: git  
+  source: 
+    uri: https://github.com/bottkars/azs-concourse
+    branch: master
+    private_key: ((azs-resource-key.private_key))
+
+
+- name: az-cli-image
+  type: docker-image
+  source: 
+    repository: microsoft/azure-cli
+
 jobs:
+- name: test-azcli 
+  plan:
+  - get: azs-concourse
+    trigger: true
+  - get: az-cli-image
+    trigger: true
+  - task: test-azcli
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/test-task.yml
+
+- name: run-azcli-get-vms
+  plan:
+  - get: config
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: get-vms
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/get-vms.yml  
+    input_mapping:
+      root_ca: config
+    params:
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+- name: deploy-opsman-from-arm
+  plan:
+  - aggregate:
+    - get: config
+    - get: azs-concourse
+    - get: az-cli-image
+  - task: validate-template
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/validate-template.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+      PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+      RESOURCE_GROUP: pcf
+      LOCATION: westus
+  - task: deploy-template 
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/deploy-template.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+      PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+      RESOURCE_GROUP: pcf
+      LOCATION: westus
+- name: copy-opsman-image
+  plan:
+  - get: config
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: copy-opsman-image
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/copy-blob.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      ACCOUNT_NAME: opsmanagerimage
+      ACCOUNT_KEY: ((storage_account_key))
+      DESTINATION_CONTAINER: images
+      DESTINATION_BLOB: ((opsman_image))
+      SOURCE_URI: https://opsmanagerwestus.blob.core.windows.net/images/((opsman_image))
+  - task: check-copy-status
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/copy-status.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      ACCOUNT_NAME: opsmanagerimage
+      DESTINATION_CONTAINER: images
+      DESTINATION_BLOB: ops-manager-2.6.0-build.138.vhd
+- name: check-opsman-copy-status
+  plan:
+  - get: config
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: check-copy-status
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/copy-status.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      ACCOUNT_NAME: opsmanagerimage
+      DESTINATION_CONTAINER: images
+      DESTINATION_BLOB: ops-manager-2.6.0-build.138.vhd
+
+- name: delete-opsman-vm
+  plan:
+  - get: config
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: delete-vm
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/delete-vm.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      RESOURCE_GROUP: pcf
+      VM_NAME: pcf
+
+## opsman starts here
 - name: install-opsman
   serial: true
   serial_groups: [ install ]
@@ -1381,6 +1559,15 @@ groups:
 - name: deploy-asdk-1905
   jobs:  
   - deploy-asdk
+
+- name: azcli-jobs
+  jobs:
+  - delete-opsman-vm
+  - test-azcli
+  - deploy-opsman-from-arm
+  - run-azcli-get-vms
+  - copy-opsman-image
+  - check-opsman-copy-status
 
 
 

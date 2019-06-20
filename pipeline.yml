@@ -103,14 +103,16 @@ resources:
 
 - name: config
   #icon: github-circle
-  type: git  source:
+  type: git  
+  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
 
 - name: variable
   #icon: github-circle
-  type: git  source:
+  type: git  
+  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master        

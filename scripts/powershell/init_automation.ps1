@@ -67,12 +67,26 @@ credhub set /name:/concourse/main/$($FOUNDATION)/client-id /type:value --value $
 credhub set /name:/concourse/main/$($FOUNDATION)/client-secret /type:value --value $($env_vars.client_secret)
 credhub set /name:/concourse/main/$($FOUNDATION)/subscription-id /type:value --value 57230479-98a0-4777-a763-8c024866a52a
 
+credhub set /name:/concourse/main/azurestack_asdk/tenant-id /type:value --value 5f7dfed5-1a3d-424f-8e22-4661ae54b53b
+credhub set /name:/concourse/main/azurestack_asdk/client-id /type:value --value $($env_vars.client_id)
+credhub set /name:/concourse/main/azurestack_asdk/client-secret /type:value --value $($env_vars.client_secret)
+credhub set /name:/concourse/main/azurestack_asdk/subscription-id /type:value --value 57230479-98a0-4777-a763-8c024866a52a
+
+
 
 credhub set /name:/concourse/main/aztest/tenant-id /type:value --value 5f7dfed5-1a3d-424f-8e22-4661ae54b53b
 credhub set /name:/concourse/main/aztest/client-id /type:value --value $($env_vars.client_id)
 credhub set /name:/concourse/main/aztest/client-secret /type:value --value $($env_vars.client_secret)
 credhub set /name:/concourse/main/aztest/subscription-id /type:value --value 57230479-98a0-4777-a763-8c024866a52a
 
+
+#### stackpoc
+
+credhub set /name:/concourse/main/$pipeline/tenant-id /type:value --value a3f33ab9-6362-4609-b44d-a669107ebd9d
+credhub set /name:/concourse/main/$pipeline/client-id /type:value --value $($env_vars.client_id)
+credhub set /name:/concourse/main/$pipeline/client-secret /type:value --value $($env_vars.client_secret)
+credhub set /name:/concourse/main/$pipeline/subscription-id /type:value --value b1d03e4e-a277-4798-bf48-77a2dfb95492
+credhub set /name:/concourse/main/$pipeline/endpoint-resource-manager /type:value --value https://management.westus.stackp
 
 credhub set /name:/concourse/main/credhub-client /type:value --value $CLIENT_NAME
 credhub set /name:/concourse/main/credhub-secret /type:value --value $CREDHUB_PASSWORD

@@ -3,3 +3,5 @@ credhub-server: https://plane.control.westus.stackpoc.com:8844
 opsman-url: https://plane.control.westus.stackpoc.com
 pipeline-repo: git@github.com:bottkars/platform-automation
 foundation: stackpoc_demo
+opsman_image: ops-manager-2.6.0-build.138.vhd
+storage_account_key: "+lK+gDbt5FqlbIm0KZ6x9c1f/P6/IQeXLnLhDmE9ShZvUWbA5KTLvitA0+Fm+hbTRIfqab+/rbh0nciFjmurfw=="

@@ -160,21 +160,24 @@ resources:
     regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-2019.*-azure.*\.tgz
 - name: configuration #to be removed
   #icon: github-circle
-  type: git  source:
+  type: git  
+  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
 
 - name: config
   #icon: github-circle
-  type: git  source:
+  type: git  
+  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
 
 - name: variable
   #icon: github-circle
-  type: git  source:
+  type: git  
+  source:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master        
