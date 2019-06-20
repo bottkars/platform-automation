@@ -655,7 +655,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/download-pas.yml
+      CONFIG_FILE: download-product-configs/v2.6/download-pas.yml
     output_mapping: {downloaded-stemcell: pas-stemcell}
   - aggregate:
     - put: pas-product
