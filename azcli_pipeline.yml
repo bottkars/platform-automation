@@ -2,7 +2,8 @@
 resources:
 - name: azs-concourse
   #icon: github-circle
-  type: git  source: 
+  type: git  
+  source: 
     uri: https://github.com/bottkars/azs-concourse
     branch: master
     private_key: ((azs-resource-key.private_key))
@@ -15,7 +16,8 @@ resources:
 
 - name: config
   #icon: github-circle
-  type: git  source:
+  type: git  
+  source:
     uri: git@github.com:bottkars/platform-automation.git
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
@@ -87,15 +89,14 @@ jobs:
       RESOURCE_GROUP: concoursedemo
       LOCATION: local
 
-
-- name: delete-resourcegroup
+- name: delete-opsman-vm
   plan:
   - get: config
   - get: azs-concourse
   - get: az-cli-image
-  - task: delete-resource-group
+  - task: delete-vm
     image: az-cli-image
-    file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
+    file: azs-concourse/ci/tasks/delete-vm.yml  
     input_mapping:
       root_ca: config
       config: config
@@ -106,6 +107,7 @@ jobs:
       AZURE_CLIENT_SECRET: ((client-secret))
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       RESOURCE_GROUP: concoursedemo
+      VM_NAME: pcf
 
 - name: copy-opsman-image
   plan:
