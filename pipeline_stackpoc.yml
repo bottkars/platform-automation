@@ -343,6 +343,51 @@ jobs:
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       RESOURCE_GROUP: pcf
       LOCATION: westus
+- name: update-opsman-from-arm
+  plan:
+  - aggregate:
+    - get: config
+    - get: azs-concourse
+    - get: az-cli-image
+  - task: validate-template
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/validate-template.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
+      PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+      RESOURCE_GROUP: pcf
+      LOCATION: westus
+  - task: deploy-template 
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/deploy-template.yml  
+    input_mapping:
+      root_ca: config
+      config: config
+    params:
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
+      PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+      RESOURCE_GROUP: pcf
+      LOCATION: westus
+
 - name: copy-opsman-image
   plan:
   - get: config
@@ -439,15 +484,15 @@ jobs:
   serial_groups: [ install ]
   plan:
     - aggregate:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: one-time-trigger
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: configuration
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: one-time-trigger
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
     - task: interpolate-creds
       <<: *interpolate-creds
     - task: download-opsman-image
@@ -1568,6 +1613,7 @@ groups:
   - run-azcli-get-vms
   - copy-opsman-image
   - check-opsman-copy-status
+  - update-opsman-from-arm
 
 
 
