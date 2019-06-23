@@ -1,5 +1,5 @@
 product-name: pas-windows
 pcf_pas_network: pcf-pas-subnet 
-compute_instances: 3
+compute_instances: 2
 singleton_zone: 'null'
 zones_map: 'null'

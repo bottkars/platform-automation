@@ -588,7 +588,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/v2.6/download-srt.yml
+      CONFIG_FILE: download-product-configs/download-srt.yml
     output_mapping: {downloaded-stemcell: srt-stemcell}
   - aggregate:
     - put: srt-product
@@ -737,7 +737,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/v2.6/download-pas-windows.yml
+      CONFIG_FILE: download-product-configs/download-pas-windows.yml
     output_mapping: {downloaded-stemcell: pas-windows-stemcell}
   - aggregate:
     - put: pas-windows-product
@@ -767,7 +767,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/v2.6/download-srt.yml
+        CONFIG_FILE: download-product-configs/download-srt.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -815,7 +815,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/v2.6/download-pas-windows.yml
+        CONFIG_FILE: download-product-configs/download-pas-windows.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -1099,7 +1099,7 @@ jobs:
         env: interpolated-creds
         vars: variable
       params:
-        CONFIG_FILE: product-configs/v2.6/pas-windows.yml
+        CONFIG_FILE: product-configs/pas-windows.yml
         VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 - name: configure-p-rabbitmq
@@ -1240,7 +1240,7 @@ jobs:
         env: interpolated-creds
         vars: variable
       params:
-        CONFIG_FILE: product-configs/v2.6/srt.yml
+        CONFIG_FILE: product-configs/srt.yml
         VARS_FILES: vars/((foundation))/vars/srt-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
 - name: deploy-asdk
