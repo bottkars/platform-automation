@@ -287,6 +287,7 @@ jobs:
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       RESOURCE_GROUP: pcf
       LOCATION: local
+      ADDITIONAL_PARAMETERS: "opsManImageURI=https://opsmanagerimage.blob.local.azurestack.external/images/((opsman_image))"
   - task: deploy-template 
     image: az-cli-image
     file: azs-concourse/ci/tasks/deploy-template.yml  
@@ -321,7 +322,7 @@ jobs:
       AZURE_CLIENT_SECRET: ((client-secret))
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       ACCOUNT_NAME: opsmanagerimage
-      ACCOUNT_KEY: "
+      ACCOUNT_KEY: ((storage_account_key))
       DESTINATION_CONTAINER: images
       DESTINATION_BLOB: ((opsman_image))
       SOURCE_URI: "https://opsmanagerwesteurope.blob.core.windows.net/images/((opsman_image))"
