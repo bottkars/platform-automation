@@ -302,6 +302,7 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+      ADDITIONAL_PARAMETERS: "opsManImageURI=https://opsmanagerimage.blob.local.azurestack.external/images/((opsman_image))"
       RESOURCE_GROUP: pcf
       LOCATION: local
 - name: copy-opsman-image
