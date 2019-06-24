@@ -611,7 +611,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/opsman.yml
+        CONFIG_FILE: download-product-configs/download-opsman.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
