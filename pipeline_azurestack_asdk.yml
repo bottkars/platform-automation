@@ -1379,7 +1379,6 @@ groups:
   - deploy-opsman-from-arm
   - run-azcli-get-vms
   - copy-opsman-image
-  - check-opsman-image-copy-status
 
 - name: staged-pas-config
 plan:
