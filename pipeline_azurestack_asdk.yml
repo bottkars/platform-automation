@@ -211,7 +211,7 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: \[ops-manager,(.*)\].*.yml
 
-- name: config
+- name: configuration
   #icon: github-circle
   type: git  
   source:
@@ -241,6 +241,22 @@ resources:
     repository: microsoft/azure-cli
     tag: latest
 
+interpolate-creds: &interpolate-creds
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    CREDHUB_CLIENT: ((credhub-client))
+    CREDHUB_SECRET: ((credhub-secret))
+    CREDHUB_SERVER: ((credhub-server))
+    PREFIX: /concourse/main/((foundation))
+    CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env  download-product-configs product-configs
+    SKIP_MISSING: true
+  input_mapping:
+    files: configuration
+  output_mapping:
+    interpolated-files: interpolated-creds
+
 jobs:
 - name: test-azcli 
   plan:
@@ -254,14 +270,14 @@ jobs:
 
 - name: run-azcli-get-vms
   plan:
-  - get: config
+  - get: configuration
   - get: azs-concourse
   - get: az-cli-image
   - task: get-vms
     image: az-cli-image
     file: azs-concourse/ci/tasks/get-vms.yml  
     input_mapping:
-      root_ca: config
+      root_ca: configuration
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
@@ -272,15 +288,15 @@ jobs:
 - name: deploy-opsman-from-arm
   plan:
   - aggregate:
-    - get: config
+    - get: configuration
     - get: azs-concourse
     - get: az-cli-image
   - task: validate-template
     image: az-cli-image
     file: azs-concourse/ci/tasks/validate-template.yml  
     input_mapping:
-      root_ca: config
-      config: config
+      root_ca: configuration
+      config: configuration
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
@@ -297,8 +313,8 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/deploy-template.yml  
     input_mapping:
-      root_ca: config
-      config: config
+      root_ca: configuration
+      config: configuration
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
@@ -317,7 +333,7 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - aggregate:
-    - get: config
+    - get: configuration
     - get: opsman-product
       passed: 
       - get-opsman 
@@ -334,8 +350,8 @@ jobs:
     image: az-cli-image
     input_mapping:
       image: opsman-product
-      root_ca: config
-      config: config
+      root_ca: configuration
+      config: configuration
     params:
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
       PROFILE: ((arm_profile))
@@ -353,8 +369,8 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/copy-status-until-success.yml  
     input_mapping:
-      root_ca: config
-      config: config
+      root_ca: configuration
+      config: configuration
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
@@ -367,15 +383,15 @@ jobs:
       DESTINATION_BLOB: ((opsman_image))
 - name: check-opsman-image-copy-status
   plan:
-  - get: config
+  - get: configuration
   - get: azs-concourse
   - get: az-cli-image
   - task: check-copy-status
     image: az-cli-image
     file: azs-concourse/ci/tasks/copy-status.yml  
     input_mapping:
-      root_ca: config
-      config: config
+      root_ca: configuration
+      config: configuration
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
@@ -389,15 +405,15 @@ jobs:
 
 - name: delete-opsman-vm
   plan:
-  - get: config
+  - get: configuration
   - get: azs-concourse
   - get: az-cli-image
   - task: delete-vm
     image: az-cli-image
     file: azs-concourse/ci/tasks/delete-vm.yml  
     input_mapping:
-      root_ca: config
-      config: config
+      root_ca: configuration
+      config: configuration
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
@@ -415,7 +431,7 @@ jobs:
   serial_groups: [ install ]
   plan:
     - aggregate:
-      - get: config
+      - get: configuration
       - get: azs-concourse
       - get: az-cli-image
       - get: platform-automation-image
@@ -442,7 +458,7 @@ jobs:
       image: az-cli-image
       file: azs-concourse/ci/tasks/query-vm.yml  
       input_mapping:
-        root_ca: config
+        root_ca: configuration
       params:
         PROFILE: ((arm_profile))
         CA_CERT: cert/root.pem
@@ -457,7 +473,7 @@ jobs:
             image: platform-automation-image
             file: platform-automation-tasks/tasks/make-git-commit.yml
             input_mapping:
-              repository: config
+              repository: configuration
               file-source: generated-state
             output_mapping:
               repository-commit: configuration-commit
@@ -467,7 +483,7 @@ jobs:
               GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
               GIT_AUTHOR_NAME: "Platform Automation Bot"
               COMMIT_MESSAGE: 'Update state file'
-          - put: config
+          - put: configuration
             params:
               repository: configuration-commit
               merge: true
@@ -476,7 +492,7 @@ jobs:
       file: platform-automation-tasks/tasks/configure-authentication.yml
       attempts: 10
       input_mapping:
-        env: config
+        env: configuration
         config: interpolated-creds
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -510,9 +526,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+    - get: configuration
+  - task: interpolate-creds
+    <<: *interpolate-creds
   - task: download-opsman-image
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -544,7 +560,7 @@ jobs:
           params: {unpack: true}
         - get: platform-automation-image
           params: {unpack: true}
-        - get: config
+        - get: configuration
     - task: interpolate-creds
       <<: *interpolate-creds
     - task: staged-director-config
@@ -569,7 +585,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
         - get: one-time-trigger
           passed: [ install-opsman ]
@@ -603,7 +619,7 @@ jobs:
             unpack: true
         - get: installation
           passed: [ export-installation ]
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -665,9 +681,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+    - get: configuration
+  - task: interpolate-creds
+    <<: *interpolate-creds
   - task: download-srt-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -695,9 +711,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+    - get: configuration
+  - task: interpolate-creds
+    <<: *interpolate-creds
   - task: download-p-spring-cloud-services-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -725,9 +741,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+    - get: configuration
+  - task: interpolate-creds
+    <<: *interpolate-creds
   - task: download-p-spring-cloud-services-3-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -755,9 +771,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+    - get: configuration
+  - task: interpolate-creds
+    <<: *interpolate-creds
   - task: download-pivotal-mysql-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -785,9 +801,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+    - get: configuration
+  - task: interpolate-creds
+    <<: *interpolate-creds
   - task: download-p-rabbitmq-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -814,9 +830,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+    - get: configuration
+  - task: interpolate-creds
+    <<: *interpolate-creds
   - task: download-pas-windows-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -843,7 +859,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -891,7 +907,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -941,7 +957,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -990,7 +1006,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1041,7 +1057,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1091,7 +1107,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1147,7 +1163,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1171,7 +1187,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1199,7 +1215,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1227,7 +1243,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1256,7 +1272,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1284,7 +1300,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1312,7 +1328,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
@@ -1338,67 +1354,35 @@ jobs:
     - put: platform-automation-image
       params:
         file: platform-automation-pivnet/*image*.tgz   
- 
-credhub-interpolate: &credhub-interpolate
-  image: platform-automation-image
-  file: platform-automation-tasks/tasks/credhub-interpolate.yml
-  params:
-    CREDHUB_CLIENT: ((credhub-client))
-    CREDHUB_SECRET: ((credhub-secret))
-    CREDHUB_SERVER: ((credhub-server))
-    PREFIX: /concourse/main/((foundation))
-    CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env ((foundation))/vars download-product-configs product-configs
-  input_mapping:
-    files: config
-  output_mapping:
-    interpolated-files: config
+- name: staged-pas-config
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: staged-config
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/staged-config.yml
+      input_mapping:
+        env: interpolated-creds
+      params:
+        PRODUCT_NAME: cf
+        ENV_FILE: ((foundation))/env/env.yml
+      ensure: *make-state-commit 
 
-interpolate-creds: &interpolate-creds
-  image: platform-automation-image
-  file: platform-automation-tasks/tasks/credhub-interpolate.yml
-  params:
-    CREDHUB_CLIENT: ((credhub-client))
-    CREDHUB_SECRET: ((credhub-secret))
-    CREDHUB_SERVER: ((credhub-server))
-    PREFIX: /concourse/main/((foundation))
-    CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env  download-product-configs product-configs
-    SKIP_MISSING: true
-  input_mapping:
-    files: config
-  output_mapping:
-    interpolated-files: interpolated-creds
-credhub-interpolate-all-vars: &credhub-interpolate-all-vars
-  image: platform-automation-image
-  file: platform-automation-tasks/tasks/credhub-interpolate.yml
-  params:
-    CREDHUB_CLIENT: ((credhub-client))
-    CREDHUB_SECRET: ((credhub-secret))
-    CREDHUB_SERVER: ((credhub-server))
-    CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    PREFIX: /concourse/main/((foundation))
-    INTERPOLATION_PATHS: ((foundation))/vars
-  input_mapping:
-    files: variable
-  output_mapping:
-    interpolated-files: variable
 
-credhub-interpolate-all-product-configs: &credhub-interpolate-all-product-configs
-  image: platform-automation-image
-  file: platform-automation-tasks/tasks/credhub-interpolate.yml
-  params:
-    CREDHUB_CLIENT: ((credhub-client))
-    CREDHUB_SECRET: ((credhub-secret))
-    CREDHUB_SERVER: ((credhub-server))
-    CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    PREFIX: /concourse/main/((foundation))
-    INTERPOLATION_PATHS: ((foundation))  
-  input_mapping:
-    files: variable
-  output_mapping:
-    interpolated-files: variable
+
 groups:
+- name: staged-configs
+  jobs:
+  - staged-pas-config
 - name: install-ops-manager
   jobs:
   - get-opsman
@@ -1448,25 +1432,3 @@ groups:
   - testing
 
 
-- name: staged-pas-config
-plan:
-  - aggregate:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: config
-      - get: variable
-  - task: interpolate-creds
-    <<: *interpolate-creds
-  - task: staged-config
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/staged-config.yml
-    input_mapping:
-      env: interpolated-creds
-    params:
-      PRODUCT_NAME: cf
-      ENV_FILE: ((foundation))/env/env.yml
-    ensure: *make-state-commit
