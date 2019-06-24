@@ -361,7 +361,7 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       ACCOUNT_NAME: opsmanagerimage
       DESTINATION_CONTAINER: images
-      DESTINATION_BLOB: ((opsman_image)
+      DESTINATION_BLOB: ((opsman_image))
 
 - name: delete-opsman-vm
   plan:
