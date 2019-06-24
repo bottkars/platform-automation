@@ -1,1 +1,4 @@
-"Succeeded"
+{
+  "VM_ID": "pcf",
+  "IAAS": "azurestack"
+}
