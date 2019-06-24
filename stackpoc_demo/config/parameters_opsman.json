@@ -5,7 +5,7 @@
         "boshstorageaccountname": {
             "value": "pcfboshstorage"
         },
-        "opsManImageURI": {
+        "OpsManImageURI": {
             "value": "https://opsmanagerimage.blob.westus.stackpoc.com/images/ops-manager-2.6.0-build.138.vhd"
         },
         "pcflbConnection": {

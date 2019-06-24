@@ -5,7 +5,7 @@
         "boshstorageaccountname": {
             "value": "pcfboshstorage1"
         },
-        "opsManImageURI": {
+        "OpsManImageURI": {
             "value": "https://opsmanagerimage.blob.local.azurestack.external/images/ops-manager-2.5.4-build.189.vhd"
         },
         "pcflbConnection": {
