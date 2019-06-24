@@ -312,7 +312,7 @@ jobs:
   - get: az-cli-image
   - task: copy-opsman-image
     image: az-cli-image
-    file: azs-concourse/ci/tasks/incremental-copy-blob.yml  
+    file: azs-concourse/ci/tasks/copy-blob.yml  
     input_mapping:
       root_ca: config
       config: config
@@ -326,7 +326,7 @@ jobs:
       ACCOUNT_KEY: ((storage_account_key))
       DESTINATION_CONTAINER: images
       DESTINATION_BLOB: ((opsman_image))
-      SOURCE_URI: "https://opsmanagerwesteurope.blob.core.windows.net/images/((opsman_image))"
+      SOURCE_URI: https://opsmanagerwesteurope.blob.core.windows.net/images/((opsman_image))
   - task: check-copy-status-success
     image: az-cli-image
     file: azs-concourse/ci/tasks/copy-status-until-success.yml  
