@@ -347,7 +347,6 @@ jobs:
   - get: config
   - get: azs-concourse
   - get: az-cli-image
-
   - task: check-copy-status
     image: az-cli-image
     file: azs-concourse/ci/tasks/copy-status.yml  
@@ -1379,6 +1378,8 @@ groups:
   - deploy-opsman-from-arm
   - run-azcli-get-vms
   - copy-opsman-image
+  - check-opsman-image-copy-status
+
 
 - name: staged-pas-config
 plan:
