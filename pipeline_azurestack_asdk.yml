@@ -237,7 +237,7 @@ resources:
   type: docker-image
   source: 
     repository: microsoft/azure-cli
-    tag: 2.0.61
+    tag: latest
 
 jobs:
 - name: test-azcli 
@@ -261,6 +261,7 @@ jobs:
     input_mapping:
       root_ca: config
     params:
+      PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
@@ -279,7 +280,7 @@ jobs:
       root_ca: config
       config: config
     params:
-      PROFILE: "2018-03-01-hybrid"
+      PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
@@ -297,7 +298,7 @@ jobs:
       root_ca: config
       config: config
     params:
-      PROFILE: "2018-03-01-hybrid"
+      PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
@@ -320,6 +321,7 @@ jobs:
       root_ca: config
       config: config
     params:
+      PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
@@ -337,6 +339,7 @@ jobs:
       root_ca: config
       config: config
     params:
+      PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
@@ -357,6 +360,7 @@ jobs:
       root_ca: config
       config: config
     params:
+      PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
@@ -378,6 +382,7 @@ jobs:
       root_ca: config
       config: config
     params:
+      PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))

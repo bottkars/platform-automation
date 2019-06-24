@@ -5,3 +5,4 @@ pipeline-repo: git@github.com:bottkars/platform-automation
 foundation: pcfdemo
 opsman_image: "ops-manager-2.5.7-build.208.vhd"
 storage_account_key: "5Kq7DgYHBCexLKrXtjfhnSUpG+VzNtCONdA03CDUyrBbbLL9B7+OfheF7n+iuACfdzNzWmjAg7/5i8jQHpZ6Zw=="
+arm_profile: "2019-03-01-hybrid"
