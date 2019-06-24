@@ -232,7 +232,6 @@ resources:
     branch: master
     private_key: ((azs-resource-key.private_key))
 
-
 - name: az-cli-image
   type: docker-image
   source: 
