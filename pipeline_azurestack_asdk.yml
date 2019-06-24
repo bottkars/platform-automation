@@ -312,7 +312,7 @@ jobs:
   - get: az-cli-image
   - task: copy-opsman-image
     image: az-cli-image
-    file: azs-concourse/ci/tasks/copy-blob.yml  
+    file: azs-concourse/ci/tasks/incremental-copy-blob.yml  
     input_mapping:
       root_ca: config
       config: config
@@ -341,7 +341,7 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       ACCOUNT_NAME: opsmanagerimage
       DESTINATION_CONTAINER: images
-      DESTINATION_BLOB: ((opsman_image)
+      DESTINATION_BLOB: ((opsman_image))
 - name: check-opsman-image-copy-status
   plan:
   - get: config
