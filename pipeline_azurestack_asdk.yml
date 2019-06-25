@@ -640,7 +640,7 @@ jobs:
       file: azs-concourse/ci/tasks/query-vm.yml  
       input_mapping:
         root_ca: configuration
-
+        config: configuration
       params:
         PROFILE: ((arm_profile))
         CA_CERT: cert/root.pem
