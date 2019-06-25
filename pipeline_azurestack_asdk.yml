@@ -211,6 +211,15 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: \[ops-manager,(.*)\].*.yml
 
+- name: config
+  type: git
+  source:
+    private_key: ((configuration.private_key))
+    uri: ((configuration.uri))
+    branch: master
+    submodules: all
+    depth: 1
+
 - name: configuration
   #icon: github-circle
   type: git  
@@ -240,6 +249,20 @@ resources:
   source: 
     repository: microsoft/azure-cli
     tag: latest
+
+credhub-interpolate: &credhub-interpolate
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    CREDHUB_CLIENT: ((credhub-client))
+    CREDHUB_SECRET: ((credhub-secret))
+    CREDHUB_SERVER: ((credhub-server))
+    PREFIX: /concourse/main/((foundation))
+    INTERPOLATION_PATHS: "download-product-configs"
+  input_mapping:
+    files: config
+  output_mapping:
+    interpolated-files: config
 
 interpolate-creds: &interpolate-creds
   image: platform-automation-image
@@ -533,6 +556,8 @@ jobs:
   - task: download-opsman-image
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
+    input_mapping:
+      config: interpolated-creds      
     params:
       CONFIG_FILE: download-product-configs/download-opsman.yml
   - aggregate:
@@ -699,8 +724,8 @@ jobs:
       params:
         unpack: true
     - get: configuration
-  - task: interpolate-creds
-    <<: *interpolate-creds
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
   - task: download-srt-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -728,9 +753,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: configuration
-  - task: interpolate-creds
-    <<: *interpolate-creds
+    - get: config
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
   - task: download-p-spring-cloud-services-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -759,8 +784,8 @@ jobs:
       params:
         unpack: true
     - get: configuration
-  - task: interpolate-creds
-    <<: *interpolate-creds
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
   - task: download-p-spring-cloud-services-3-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -818,7 +843,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: configuration
+    - get: config
   - task: interpolate-creds
     <<: *interpolate-creds
   - task: download-p-rabbitmq-product-and-stemcell
