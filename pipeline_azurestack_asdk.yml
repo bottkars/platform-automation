@@ -214,9 +214,11 @@ resources:
 - name: config
   type: git
   source:
-    private_key: ((configuration.private_key))
-    uri: ((configuration.uri))
+  #  private_key: ((configuration.private_key))
+  # uri: ((configuration.uri))
     branch: master
+    uri: ((pipeline-repo))
+    private_key: ((plat-auto-pipes-deploy-key.private_key))  
     submodules: all
     depth: 1
 
