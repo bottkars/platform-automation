@@ -458,6 +458,7 @@ jobs:
       image: az-cli-image
       file: azs-concourse/ci/tasks/query-vm.yml  
       input_mapping:
+        config: configuration
         root_ca: configuration
       params:
         PROFILE: ((arm_profile))
@@ -610,6 +611,8 @@ jobs:
     - aggregate:
         - get: one-time-trigger
           passed: [ export-installation ]
+        - get: azs-concourse  
+        - get: az-cli-image  
         - get: platform-automation-image
           params:
             unpack: true
@@ -632,6 +635,20 @@ jobs:
         config: interpolated-creds
       output_mapping:
         downloaded-product: opsman-image
+    - task: create-vm
+      image: az-cli-image
+      file: azs-concourse/ci/tasks/query-vm.yml  
+      input_mapping:
+        root_ca: configuration
+
+      params:
+        PROFILE: ((arm_profile))
+        CA_CERT: cert/root.pem
+        AZURE_TENANT_ID: ((tenant-id))
+        AZURE_CLIENT_ID: ((client-id))
+        AZURE_CLIENT_SECRET: ((client-secret))
+        AZURE_SUBSCRIPTION_ID: ((subscription-id))
+        STATE_FILE: ((foundation))/state/state.yml        
       ensure: *make-state-commit
     - task: configure-director
       image: platform-automation-image
