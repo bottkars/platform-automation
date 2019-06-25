@@ -2,23 +2,31 @@
 networks-configuration:
  icmp_checks_enabled: false
  networks:
- - name: control-infrastructure-subnet
+ - name: pcf-infrastructure-subnet
    subnets:
    - iaas_identifier: ((infrastructure-subnet))
      cidr: ((infrastructure_cidr))
      reserved_ip_ranges: ((infrastructure_range))
      dns: 168.63.129.16
      gateway: ((infrastructure_gateway))
- - name: control-plane-subnet
+ - name: pcf-pas-subnet
    subnets:
-   - iaas_identifier: ((plane-subnet))
-     cidr: ((plane_cidr))
-     reserved_ip_ranges: ((plane_range))
+   - iaas_identifier: ((pas-subnet))
+     cidr: ((pas_cidr))
+     reserved_ip_ranges: ((pas_range))
      dns: 168.63.129.16
-     gateway: ((plane_gateway))
+     gateway: ((pas_gateway))
+ - name: pcf-services-subnet
+   service_network: true
+   subnets:
+   - iaas_identifier: ((services-subnet))
+     cidr: ((services_cidr))
+     reserved_ip_ranges: ((services_range))
+     dns: 168.63.129.16
+     gateway: ((services_gateway))
 network-assignment:
  network:
-  name: control-infrastructure-subnet
+  name: pcf-infrastructure-subnet
  singleton_availability_zone:
   name: ((singleton_availability_zone))   
 properties-configuration:
@@ -64,4 +72,3 @@ resource-configuration:
       size_mb: "204800"
     instance_type:
       id: automatic
-
