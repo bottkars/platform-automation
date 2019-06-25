@@ -220,7 +220,7 @@ resources:
     uri: ((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))  
     submodules: all
-    depth: 1
+#    depth: 1
 
 - name: configuration
   #icon: github-circle
@@ -260,7 +260,8 @@ credhub-interpolate: &credhub-interpolate
     CREDHUB_SECRET: ((credhub-secret))
     CREDHUB_SERVER: ((credhub-server))
     PREFIX: /concourse/main/((foundation))
-    INTERPOLATION_PATHS: "download-product-configs"
+   # INTERPOLATION_PATHS: "download-product-configs"
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env ((foundation))/vars download-product-configs product-configs  
   input_mapping:
     files: config
   output_mapping:
