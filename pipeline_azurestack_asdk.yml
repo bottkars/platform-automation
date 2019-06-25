@@ -723,7 +723,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: configuration
+    - get: config
   - task: credhub-interpolate
     <<: *credhub-interpolate
   - task: download-srt-product-and-stemcell
@@ -783,7 +783,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: configuration
+    - get: config
   - task: credhub-interpolate
     <<: *credhub-interpolate
   - task: download-p-spring-cloud-services-3-product-and-stemcell
@@ -813,9 +813,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: configuration
-  - task: interpolate-creds
-    <<: *interpolate-creds
+    - get: config
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
   - task: download-pivotal-mysql-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -844,8 +844,8 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: interpolate-creds
-    <<: *interpolate-creds
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
   - task: download-p-rabbitmq-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -872,9 +872,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: configuration
-  - task: interpolate-creds
-    <<: *interpolate-creds
+    - get: config
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
   - task: download-pas-windows-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
