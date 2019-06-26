@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "OpsManImageURI": {
+            "value": "https://opsmanagerimage.blob.local.azurestack.external/images/ops-manager-2.5.4-build.189.vhd"
+        },
+        "opsManFQDNPrefix": {
+            "value": "pcf"
+        },
+        "opsManVHD": {
+            "value": "ops-manager-2.5.4-build.189.vhd"
+        },
+        "mask": {
+            "value": "10.0"
+        },
+        "deploymentcolor": {
+            "value": "green"
+        },
+        "vmSize": {
+            "value": "Standard_F4s_v2"
+        },
+        "adminUsername": {
+            "value": "ubuntu"
+        },
+        "sshKeyData": {
+            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCvvplV8rSugLdqikfRojJEqANiOYymIFmACRsr6h7lvRwP98PHQyjzhaN43PFxN42l3mHGFjswHupVEBP4nb+rn9qYRnEPLO8tiL7IklvamNKk0MyspyVxw20mVuujZdIIVOE6mpABpybZ+VM0yk6Eb1nr1sTMUR9iagLaECBIss/9/EayH/ArWtNz4CMDyMCiF5VZNnmkE3Um0XLf1DKWzMceFfAZrEAEi2Pl1dy5Kggg0jCIrgq+tkBJ/ph4rHH2mMu0Ibitdb5OG8PwGZsiRpf6/PNSuW1Dzf4pVtRuNWFfQfmjtOTezdYehV2XHfExwvw2f7gaABU5N6Xo4v2l ubuntu"
+        },
+        "location": {
+            "value": "local"
+        }
+    }
+}

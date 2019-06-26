@@ -657,7 +657,7 @@ jobs:
         AZURE_CLIENT_SECRET: ((client-secret))
         AZURE_SUBSCRIPTION_ID: ((subscription-id))
         TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
-        PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+        PARAMETER_FILE: ((foundation))/config/parameters_opsman_update.json
         RESOURCE_GROUP: pcf
         LOCATION: local
       ensure: *make-state-commit
