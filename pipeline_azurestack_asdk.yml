@@ -318,6 +318,7 @@ jobs:
     - get: configuration
     - get: azs-concourse
     - get: az-cli-image
+    - get: opsman-product
   - task: validate-template
     image: az-cli-image
     file: azs-concourse/ci/tasks/validate-template.yml  
@@ -336,12 +337,13 @@ jobs:
       RESOURCE_GROUP: pcf
       LOCATION: local
       ADDITIONAL_PARAMETERS: "OpsManImageURI=https://opsmanagerimage.blob.local.azurestack.external/images/((opsman_image))"
-  - task: deploy-template 
+  - task: deploy-opsman-template 
     image: az-cli-image
-    file: azs-concourse/ci/tasks/deploy-template.yml  
+    file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
     input_mapping:
       root_ca: configuration
       config: configuration
+      image: opsman-product
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
@@ -351,7 +353,6 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
-      ADDITIONAL_PARAMETERS: "OpsManImageURI=https://opsmanagerimage.blob.local.azurestack.external/images/((opsman_image))"
       RESOURCE_GROUP: pcf
       LOCATION: local
 
@@ -390,45 +391,23 @@ jobs:
       ACCOUNT_NAME: opsmanagerimage
       ACCOUNT_KEY: ((storage_account_key))
       DESTINATION_CONTAINER: images
-      DESTINATION_BLOB: ((opsman_image))
-      SOURCE_URI: https://opsmanagerwesteurope.blob.core.windows.net/images/((opsman_image))
-  - task: check-copy-status-success
-    image: az-cli-image
-    file: azs-concourse/ci/tasks/copy-status-until-success.yml  
-    input_mapping:
-      root_ca: configuration
-      config: configuration
-    params:
-      PROFILE: ((arm_profile))
-      CA_CERT: cert/root.pem
-      AZURE_TENANT_ID: ((tenant-id))
-      AZURE_CLIENT_ID: ((client-id))
-      AZURE_CLIENT_SECRET: ((client-secret))
-      AZURE_SUBSCRIPTION_ID: ((subscription-id))
-      ACCOUNT_NAME: opsmanagerimage
-      DESTINATION_CONTAINER: images
-      DESTINATION_BLOB: ((opsman_image))
-- name: check-opsman-image-copy-status
-  plan:
-  - get: configuration
-  - get: azs-concourse
-  - get: az-cli-image
-  - task: check-copy-status
-    image: az-cli-image
-    file: azs-concourse/ci/tasks/copy-status.yml  
-    input_mapping:
-      root_ca: configuration
-      config: configuration
-    params:
-      PROFILE: ((arm_profile))
-      CA_CERT: cert/root.pem
-      AZURE_TENANT_ID: ((tenant-id))
-      AZURE_CLIENT_ID: ((client-id))
-      AZURE_CLIENT_SECRET: ((client-secret))
-      AZURE_SUBSCRIPTION_ID: ((subscription-id))
-      ACCOUNT_NAME: opsmanagerimage
-      DESTINATION_CONTAINER: images
-      DESTINATION_BLOB: ((opsman_image))
+#  - task: check-copy-status-success
+#    image: az-cli-image
+#    file: azs-concourse/ci/tasks/copy-status-until-success.yml  
+#    input_mapping:
+#      image: opsman-product
+#      root_ca: configuration
+#      config: configuration
+#    params:
+#      PROFILE: ((arm_profile))
+#      CA_CERT: cert/root.pem
+#      AZURE_TENANT_ID: ((tenant-id))
+#      AZURE_CLIENT_ID: ((client-id))
+#      AZURE_CLIENT_SECRET: ((client-secret))
+#      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+#      ACCOUNT_NAME: opsmanagerimage
+#      DESTINATION_CONTAINER: images
+#      DESTINATION_BLOB: ((opsman_image))
 
 - name: delete-opsman-vm
   plan:
@@ -653,6 +632,7 @@ jobs:
           passed: [ export-installation ]
         - get: configuration
         - get: variable
+        - get: opsman-product
     - task: interpolate-creds
       <<: *interpolate-creds
     - task: download-opsman-image
@@ -666,10 +646,11 @@ jobs:
         downloaded-product: opsman-image
     - task: create-vm
       image: az-cli-image
-      file: azs-concourse/ci/tasks/query-vm.yml  
+      file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
       input_mapping:
         root_ca: configuration
         config: configuration
+        image: opsman-product
       params:
         PROFILE: ((arm_profile))
         CA_CERT: cert/root.pem
@@ -677,28 +658,29 @@ jobs:
         AZURE_CLIENT_ID: ((client-id))
         AZURE_CLIENT_SECRET: ((client-secret))
         AZURE_SUBSCRIPTION_ID: ((subscription-id))
-        STATE_FILE: ((foundation))/state/state.yml        
+        TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy-update.json"
+        PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+        RESOURCE_GROUP: pcf
+        LOCATION: local
       ensure: *make-state-commit
-    - task: configure-director
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-director.yml
-      input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
-        vars: variable
-      params:
-        VARS_FILES: vars/((foundation))/vars/director-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
-    - task: apply-director-changes
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/apply-director-changes.yml
-      input_mapping:
-        env: interpolated-creds
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-
-
+#    - task: configure-director
+#      image: platform-automation-image
+#      file: platform-automation-tasks/tasks/configure-director.yml
+#      input_mapping:
+#        config: interpolated-creds
+#        env: interpolated-creds
+#        vars: variable
+ #     params:
+ #       VARS_FILES: vars/((foundation))/vars/director-vars.yml
+#        ENV_FILE: ((foundation))/env/env.yml
+#        DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
+#    - task: apply-director-changes
+#      image: platform-automation-image
+#      file: platform-automation-tasks/tasks/apply-director-changes.yml
+#      input_mapping:
+#        env: interpolated-creds
+#      params:
+#        ENV_FILE: ((foundation))/env/env.yml
 
 - name: get-platform-automation
   plan:
