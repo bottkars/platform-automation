@@ -370,9 +370,7 @@ jobs:
     - get: installation
       passed: [ export-installation ]  
     - get: azs-concourse
-      trigger: true
     - get: az-cli-image
-      trigger: true
   - task: copy-opsman-image
     file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
     image: az-cli-image
@@ -1458,7 +1456,6 @@ groups:
   - test-azcli
   - deploy-opsman-from-arm
   - run-azcli-get-vms
-  - check-opsman-image-copy-status
   - testing
 
 
