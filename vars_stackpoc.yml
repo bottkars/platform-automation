@@ -6,5 +6,5 @@ foundation: stackpoc_demo
 opsman_image: ops-manager-2.6.0-build.138.vhd
 storage_account_key: "+lK+gDbt5FqlbIm0KZ6x9c1f/P6/IQeXLnLhDmE9ShZvUWbA5KTLvitA0+Fm+hbTRIfqab+/rbh0nciFjmurfw=="
 arm_profile: "2019-03-01-hybrid"
-pcf_version: 2.6
+pcf_version: "2.6"
 opsman_image_location: west_europe

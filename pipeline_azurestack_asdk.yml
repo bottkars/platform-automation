@@ -466,7 +466,7 @@ jobs:
           unpack: true
     - task: interpolate-creds
       <<: *interpolate-creds
-    - task: download-opsman-image
+    - task: download-opsman-pivnet
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
@@ -545,7 +545,7 @@ jobs:
   plan:
   - aggregate:
     - get: daily-trigger
-      trigger: true
+    #  trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -555,7 +555,7 @@ jobs:
     - get: config
   - task: credhub-interpolate
     <<: *credhub-interpolate
-  - task: download-opsman-image
+  - task: download-opsman-pivnet
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
 #    input_mapping:
@@ -654,7 +654,7 @@ jobs:
         - get: opsman-product
     - task: interpolate-creds
       <<: *interpolate-creds
-    - task: download-opsman-image
+    - task: download-opsman-pivnet
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
