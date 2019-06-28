@@ -565,7 +565,7 @@ jobs:
         BOSHSTORAGEACCOUNT: pcfkbboshstorage
         LOCATION: ((azurestack_region))
         STATE_FILE: director_deployment_vars.yml
-      ensure: &make-config-commit
+      on_success: &make-config-commit
         do:
           - task: make-commit
             image: platform-automation-image
@@ -592,7 +592,6 @@ jobs:
       input_mapping:
         config: configuration
         root_ca: configuration
-
       params:
         PROFILE: ((arm_profile))
         CA_CERT: cert/root.pem
@@ -634,24 +633,26 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
         AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
-#    - task: configure-director
-#      image: platform-automation-image
-#      file: platform-automation-tasks/tasks/configure-director.yml
-#      input_mapping:
-#        config: interpolated-creds
-#        env: interpolated-creds
-#        vars: variable
-#      params:
-#        VARS_FILES: vars/((foundation))/vars/director-vars.yml
-#        ENV_FILE: ((foundation))/env/env.yml
-#        DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
-#    - task: apply-director-changes
-#      image: platform-automation-image
-#      file: platform-automation-tasks/tasks/apply-director-changes.yml
-#      input_mapping:
-#        env: interpolated-creds
-#      params:
-#        ENV_FILE: ((foundation))/env/env.yml
+    - task: configure-director
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-director.yml
+      input_mapping:
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        VARS_FILES: vars/((foundation))/vars/director-vars.yml generated.state/director_deployment_vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
+        DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
+    - task: apply-director-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-director-changes.yml
+      input_mapping:
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+
+
 - name: get-opsman
   plan:
   - aggregate:
