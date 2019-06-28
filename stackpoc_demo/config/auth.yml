@@ -1,5 +1,5 @@
 ---
-target: https://pcf.pcfazure.labbuildr.com
+target: https://pcf.pcfdemo.westus.stackpoc.com
 connect-timeout: 30            # default 5
 request-timeout: 1800          # default 1800
 skip-ssl-validation: true     # default false
