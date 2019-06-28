@@ -453,6 +453,7 @@ jobs:
   serial_groups: [ install ]
   plan:
     - aggregate:
+      - get: config
       - get: configuration
       - get: azs-concourse
       - get: az-cli-image
@@ -465,8 +466,21 @@ jobs:
         params:
           unpack: true
     - task: interpolate-creds
-      <<: *interpolate-creds
+      <<: *interpolate-creds          
+    - task: credhub-interpolate
+      <<: *credhub-interpolate
     - task: download-opsman-pivnet
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product.yml
+  #    input_mapping:
+  #      config: interpolated-creds      
+      params:
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
+    - aggregate:
+      - put: opsman-product
+        params:
+          file: downloaded-product/*      
+    - task: download-opsman-s3
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
@@ -475,6 +489,30 @@ jobs:
         config: interpolated-creds
       output_mapping:
         downloaded-product: opsman-image
+
+    - task: copy-opsman-image
+      file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
+      image: az-cli-image
+      input_mapping:
+        image: opsman-product
+        root_ca: configuration
+        config: configuration
+      params:
+        OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+        PROFILE: ((arm_profile))
+        CA_CERT: cert/root.pem
+        ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+        VAULT_DNS:  ((vault-dns))
+        SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+        AZURE_TENANT_ID: ((tenant-id))
+        AZURE_CLIENT_ID: ((client-id))
+        AZURE_CLIENT_SECRET: ((client-secret))
+        AZURE_SUBSCRIPTION_ID: ((subscription-id))
+        ACCOUNT_NAME: opsmanagerimage
+        ACCOUNT_KEY: ((storage_account_key))
+        DESTINATION_CONTAINER: images
+
+
     - get: variable
     - task: create-vm
       image: az-cli-image
