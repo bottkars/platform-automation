@@ -308,6 +308,9 @@ jobs:
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
       AZURE_CLIENT_SECRET: ((client-secret))
@@ -328,6 +331,9 @@ jobs:
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
       AZURE_CLIENT_SECRET: ((client-secret))
@@ -347,6 +353,9 @@ jobs:
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
       AZURE_CLIENT_SECRET: ((client-secret))
@@ -382,6 +391,9 @@ jobs:
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
       AZURE_CLIENT_SECRET: ((client-secret))
@@ -399,6 +411,9 @@ jobs:
 #    params:
 #      PROFILE: ((arm_profile))
 #      CA_CERT: cert/root.pem
+#      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+#      VAULT_DNS:  ((vault-dns))
+#      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
 #      AZURE_TENANT_ID: ((tenant-id))
 #      AZURE_CLIENT_ID: ((client-id))
 #      AZURE_CLIENT_SECRET: ((client-secret))
@@ -421,6 +436,9 @@ jobs:
     params:
       PROFILE: ((arm_profile))
       CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
       AZURE_TENANT_ID: ((tenant-id))
       AZURE_CLIENT_ID: ((client-id))
       AZURE_CLIENT_SECRET: ((client-secret))
@@ -467,6 +485,9 @@ jobs:
       params:
         PROFILE: ((arm_profile))
         CA_CERT: cert/root.pem
+        ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+        VAULT_DNS:  ((vault-dns))
+        SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
         AZURE_TENANT_ID: ((tenant-id))
         AZURE_CLIENT_ID: ((client-id))
         AZURE_CLIENT_SECRET: ((client-secret))
@@ -652,6 +673,9 @@ jobs:
       params:
         PROFILE: ((arm_profile))
         CA_CERT: cert/root.pem
+        ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+        VAULT_DNS:  ((vault-dns))
+        SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
         AZURE_TENANT_ID: ((tenant-id))
         AZURE_CLIENT_ID: ((client-id))
         AZURE_CLIENT_SECRET: ((client-secret))

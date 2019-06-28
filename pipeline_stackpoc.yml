@@ -282,14 +282,14 @@ jobs:
 
 - name: run-azcli-get-vms
   plan:
-  - get: config
+  - get: configuration
   - get: azs-concourse
   - get: az-cli-image
   - task: get-vms
     image: az-cli-image
     file: azs-concourse/ci/tasks/get-vms.yml  
     input_mapping:
-      root_ca: config
+      root_ca: configuration
     params:
       CA_CERT: cert/root.pem
       ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
