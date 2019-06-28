@@ -603,6 +603,7 @@ jobs:
         AZURE_CLIENT_SECRET: ((client-secret))
         AZURE_SUBSCRIPTION_ID: ((subscription-id))
         STATE_FILE: ((foundation))/state/state.yml
+        VM_NAME: ops_man_vm
       ensure: &make-state-commit
         do:
           - task: make-commit
