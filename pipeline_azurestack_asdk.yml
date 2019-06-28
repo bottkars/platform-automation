@@ -470,7 +470,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/download-opsman.yml
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -561,7 +561,7 @@ jobs:
 #    input_mapping:
 #      config: interpolated-creds      
     params:
-      CONFIG_FILE: download-product-configs/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
   - aggregate:
     - put: opsman-product
       params:
@@ -658,7 +658,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/download-opsman.yml
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -738,7 +738,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/download-srt.yml
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-srt.yml
     output_mapping: {downloaded-stemcell: srt-stemcell}
   - aggregate:
     - put: srt-product
@@ -768,7 +768,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/download-p-spring-cloud-services.yml
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services.yml
     output_mapping: {downloaded-stemcell: p-spring-cloud-services-stemcell}
   - aggregate:
     - put: p-spring-cloud-services-product
@@ -798,7 +798,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/download-p-spring-cloud-services-3.yml
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services-3.yml
     output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
   - aggregate:
     - put: p-spring-cloud-services-3-product
@@ -828,7 +828,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/download-pivotal-mysql.yml
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-pivotal-mysql.yml
     output_mapping: {downloaded-stemcell: pivotal-mysql-stemcell}
   - aggregate:
     - put: pivotal-mysql-product
@@ -858,7 +858,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/download-p-rabbitmq.yml
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-rabbitmq.yml
     output_mapping: {downloaded-stemcell: p-rabbitmq-stemcell}
   - aggregate:
     - put: p-rabbitmq-product
@@ -889,7 +889,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/download-pas-windows.yml
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-pas-windows.yml
     output_mapping: {downloaded-stemcell: pas-windows-stemcell}
   - aggregate:
     - put: pas-windows-product
@@ -919,7 +919,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/download-srt.yml
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-srt.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -967,7 +967,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/download-pas-windows.yml
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-pas-windows.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -1017,7 +1017,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/download-pivotal-mysql.yml
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-pivotal-mysql.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -1066,7 +1066,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/download-p-spring-cloud-services.yml
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -1117,7 +1117,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/download-p-spring-cloud-services-3.yml
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services-3.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
@@ -1167,7 +1167,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/download-p-rabbitmq.yml
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-p-rabbitmq.yml
       input_mapping:
         config: interpolated-creds
       output_mapping:
