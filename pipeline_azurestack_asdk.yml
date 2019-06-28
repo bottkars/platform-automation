@@ -341,7 +341,9 @@ jobs:
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       RESOURCE_GROUP: pcf
-      LOCATION: local
+      RESOURCE_GROUP: pcf
+      BOSHSTORAGEACCOUNT: boshstorage
+      LOCATION: ((azurestack_region))
       ADDITIONAL_PARAMETERS: "OpsManImageURI=https://opsmanagerimage.blob.local.azurestack.external/images/((opsman_image))"
   - task: deploy-opsman-template 
     image: az-cli-image
@@ -363,7 +365,8 @@ jobs:
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       RESOURCE_GROUP: pcf
-      LOCATION: local
+      BOSHSTORAGEACCOUNT: boshstorage
+      LOCATION: ((azurestack_region))
 
 - name: get-opsman-image
   serial: true
@@ -514,12 +517,81 @@ jobs:
 
 
     - get: variable
-    - task: create-vm
+    
+    - task: validate-template
+      image: az-cli-image
+      file: azs-concourse/ci/tasks/validate-pcf-template.yml  
+      input_mapping:
+        root_ca: configuration
+        config: configuration
+        image: opsman-product
+      params:
+        PROFILE: ((arm_profile))
+        CA_CERT: cert/root.pem
+        ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+        VAULT_DNS:  ((vault-dns))
+        SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+        AZURE_TENANT_ID: ((tenant-id))
+        AZURE_CLIENT_ID: ((client-id))
+        AZURE_CLIENT_SECRET: ((client-secret))
+        AZURE_SUBSCRIPTION_ID: ((subscription-id))
+        TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+        PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+        RESOURCE_GROUP: pcf
+        RESOURCE_GROUP: pcf
+        BOSHSTORAGEACCOUNT: boshstorage
+        LOCATION: ((azurestack_region))
+      ensure: &make-config-commit
+          do:
+          - task: make-commit
+            image: platform-automation-image
+            file: platform-automation-tasks/tasks/make-git-commit.yml
+            input_mapping:
+              repository: configuration
+              file-source: generated-state
+            output_mapping:
+              repository-commit: configuration-commit
+            params:
+              FILE_SOURCE_PATH: director_deployment_vars.yml
+              FILE_DESTINATION_PATH: ((foundation))/vars/director_deployment_vars.yml
+              GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
+              GIT_AUTHOR_NAME: "Platform Automation Bot"
+              COMMIT_MESSAGE: 'Update state file'
+          - put: configuration
+            params:
+              repository: configuration-commit
+              merge: true
+    
+    - task: deploy-opsman-template 
+      image: az-cli-image
+      file: azs-concourse/ci/tasks/deploy-pcf-template.yml  
+      input_mapping:
+        root_ca: configuration
+        config: configuration
+        image: opsman-product
+      params:
+        PROFILE: ((arm_profile))
+        CA_CERT: cert/root.pem
+        ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+        VAULT_DNS:  ((vault-dns))
+        SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+        AZURE_TENANT_ID: ((tenant-id))
+        AZURE_CLIENT_ID: ((client-id))
+        AZURE_CLIENT_SECRET: ((client-secret))
+        AZURE_SUBSCRIPTION_ID: ((subscription-id))
+        TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+        PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+        RESOURCE_GROUP: pcf
+        BOSHSTORAGEACCOUNT: boshstorage
+        LOCATION: ((azurestack_region))
+
+    - task: validate-vm
       image: az-cli-image
       file: azs-concourse/ci/tasks/query-vm.yml  
       input_mapping:
         config: configuration
         root_ca: configuration
+
       params:
         PROFILE: ((arm_profile))
         CA_CERT: cert/root.pem
@@ -721,7 +793,7 @@ jobs:
         TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
         PARAMETER_FILE: ((foundation))/config/parameters_opsman_update.json
         RESOURCE_GROUP: pcf
-        LOCATION: local
+        location: ((azurestack_region))
       ensure: *make-state-commit
 #    - task: configure-director
 #      image: platform-automation-image
