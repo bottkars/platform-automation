@@ -6,4 +6,6 @@ foundation: pcfdemo
 opsman_image_location: west_europe
 storage_account_key: "jqF9Diac1O1hhtgChy0KCc7vbDlWUWKmc5wNZmJpVEi3ffg3Bh3LHjs1Zw/m1zI/oO8uhoQ3MgEQ+DwnNsOFew=="
 arm_profile: "2019-03-01-hybrid"
+vault-dns: vault.local.azurestack.external
+suffix-storage-endpoint: local.azurestack.external
 pcf_version: "2.6"

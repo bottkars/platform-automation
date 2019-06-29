@@ -307,7 +307,7 @@ jobs:
       root_ca: configuration
     params:
       PROFILE: ((arm_profile))
-      CA_CERT: cert/root.pem
+      CA_CERT: ((foundation))/cert/root.pem
       ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
       VAULT_DNS:  ((vault-dns))
       SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -330,7 +330,7 @@ jobs:
       config: configuration
     params:
       PROFILE: ((arm_profile))
-      CA_CERT: cert/root.pem
+      CA_CERT: ((foundation))/cert/root.pem
       ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
       VAULT_DNS:  ((vault-dns))
       SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -354,7 +354,7 @@ jobs:
       image: opsman-product
     params:
       PROFILE: ((arm_profile))
-      CA_CERT: cert/root.pem
+      CA_CERT: ((foundation))/cert/root.pem
       ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
       VAULT_DNS:  ((vault-dns))
       SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -393,7 +393,7 @@ jobs:
     params:
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
       PROFILE: ((arm_profile))
-      CA_CERT: cert/root.pem
+      CA_CERT: ((foundation))/cert/root.pem
       ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
       VAULT_DNS:  ((vault-dns))
       SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -413,7 +413,7 @@ jobs:
 #      config: configuration
 #    params:
 #      PROFILE: ((arm_profile))
-#      CA_CERT: cert/root.pem
+#      CA_CERT: ((foundation))/cert/root.pem
 #      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
 #      VAULT_DNS:  ((vault-dns))
 #      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -438,7 +438,7 @@ jobs:
       config: configuration
     params:
       PROFILE: ((arm_profile))
-      CA_CERT: cert/root.pem
+      CA_CERT: ((foundation))/cert/root.pem
       ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
       VAULT_DNS:  ((vault-dns))
       SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -462,7 +462,7 @@ jobs:
       config: configuration
     params:
       PROFILE: ((arm_profile))
-      CA_CERT: cert/root.pem
+      CA_CERT: ((foundation))/cert/root.pem
       ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
       VAULT_DNS:  ((vault-dns))
       SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -526,7 +526,7 @@ jobs:
       params:
         OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
         PROFILE: ((arm_profile))
-        CA_CERT: cert/root.pem
+        CA_CERT: ((foundation))/cert/root.pem
         ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
         VAULT_DNS:  ((vault-dns))
         SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -550,7 +550,7 @@ jobs:
         image: opsman-product
       params:
         PROFILE: ((arm_profile))
-        CA_CERT: cert/root.pem
+        CA_CERT: ((foundation))/cert/root.pem
         ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
         VAULT_DNS:  ((vault-dns))
         SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -574,7 +574,7 @@ jobs:
         image: opsman-product
       params:
         PROFILE: ((arm_profile))
-        CA_CERT: cert/root.pem
+        CA_CERT: ((foundation))/cert/root.pem
         ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
         VAULT_DNS:  ((vault-dns))
         SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -617,7 +617,7 @@ jobs:
         root_ca: configuration
       params:
         PROFILE: ((arm_profile))
-        CA_CERT: cert/root.pem
+        CA_CERT: ((foundation))/cert/root.pem
         ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
         VAULT_DNS:  ((vault-dns))
         SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -840,7 +840,7 @@ jobs:
         image: opsman-product
       params:
         PROFILE: ((arm_profile))
-        CA_CERT: cert/root.pem
+        CA_CERT: ((foundation))/cert/root.pem
         ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
         VAULT_DNS:  ((vault-dns))
         SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
