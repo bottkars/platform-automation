@@ -449,7 +449,30 @@ jobs:
       RESOURCE_GROUP: pcf
       VM_NAME: pcf
 
+- name: delete-pcf
+  plan:
+  - get: configuration
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: delete-rg
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/delete-rg.yml  
+    input_mapping:
+      root_ca: configuration
+      config: configuration
+    params:
+      PROFILE: ((arm_profile))
+      CA_CERT: cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      RESOURCE_GROUP: pcf
      
+
 ## opsman starts here
 - name: install-opsman
   serial: true
@@ -1584,12 +1607,13 @@ groups:
   - configure-p-spring-cloud-services
   - configure-p-spring-cloud-services-3
   - apply-product-changes
-- name: deploy-asdk-1905
+- name: deploy-asdk-1906
   jobs:  
   - deploy-asdk
 - name: azcli-jobs
   jobs:
   - delete-opsman-vm
+  - delete-pcf
   - test-azcli
   - deploy-opsman-from-arm
   - run-azcli-get-vms
