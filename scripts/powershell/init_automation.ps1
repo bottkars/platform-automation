@@ -59,8 +59,8 @@ credhub set /name:/concourse/main/pivnet_token /type:value --value $($env_vars.E
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet_token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 
-credhub set /name:/concourse/main/azs_ca /type:certificate /root:$HOME/root.pem 
-credhub get /name:/concourse/main/azs_ca /key:certificate
+credhub set /name:/concourse/main/$FOUNDATION/azs_ca /type:certificate /certificate:$HOME/root.pem 
+credhub get /name:/concourse/main/$FOUNDATION/azs_ca /key:certificate
 
 
 
@@ -80,6 +80,7 @@ credhub set /name:/concourse/main/aztest/tenant-id /type:value --value 5f7dfed5-
 credhub set /name:/concourse/main/aztest/client-id /type:value --value $($env_vars.client_id)
 credhub set /name:/concourse/main/aztest/client-secret /type:value --value $($env_vars.client_secret)
 credhub set /name:/concourse/main/aztest/subscription-id /type:value --value 57230479-98a0-4777-a763-8c024866a52a
+credhub set /name:/concourse/main/$pipeline/endpoint-resource-manager /type:value --value https://management.local.azurestack.external
 
 
 #### stackpoc

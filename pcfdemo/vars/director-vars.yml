@@ -7,9 +7,7 @@ tenant_id: 5f7dfed5-1a3d-424f-8e22-4661ae54b53b
 client_id: 528621af-bbbb-44a8-bc62-3a2db31b0f62
 client_secret: m1;^y:1nV]%cM.s/]$]};_=[
 domain: local.azurestack.external
-deployments_storage_account_name: "*xtrastrggnhj3jjciqi2k*"
 resource_group_name: pcf
-bosh_storage_account_name: pcfboshstorage
 ntp_servers_string: 192.168.1.1
 ressource: https://management.karstenbottemc.onmicrosoft.com/46b6a87d-f8c2-4ea0-9e91-37b4a262d7b1
 ssh_public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCvvplV8rSugLdqikfRojJEqANiOYymIFmACRsr6h7lvRwP98PHQyjzhaN43PFxN42l3mHGFjswHupVEBP4nb+rn9qYRnEPLO8tiL7IklvamNKk0MyspyVxw20mVuujZdIIVOE6mpABpybZ+VM0yk6Eb1nr1sTMUR9iagLaECBIss/9/EayH/ArWtNz4CMDyMCiF5VZNnmkE3Um0XLf1DKWzMceFfAZrEAEi2Pl1dy5Kggg0jCIrgq+tkBJ/ph4rHH2mMu0Ibitdb5OG8PwGZsiRpf6/PNSuW1Dzf4pVtRuNWFfQfmjtOTezdYehV2XHfExwvw2f7gaABU5N6Xo4v2l ubuntu"
