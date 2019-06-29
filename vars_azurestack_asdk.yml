@@ -3,8 +3,7 @@ credhub-server: https://plane.control.local.azurestack.external:8844
 opsman-url: https://plane.control.local.azurestack.external
 pipeline-repo: git@github.com:bottkars/platform-automation
 foundation: pcfdemo
-opsman_image: "ops-manager-2.5.7-build.208.vhd"
 opsman_image_location: west_europe
-storage_account_key: "5Kq7DgYHBCexLKrXtjfhnSUpG+VzNtCONdA03CDUyrBbbLL9B7+OfheF7n+iuACfdzNzWmjAg7/5i8jQHpZ6Zw=="
+storage_account_key: "jqF9Diac1O1hhtgChy0KCc7vbDlWUWKmc5wNZmJpVEi3ffg3Bh3LHjs1Zw/m1zI/oO8uhoQ3MgEQ+DwnNsOFew=="
 arm_profile: "2019-03-01-hybrid"
 pcf_version: "2.6"

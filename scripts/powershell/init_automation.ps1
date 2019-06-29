@@ -60,14 +60,14 @@ credhub set /name:/concourse/main/$($FOUNDATION)/pivnet_token /type:value --valu
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 
 credhub set /name:/concourse/main/azs_ca /type:certificate /root:$HOME/root.pem 
-credhub get /name:/concourse/main/azs_ca -k certificate
+credhub get /name:/concourse/main/azs_ca -k ca
 
 
 
-credhub set /name:/concourse/main/$($FOUNDATION)/tenant-id /type:value --value 5f7dfed5-1a3d-424f-8e22-4661ae54b53b
+credhub set /name:/concourse/main/$($FOUNDATION)/tenant-id /type:value --value $(Get-AzureRmSubscription).TenantId
 credhub set /name:/concourse/main/$($FOUNDATION)/client-id /type:value --value $($env_vars.client_id)
 credhub set /name:/concourse/main/$($FOUNDATION)/client-secret /type:value --value $($env_vars.client_secret)
-credhub set /name:/concourse/main/$($FOUNDATION)/subscription-id /type:value --value 57230479-98a0-4777-a763-8c024866a52a
+credhub set /name:/concourse/main/$($FOUNDATION)/subscription-id /type:value --value $(Get-AzureRmSubscription).SubscriptionId
 
 credhub set /name:/concourse/main/azurestack_asdk/tenant-id /type:value --value 5f7dfed5-1a3d-424f-8e22-4661ae54b53b
 credhub set /name:/concourse/main/azurestack_asdk/client-id /type:value --value $($env_vars.client_id)
