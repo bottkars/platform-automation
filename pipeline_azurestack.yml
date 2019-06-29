@@ -456,7 +456,7 @@ jobs:
   - get: az-cli-image
   - task: delete-rg
     image: az-cli-image
-    file: azs-concourse/ci/tasks/delete-rg.yml  
+    file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
     input_mapping:
       root_ca: configuration
       config: configuration
