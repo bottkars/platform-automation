@@ -1,2 +1,2 @@
-deployments_storage_account_name: *xtrastrgavw5gjrr3gn7a*
+deployments_storage_account_name: '*xtrastrgavw5gjrr3gn7a*'
 bosh_storage_account_name: pcfkbboshstorage
