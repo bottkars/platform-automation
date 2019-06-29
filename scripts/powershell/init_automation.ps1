@@ -62,6 +62,8 @@ credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --valu
 credhub set /name:/concourse/main/azs_ca /type:certificate /root:$HOME/root.pem 
 credhub get /name:/concourse/main/azs_ca -k certificate
 
+
+
 credhub set /name:/concourse/main/$($FOUNDATION)/tenant-id /type:value --value 5f7dfed5-1a3d-424f-8e22-4661ae54b53b
 credhub set /name:/concourse/main/$($FOUNDATION)/client-id /type:value --value $($env_vars.client_id)
 credhub set /name:/concourse/main/$($FOUNDATION)/client-secret /type:value --value $($env_vars.client_secret)
@@ -92,6 +94,7 @@ credhub set /name:/concourse/main/credhub-client /type:value --value $CLIENT_NAM
 credhub set /name:/concourse/main/credhub-secret /type:value --value $CREDHUB_PASSWORD
 credhub set /name:/concourse/main/credhub-server /type:value --value $CREDHUB_URL
 credhub set /name:/concourse/main/credhub-ca-cert /type:certificate /root:"$HOME\credhub_ca_cert"
+
 credhub set /name:/concourse/main/$($FOUNDATION)/access_key_id /type:value --value s3admin
 credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_tasks /type:value --value tasks
 credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_image /type:value --value image
