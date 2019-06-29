@@ -45,7 +45,7 @@ properties-configuration:
     cloud_storage_type: ((cloud_storage_type))
     storage_account_type: 
     deployed_cloud_storage_type: 
-    deployments_storage_account_name: ((deployments_storage_account_name))
+    deployments_storage_account_name: "*((deployments_storage_account_name))*""
     bosh_storage_account_name: ((bosh_storage_account_name))
     default_security_group: ((default_security_group))
     ssh_public_key: ((ssh_public_key))
