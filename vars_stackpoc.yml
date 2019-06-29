@@ -9,4 +9,3 @@ arm_profile: "2019-03-01-hybrid"
 pcf_version: "2.6"
 opsman_image_location: west_us
 azurestack_region: westus
-deployment_storage_account: dummy

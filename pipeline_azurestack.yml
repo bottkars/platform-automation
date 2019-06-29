@@ -1560,7 +1560,7 @@ jobs:
         env: interpolated-creds
         vars: variable
       params:
-        CONFIG_FILE: product-configs/srt.yml
+        CONFIG_FILE: product-configs/((pcf_version))/srt.yml
         VARS_FILES: vars/((foundation))/vars/srt-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
 - name: deploy-asdk
