@@ -62,7 +62,7 @@ properties-configuration:
         azure_stack:
           domain: ((domain))
           authentication: ((authentication))
-          resource: ((tenant-endpoint-ressource))
+          resource: ((tenant-endpoint-resource))
           endpoint_prefix: ((endpoint_prefix))
           ca_cert: ((azs_ca.certificate))      
 resource-configuration:
