@@ -60,7 +60,7 @@ credhub set /name:/concourse/main/$($FOUNDATION)/pivnet_token /type:value --valu
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 
 credhub set /name:/concourse/main/azs_ca /type:certificate /root:$HOME/root.pem 
-credhub get /name:/concourse/main/azs_ca -k ca
+credhub get /name:/concourse/main/azs_ca /key:certificate
 
 
 
@@ -147,6 +147,9 @@ credhub set /name:/concourse/main/$($FOUNDATION)/ops-manager-dns /type:value --v
 
 ### asdk things
 credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate `
-/certificate:$HOME\pcfdemo.local.azurestack.external.crt `
-/private:$HOME\pcfdemo.local.azurestack.external.key `
-/root:$HOME\pcfdemo.local.azurestack.external.ca.crt
+ /certificate:$HOME\pcfdemo.local.azurestack.external.crt `
+ /public:$HOME\pcfdemo.local.azurestack.external.key
+
+ credhub set /name:/concourse/main/$FOUNDATION/pcf_opsman_cert /type:certificate `
+ /certificate:$HOME\pcf.pcfdemo.local.azurestack.external.crt `
+ /public:$HOME\pcf.pcfdemo.local.azurestack.external.key
