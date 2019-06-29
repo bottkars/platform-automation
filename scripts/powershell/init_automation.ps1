@@ -83,6 +83,8 @@ credhub set /name:/concourse/main/aztest/subscription-id /type:value --value 572
 credhub set /name:/concourse/main/$pipeline/endpoint-resource-manager /type:value --value https://management.local.azurestack.external
 
 
+credhub set /name:/concourse/main/$pipeline/tenant-endpoint-resource /type:value --value $(Get-AzureRmContext).Environment.ActiveDirectoryServiceEndpointResourceId
+
 #### stackpoc
 
 credhub set /name:/concourse/main/$pipeline/tenant-id /type:value --value $(Get-AzureRmSubscription).TenantId

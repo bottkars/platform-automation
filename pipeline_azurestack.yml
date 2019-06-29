@@ -701,6 +701,19 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
       DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
+- name: apply-director 
+  plan:
+  - aggregate:
+    - get: variable
+    - get: configuration
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+  - task: interpolate-creds
+    <<: *interpolate-creds          
   - task: apply-director-changes
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-director-changes.yml
@@ -1612,6 +1625,7 @@ groups:
   - install-opsman 
   - get-opsman-image
   - configure-opsman
+  - apply-director
 - name: get-products
   jobs:
   - get-platform-automation

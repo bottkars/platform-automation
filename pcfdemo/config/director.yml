@@ -55,14 +55,14 @@ properties-configuration:
     azure_stack:
       domain: ((domain))
       authentication: AzureAD
-      resource: ((ressource))
+      resource: ((tenant-endpoint-resource))
       endpoint_prefix: ((endpoint_prefix))
       ca_cert: ((azs_ca.certificate)) 
     additional_cloud_properties:
         azure_stack:
           domain: ((domain))
           authentication: ((authentication))
-          resource: ((ressource))
+          resource: ((tenant-endpoint-ressource))
           endpoint_prefix: ((endpoint_prefix))
           ca_cert: ((azs_ca.certificate))      
 resource-configuration:
