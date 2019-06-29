@@ -677,6 +677,37 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml
 
 
+- name: configure-opsman ## delete
+  plan:
+  - aggregate:
+    - get: configuration
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+  - task: interpolate-creds
+    <<: *interpolate-creds          
+  - task: configure-director
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-director.yml
+    input_mapping:
+      config: interpolated-creds
+      env: interpolated-creds
+      vars: variable
+    params:
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml generated.state/director_deployment_vars.yml
+      ENV_FILE: ((foundation))/env/env.yml
+      DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
+  - task: apply-director-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-director-changes.yml
+    input_mapping:
+      env: interpolated-creds
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+
 - name: get-opsman
   plan:
   - aggregate:
@@ -1579,6 +1610,7 @@ groups:
   - staged-director-config 
   - install-opsman 
   - get-opsman-image
+  - configure-opsman
 - name: get-products
   jobs:
   - get-platform-automation
