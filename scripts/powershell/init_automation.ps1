@@ -84,11 +84,11 @@ credhub set /name:/concourse/main/aztest/subscription-id /type:value --value 572
 
 #### stackpoc
 
-credhub set /name:/concourse/main/$pipeline/tenant-id /type:value --value a3f33ab9-6362-4609-b44d-a669107ebd9d
+credhub set /name:/concourse/main/$pipeline/tenant-id /type:value --value $(Get-AzureRmSubscription).TenantId
 credhub set /name:/concourse/main/$pipeline/client-id /type:value --value $($env_vars.client_id)
 credhub set /name:/concourse/main/$pipeline/client-secret /type:value --value $($env_vars.client_secret)
-credhub set /name:/concourse/main/$pipeline/subscription-id /type:value --value b1d03e4e-a277-4798-bf48-77a2dfb95492
-credhub set /name:/concourse/main/$pipeline/endpoint-resource-manager /type:value --value https://management.westus.stackp
+credhub set /name:/concourse/main/$pipeline/subscription-id /type:value --value $(Get-AzureRmSubscription).SubscriptionId
+credhub set /name:/concourse/main/$pipeline/endpoint-resource-manager /type:value --value https://management.local.azurestack.external
 
 credhub set /name:/concourse/main/credhub-client /type:value --value $CLIENT_NAME
 credhub set /name:/concourse/main/credhub-secret /type:value --value $CREDHUB_PASSWORD
