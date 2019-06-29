@@ -680,7 +680,7 @@ jobs:
 - name: configure-opsman ## delete
   plan:
   - aggregate:
-    - get: config
+    - get: configuration
     - get: platform-automation-image
       params:
         unpack: true
