@@ -1373,12 +1373,12 @@ jobs:
           params:
             unpack: true
           passed:
-            - configure-pivotal-mysql
-            - configure-p-spring-cloud-services
-            - configure-p-spring-cloud-services-3
-            - configure-p-rabbitmq
+#            - configure-pivotal-mysql
+#            - configure-p-spring-cloud-services
+#            - configure-p-spring-cloud-services-3
+#            - configure-p-rabbitmq
             - configure-srt
-            - configure-pas-windows
+#            - configure-pas-windows
           trigger: true
         - get: platform-automation-tasks
           params:

@@ -144,3 +144,9 @@ credhub set /name:/concourse/main/$($FOUNDATION)/foundation /type:value --value 
 credhub set /name:/concourse/main/$($FOUNDATION)/location /type:value --value ${LOCATION}
 credhub set /name:/concourse/main/$($FOUNDATION)/ops-manager-dns /type:value --value $(terraform output ops_manager_dns)
 #>
+
+### asdk things
+credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate `
+/certificate:$HOME\pcfdemo.local.azurestack.external.crt `
+/private:$HOME\pcfdemo.local.azurestack.external.key `
+/root:$HOME\pcfdemo.local.azurestack.external.ca.crt
