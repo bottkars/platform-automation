@@ -34,7 +34,7 @@ properties-configuration:
     trusted_certificates: ((pcf_domain_cert.certificate))
     opsmanager_root_ca_trusted_certs: true
   director_configuration:
-    max_threads: 8
+    max_threads: 4
     ntp_servers_string: ((ntp_servers_string))     
   iaas_configuration:
     subscription_id: ((subscription-id))

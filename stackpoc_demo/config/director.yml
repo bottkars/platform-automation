@@ -31,7 +31,7 @@ network-assignment:
   name: ((singleton_availability_zone))   
 properties-configuration:
   security_configuration:
-    trusted_certificates: ((fullchain))
+    trusted_certificates: ((pcf_domain_cert.certificate))
     opsmanager_root_ca_trusted_certs: true
   director_configuration:
     max_threads: 4
@@ -55,16 +55,16 @@ properties-configuration:
     azure_stack:
       domain: ((domain))
       authentication: AzureAD
-      resource: ((ressource))
+      resource: ((tenant-endpoint-resource))
       endpoint_prefix: ((endpoint_prefix))
-      ca_cert: ((ca_cert)) 
+      ca_cert: ((azs_ca.certificate)) 
     additional_cloud_properties:
         azure_stack:
           domain: ((domain))
           authentication: ((authentication))
-          resource: ((ressource))
+          resource: ((tenant-endpoint-resource))
           endpoint_prefix: ((endpoint_prefix))
-          ca_cert: ((ca_cert))      
+          ca_cert: ((azs_ca.certificate))      
 resource-configuration:
   director:
     instances: automatic
