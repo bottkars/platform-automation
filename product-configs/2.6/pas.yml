@@ -25,17 +25,17 @@ product-properties:
   .uaa.service_provider_key_credentials:
     value:
       private_key_pem: |
-        ((pcf_key_pem))
+        ((pcf_domain_cert.private_key))
       cert_pem: |
-        ((pcf_cert_pem))
+        ((pcf_domain_cert.certificate))
   .properties.networking_poe_ssl_certs:
     value:
     - name: default
       certificate:
         private_key_pem: |
-          ((pcf_key_pem))
+          ((pcf_domain_cert.private_key))
         cert_pem: |
-          ((pcf_cert_pem))
+          ((pcf_domain_cert.certificate))
   .properties.credhub_key_encryption_passwords:
     value:
     - name: default

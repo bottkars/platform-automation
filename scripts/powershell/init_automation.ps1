@@ -157,3 +157,8 @@ credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate 
  credhub set /name:/concourse/main/$FOUNDATION/pcf_opsman_cert /type:certificate `
  /certificate:$HOME\pcf.pcfdemo.local.azurestack.external.crt `
  /public:$HOME\pcf.pcfdemo.local.azurestack.external.key
+
+
+ credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate `
+ /certificate:C:\Users\kbott\AppData\Local\Posh-ACME\acme-v02.api.letsencrypt.org\55142119\pcfdemo.westus.stackpoc.com\cert.cer `
+ /public:C:\Users\kbott\AppData\Local\Posh-ACME\acme-v02.api.letsencrypt.org\55142119\pcfdemo.westus.stackpoc.com\cert.key
