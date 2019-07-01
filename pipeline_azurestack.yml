@@ -1556,7 +1556,7 @@ jobs:
         env: interpolated-creds
         vars: variable
       params:
-        CONFIG_FILE: product-configs/pas-windows.yml
+        CONFIG_FILE: product-configs/((pcf_version))/pas-windows.yml
         VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 - name: configure-p-rabbitmq
@@ -1584,7 +1584,7 @@ jobs:
         env: interpolated-creds
         vars: variable
       params:
-        CONFIG_FILE: product-configs/p-rabbitmq.yml
+        CONFIG_FILE: product-configs/((pcf_version))/p-rabbitmq.yml
         VARS_FILES: vars/((foundation))/vars/p-rabbitmq-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 - name: configure-pivotal-mysql
@@ -1612,7 +1612,7 @@ jobs:
         env: interpolated-creds
         vars: variable
       params:
-        CONFIG_FILE: product-configs/pivotal-mysql.yml
+        CONFIG_FILE: product-configs/((pcf_version))/pivotal-mysql.yml
         VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 
@@ -1641,7 +1641,7 @@ jobs:
         env: interpolated-creds
         vars: variable
       params:
-        CONFIG_FILE: product-configs/p-spring-cloud-services.yml
+        CONFIG_FILE: product-configs/((pcf_version))/p-spring-cloud-services.yml
         VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
 - name: configure-p-spring-cloud-services-3
@@ -1669,7 +1669,7 @@ jobs:
         env: interpolated-creds
         vars: variable
       params:
-        CONFIG_FILE: product-configs/p-spring-cloud-services-3.yml
+        CONFIG_FILE: product-configs/((pcf_version))/p-spring-cloud-services-3.yml
         VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
         ENV_FILE: ((foundation))/env/env.yml        
 - name: configure-srt
