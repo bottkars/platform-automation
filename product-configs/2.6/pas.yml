@@ -69,7 +69,7 @@ resource-config:
     elb_names:
     - ((pcf_istio_lb))
   diego_cell:
-    instances: 6
+    instances: ((compute_instances))
   diego_brain:
     elb_names:
     - ((pcf_diego_ssh_lb))
