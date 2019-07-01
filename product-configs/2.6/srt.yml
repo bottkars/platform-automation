@@ -64,13 +64,10 @@ product-properties:
   .properties.metric_registrar_enabled:
     value: true
   .properties.istio:
-    value: enable
+    value: disable
 resource-config:
   router:
     elb_names:
     - ((pcf_web_lb))
-  istio_router:  
-    elb_names:
-    - ((pcf_istio_lb))
   compute:
     instances: ((compute_instances))
