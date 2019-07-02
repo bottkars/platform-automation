@@ -1,0 +1,9 @@
+product_name: wavefront-nozzle
+pcf_pas_network: pcf-pas-subnet
+wavefront_url: https://surf.wavefront.com/api
+wavefront_token: ff543f93-efdc-4d0f-a2b5-c60d266ad9e3
+wavefront_proxy: pcfdemo
+api_hostname: api.sys.pcfdemo.westus.stackpoc.com
+uaa_user: wavefront_nozzle
+uaa_password: Thyph00n#
+tag_foundation: stackpoc

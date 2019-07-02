@@ -152,6 +152,18 @@ resources:
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
     regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]p-healthwatch-.*.pivotal
+
+- name: wavefront-nozzle-product
+  #icon: amazon-drive
+  type: s3
+  source:
+    access_key_id: ((access_key_id))
+    bucket: ((buckets_pivnet_products))
+    endpoint:  ((s3_endpoint))
+    region_name: ((s3_region_name))
+    secret_access_key: ((secret_access_key))
+    regexp: wavefront-nozzle-product/\[wavefront-nozzle,(.*)\]wavefront-nozzle-.*.pivotal
+
 - name: pas-stemcell
   #icon: amazon-drive
   type: s3
@@ -219,7 +231,7 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
 
-- name: p-healthwatch-stemcell
+- name: wavefront-nozzle-stemcell
   #icon: amazon-drive
   type: s3
   source:
@@ -228,7 +240,8 @@ resources:
     endpoint:  ((s3_endpoint))
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
-    regexp: p-healthwatch-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
+    regexp: wavefront-nozzle-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
+
 
 - name: pas-windows-stemcell
   #icon: amazon-drive
@@ -301,7 +314,7 @@ credhub-interpolate: &credhub-interpolate
     CREDHUB_SERVER: ((credhub-server))
     PREFIX: /concourse/main/((foundation))
     CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    INTERPOLATION_PATHS: "download-product-configs"
+    INTERPOLATION_PATHS: "download-product-configs/((pcf_version))"
    # INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env ((foundation))/vars download-product-configs
   input_mapping:
     files: config
@@ -317,7 +330,7 @@ interpolate-creds: &interpolate-creds
     CREDHUB_SERVER: ((credhub-server))
     PREFIX: /concourse/main/((foundation))
     CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env  download-product-configs product-configs
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env  download-product-configs/((pcf_version)) product-configs/((pcf_version))
     SKIP_MISSING: true
   input_mapping:
     files: configuration
@@ -1117,6 +1130,37 @@ jobs:
       params:
         file: p-healthwatch-stemcell/*.tgz
 
+- name: get-wavefront-nozzle
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - aggregate:
+#    - get: daily-trigger
+#      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: config
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
+  - task: download-wavefront-nozzle-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-wavefront-nozzle.yml
+    output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
+  - aggregate:
+    - put: wavefront-nozzle-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: wavefront-nozzle-stemcell
+      params:
+        file: wavefront-nozzle-stemcell/*.tgz
+
+
 - name: get-p-rabbitmq
   serial: true
   serial_groups: [ get-products ]
@@ -1425,6 +1469,55 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 
+- name: upload-and-stage-wavefront-nozzle
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-wavefront-nozzle
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-wavefront-nozzle.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: wavefront-nozzle-product
+        downloaded-stemcell: wavefront-nozzle-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: wavefront-nozzle-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-wavefront-nozzle-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: interpolated-creds
+        stemcell: wavefront-nozzle-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: wavefront-nozzle-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+
 
 - name: upload-and-stage-p-spring-cloud-services
   serial: true
@@ -1713,7 +1806,7 @@ jobs:
         CONFIG_FILE: product-configs/((pcf_version))/pivotal-mysql.yml
         VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
-        
+
 - name: configure-p-healthwatch
   serial: true
   plan:
@@ -1742,6 +1835,36 @@ jobs:
         CONFIG_FILE: product-configs/((pcf_version))/p-healthwatch.yml
         VARS_FILES: vars/((foundation))/vars/p-healthwatch-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-wavefront-nozzle
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-wavefront-nozzle
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: configure-wavefront-nozzle
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pcf_version))/wavefront-nozzle.yml
+        VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
 
 - name: configure-p-spring-cloud-services
   serial: true
@@ -1888,6 +2011,8 @@ groups:
   - get-p-rabbitmq
   - get-pivotal-mysql
   - get-opsman-image
+  - get-p-healthwatch
+  - get-wavefront-nozzle
 - name: upgrade-products
   jobs:
   #- export-installation
@@ -1898,6 +2023,8 @@ groups:
   - upload-and-stage-p-spring-cloud-services
   - upload-and-stage-p-spring-cloud-services-3
   - upload-and-stage-p-rabbitmq
+  - upload-and-stage-p-healthwatch
+  - upload-and-stage-wavefront-nozzle
 - name: configure-products
   jobs:
   - configure-srt
@@ -1907,6 +2034,8 @@ groups:
   - configure-pivotal-mysql
   - configure-p-spring-cloud-services
   - configure-p-spring-cloud-services-3
+  - configure-p-healthwatch
+  - configure-wavefront-nozzle
   - apply-product-changes
 - name: deploy-asdk-1906
   jobs:  
