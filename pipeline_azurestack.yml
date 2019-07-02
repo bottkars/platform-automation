@@ -231,6 +231,18 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
 
+- name: p-healthwatch-stemcell
+  #icon: amazon-drive
+  type: s3
+  source:
+    access_key_id: ((access_key_id))
+    bucket: ((buckets_pivnet_products))
+    endpoint:  ((s3_endpoint))
+    region_name: ((s3_region_name))
+    secret_access_key: ((secret_access_key))
+    regexp: p-healthwatch-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
+
+
 - name: wavefront-nozzle-stemcell
   #icon: amazon-drive
   type: s3
