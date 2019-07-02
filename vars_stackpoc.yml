@@ -17,4 +17,5 @@ passed_configs:
   - configure-p-rabbitmq
   - configure-pas
   - configure-p-healthwatch
+  - configure-wavefront-nozzle
 
