@@ -1,5 +1,8 @@
+---
 product_name: wavefront-nozzle
 pcf_pas_network: pcf-pas-subnet
+singleton_zone: 'Availability Sets'
+zones_map: 'Availability Sets'
 wavefront_url: https://surf.wavefront.com/api
 wavefront_token: ff543f93-efdc-4d0f-a2b5-c60d266ad9e3
 wavefront_proxy: pcfdemo
