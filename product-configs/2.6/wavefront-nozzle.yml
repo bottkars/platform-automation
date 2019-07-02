@@ -21,7 +21,7 @@ product-properties:
       secret: ((uaa_password))
   .properties.custom_tag_foundation:
     value: ((tag_foundation))
-  .properties.pcf_skipsslvalidation:
-    value: true
+  .properties.pcf_skip_ssl_validation:
+    value: ((skip_ssl))
   .properties.cf_quota_name:
     value: runaway

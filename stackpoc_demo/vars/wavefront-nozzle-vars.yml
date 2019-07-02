@@ -10,3 +10,4 @@ api_hostname: api.sys.pcfdemo.westus.stackpoc.com
 uaa_user: wavefront_nozzle
 uaa_password: Thyph00n#
 tag_foundation: stackpoc
+skip_ssl: 'true'
