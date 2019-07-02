@@ -142,6 +142,16 @@ resources:
     secret_access_key: ((secret_access_key))
     regexp: pivotal-mysql-product/\[pivotal-mysql,(.*)\]pivotal-mysql-.*.pivotal
 
+- name: p-healthwatch-product
+  #icon: amazon-drive
+  type: s3
+  source:
+    access_key_id: ((access_key_id))
+    bucket: ((buckets_pivnet_products))
+    endpoint:  ((s3_endpoint))
+    region_name: ((s3_region_name))
+    secret_access_key: ((secret_access_key))
+    regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]p-healthwatch-.*.pivotal
 - name: pas-stemcell
   #icon: amazon-drive
   type: s3
@@ -208,6 +218,17 @@ resources:
     region_name: ((s3_region_name))
     secret_access_key: ((secret_access_key))
     regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
+
+- name: p-healthwatch-stemcell
+  #icon: amazon-drive
+  type: s3
+  source:
+    access_key_id: ((access_key_id))
+    bucket: ((buckets_pivnet_products))
+    endpoint:  ((s3_endpoint))
+    region_name: ((s3_region_name))
+    secret_access_key: ((secret_access_key))
+    regexp: p-healthwatch-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
 
 - name: pas-windows-stemcell
   #icon: amazon-drive
@@ -1066,6 +1087,36 @@ jobs:
       params:
         file: pivotal-mysql-stemcell/*.tgz
 
+- name: get-p-healthwatch
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - aggregate:
+#    - get: daily-trigger
+#      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: config
+  - task: credhub-interpolate
+    <<: *credhub-interpolate
+  - task: download-p-healthwatch-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-healthwatch.yml
+    output_mapping: {downloaded-stemcell: p-healthwatch-stemcell}
+  - aggregate:
+    - put: p-healthwatch-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-healthwatch-stemcell
+      params:
+        file: p-healthwatch-stemcell/*.tgz
+
 - name: get-p-rabbitmq
   serial: true
   serial_groups: [ get-products ]
@@ -1322,7 +1373,59 @@ jobs:
         product: pivotal-mysql-product
         env: interpolated-creds
       params:
+        ENV_FILE: ((foundation))/env/env.yml   
+
+- name: upload-and-stage-p-healthwatch
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: download-p-healthwatch
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-p-healthwatch.yml
+      input_mapping:
+        config: interpolated-creds
+      output_mapping:
+        downloaded-product: p-healthwatch-product
+        downloaded-stemcell: p-healthwatch-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-healthwatch-product
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-healthwatch-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: interpolated-creds
+        stemcell: p-healthwatch-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-healthwatch-product
+        env: interpolated-creds
+      params:
         ENV_FILE: ((foundation))/env/env.yml        
+
+
 - name: upload-and-stage-p-spring-cloud-services
   serial: true
   plan:
@@ -1480,13 +1583,7 @@ jobs:
         - get: platform-automation-image
           params:
             unpack: true
-          passed:
-#            - configure-pivotal-mysql
-#            - configure-p-spring-cloud-services
-#            - configure-p-spring-cloud-services-3
-#            - configure-p-rabbitmq
-            - configure-srt
-#            - configure-pas-windows
+          passed: ((passed_configs))
           trigger: true
         - get: platform-automation-tasks
           params:
@@ -1587,6 +1684,7 @@ jobs:
         CONFIG_FILE: product-configs/((pcf_version))/p-rabbitmq.yml
         VARS_FILES: vars/((foundation))/vars/p-rabbitmq-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
+
 - name: configure-pivotal-mysql
   serial: true
   plan:
@@ -1614,6 +1712,35 @@ jobs:
       params:
         CONFIG_FILE: product-configs/((pcf_version))/pivotal-mysql.yml
         VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+        
+- name: configure-p-healthwatch
+  serial: true
+  plan:
+    - aggregate:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-healthwatch
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: configuration
+        - get: variable
+    - task: interpolate-creds
+      <<: *interpolate-creds
+    - task: configure-p-healthwatch
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-creds
+        env: interpolated-creds
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pcf_version))/p-healthwatch.yml
+        VARS_FILES: vars/((foundation))/vars/p-healthwatch-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-spring-cloud-services

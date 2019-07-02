@@ -1,0 +1,13 @@
+---
+pivnet-api-token: ((pivnet-token))
+pivnet-file-glob: "*healthwatch*.pivotal"
+pivnet-product-slug: p-healthwatch
+product-version-regex: ^1\.6\..*$
+stemcell-iaas: azure
+s3-access-key-id: ((access_key_id))
+s3-secret-access-key: ((secret_access_key))
+s3-bucket: pivnet.products
+s3-endpoint: ((s3_endpoint))
+s3-stemcell-path: p-healthwatch-stemcell
+s3-product-path: p-healthwatch-product
+s3-region-name: region

@@ -9,3 +9,12 @@ arm_profile: "2019-03-01-hybrid"
 pcf_version: "2.6"
 opsman_image_location: west_us
 azurestack_region: westus
+runtime: pas # pas or srt
+passed_configs: 
+  - configure-pivotal-mysql
+  - configure-p-spring-cloud-services
+  - configure-p-spring-cloud-services-3
+  - configure-p-rabbitmq
+  - configure-pas
+  - configure-p-healthwatch
+
