@@ -2145,7 +2145,6 @@ groups:
   jobs:
   - get-platform-automation
   - get-pas
-  - get-srt
   - get-pas-windows
   - get-p-spring-cloud-services
   - get-p-spring-cloud-services-3
@@ -2158,7 +2157,6 @@ groups:
 - name: upgrade-products
   jobs:
   #- export-installation
-  - upload-and-stage-srt
   - upload-and-stage-pas
   - upload-and-stage-pas-windows  
   - upload-and-stage-pivotal-mysql
@@ -2170,7 +2168,6 @@ groups:
   - upload-and-stage-p-event-alerts
 - name: configure-products
   jobs:
-  - configure-srt
   - configure-pas
   - configure-pas-windows
   - configure-p-rabbitmq
@@ -2192,5 +2189,10 @@ groups:
   - deploy-opsman-from-arm
   - run-azcli-get-vms
   - testing
+- name: inactive
+  jobs: 
+   - get-srt
+   - upload-and-stage-srt
+   - configure-srt
 
 

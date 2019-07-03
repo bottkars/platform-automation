@@ -21,4 +21,8 @@ passed_configs:
   - configure-p-event-alerts
 inactive_get:
   - get-srt  
+inactive_configure:
+  - configure-srt
+inactive-upload:
+  - upload-and-stage-srt    
 
