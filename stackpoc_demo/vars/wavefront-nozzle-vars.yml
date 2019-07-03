@@ -4,7 +4,7 @@ pcf_pas_network: pcf-pas-subnet
 singleton_zone: 'Availability Sets'
 zones_map: 'Availability Sets'
 wavefront_url: https://surf.wavefront.com/api
-wavefront_token: ff543f93-efdc-4d0f-a2b5-c60d266ad9e3
+wavefront_token: edfdcc53-5a6d-40b0-ae84-5afc2f27e9ee
 wavefront_proxy: pcfdemo
 api_hostname: api.sys.pcfdemo.westus.stackpoc.com
 uaa_user: wavefront_nozzle
