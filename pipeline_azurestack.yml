@@ -542,7 +542,7 @@ jobs:
       AZURE_CLIENT_SECRET: ((client-secret))
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       RESOURCE_GROUP: pcf
-      VM_NAME: pcf
+      VM_NAME: ops-man-vm
       LOCATION: ((azurestack_region))
 - name: delete-pcf
   plan:
@@ -915,8 +915,8 @@ jobs:
   serial_groups: [ install ]
   plan:
     - in_parallel:
-        - get: one-time-trigger
-          passed: [ export-installation ]
+        # - get: one-time-trigger
+        #  passed: [ export-installation ]
         - get: azs-concourse  
         - get: az-cli-image  
         - get: platform-automation-image
@@ -926,8 +926,8 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: installation
-          passed: [ export-installation ]
+        #- get: installation
+        #  passed: [ export-installation ]
         - get: configuration
         - get: variable
         - get: opsman-product
