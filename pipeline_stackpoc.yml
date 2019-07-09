@@ -324,7 +324,7 @@ jobs:
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       ADDITIONAL_PARAMETERS: "OpsManImageURI=https://opsmanagerimage.westus.stackpoc.com/images/((opsman_image))"
       RESOURCE_GROUP: pcf
-      LOCATION: westus
+      LOCATION: ((azurestack_region))
   - task: deploy-template 
     image: az-cli-image
     file: azs-concourse/ci/tasks/deploy-template.yml  
