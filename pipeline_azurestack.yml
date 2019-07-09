@@ -1851,25 +1851,23 @@ jobs:
         env: interpolated-creds
       params:
         ENV_FILE: ((foundation))/env/env.yml        
-- name: apply-product-changes
+- name: apply-product-changes-sup
   serial: true
   plan:
     - in_parallel:
+        - get: azs-concourse
         - get: platform-automation-image
           params:
             unpack: true
           passed: ((passed_configs))
           trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
         - get: configuration
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
-    - task: apply-product-changes
+    - task: apply-product-changes-sup
       image: platform-automation-image
-      file: platform-automation-tasks/tasks/apply-changes.yml
+      file: azs-concourse/ci/tasks/apply-changes.yml
       input_mapping:
         env: interpolated-creds
       params:
@@ -2247,7 +2245,7 @@ groups:
   - configure-p-healthwatch
   - configure-wavefront-nozzle
   - configure-p-event-alerts
-  - apply-product-changes
+  - apply-product-changes-sup
 - name: deploy-asdk-1906
   jobs:  
   - deploy-asdk
