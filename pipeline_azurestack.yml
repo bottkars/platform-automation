@@ -544,6 +544,31 @@ jobs:
       RESOURCE_GROUP: pcf
       VM_NAME: ops-man-vm
       LOCATION: ((azurestack_region))
+      
+- name: delete-orphan-azurevm-images
+  plan:
+  - get: configuration
+  - get: azs-concourse
+  - get: az-cli-image
+  - task: delete-vm
+    image: az-cli-image
+    file: azs-concourse/ci/tasks/delete-vm-images.yml  
+    input_mapping:
+      root_ca: configuration
+      config: configuration
+    params:
+      PROFILE: ((arm_profile))
+      CA_CERT: ((foundation))/cert/root.pem
+      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+      VAULT_DNS:  ((vault-dns))
+      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+      AZURE_TENANT_ID: ((tenant-id))
+      AZURE_CLIENT_ID: ((client-id))
+      AZURE_CLIENT_SECRET: ((client-secret))
+      AZURE_SUBSCRIPTION_ID: ((subscription-id))
+      RESOURCE_GROUP: pcf
+      LOCATION: ((azurestack_region))
+
 - name: delete-pcf
   plan:
   - get: configuration
@@ -987,6 +1012,7 @@ jobs:
     - task: import-installation
       image: platform-automation-image
       file: platform-automation-tasks/tasks/import-installation.yaml
+      attempts: 10
       params:
         ENV_FILE: ((foundation))/env/env.yml
         INSTALLATION_FILE: installation*.yml
@@ -2225,6 +2251,7 @@ groups:
   - deploy-asdk
 - name: azcli-jobs
   jobs:
+  - delete-orphan-azurevm-images
   - delete-opsman-vm
   - delete-pcf
   - test-azcli
