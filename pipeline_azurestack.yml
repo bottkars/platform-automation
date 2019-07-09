@@ -933,6 +933,26 @@ jobs:
         - get: opsman-product
     - task: interpolate-creds
       <<: *interpolate-creds
+    - task: delete-existing-opsman
+      image: az-cli-image
+      file: azs-concourse/ci/tasks/delete-vm.yml  
+      input_mapping:
+        root_ca: configuration
+        config: configuration
+      params:
+        PROFILE: ((arm_profile))
+        CA_CERT: ((foundation))/cert/root.pem
+        ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+        VAULT_DNS:  ((vault-dns))
+        SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+        AZURE_TENANT_ID: ((tenant-id))
+        AZURE_CLIENT_ID: ((client-id))
+        AZURE_CLIENT_SECRET: ((client-secret))
+        AZURE_SUBSCRIPTION_ID: ((subscription-id))
+        RESOURCE_GROUP: pcf
+        VM_NAME: ops-man-vm
+        LOCATION: ((azurestack_region))
+ 
     - task: download-opsman-pivnet
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
