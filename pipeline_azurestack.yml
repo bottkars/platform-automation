@@ -1,7 +1,6 @@
 ---
 resource_types:
 - name: pivnet
-  icon:
   type: docker-image
   source:
     repository: pivotalcf/pivnet-resource
@@ -15,6 +14,7 @@ resources:
     interval: 24h
 
 - name: one-time-trigger
+  icon: time
   type: time
   source:
     interval: 999999h
