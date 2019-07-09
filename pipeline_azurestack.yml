@@ -550,7 +550,7 @@ jobs:
   - get: configuration
   - get: azs-concourse
   - get: az-cli-image
-  - task: delete-vm
+  - task: delete-images
     image: az-cli-image
     file: azs-concourse/ci/tasks/delete-vm-images.yml  
     input_mapping:
