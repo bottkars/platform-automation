@@ -977,6 +977,7 @@ jobs:
         RESOURCE_GROUP: pcf
         VM_NAME: ops-man-vm
         LOCATION: ((azurestack_region))
+
  
     - task: download-opsman-pivnet
       image: platform-automation-image
@@ -1007,6 +1008,7 @@ jobs:
         TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
         PARAMETER_FILE: ((foundation))/config/parameters_opsman_update.json
         RESOURCE_GROUP: pcf
+        STATE_FILE: state.yml
         LOCATION: ((azurestack_region))
       ensure: *make-state-commit
     - task: import-installation
