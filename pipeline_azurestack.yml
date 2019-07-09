@@ -8,13 +8,13 @@ resource_types:
 resources:
 # triggers
 - name: daily-trigger
-  icon: time
+  icon: calendar-clock
   type: time
   source:
     interval: 24h
 
 - name: one-time-trigger
-  icon: time
+  icon: calendar-clock
   type: time
   source:
     interval: 999999h
@@ -301,6 +301,7 @@ resources:
     regexp: \[ops-manager,(.*)\].*.yml
 
 - name: config
+  icon: github-circle
   type: git
   source:
   #  private_key: ((configuration.private_key))
