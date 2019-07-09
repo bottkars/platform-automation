@@ -1,6 +1,7 @@
 ---
 resource_types:
 - name: pivnet
+  icon:
   type: docker-image
   source:
     repository: pivotalcf/pivnet-resource
@@ -8,6 +9,7 @@ resource_types:
 resources:
 # triggers
 - name: daily-trigger
+  icon: time
   type: time
   source:
     interval: 24h
@@ -334,7 +336,7 @@ resources:
     private_key: ((azs-resource-key.private_key))
 
 - name: az-cli-image
-  icon: docker
+  icon: azure
   type: docker-image
   source: 
     repository: microsoft/azure-cli
@@ -961,6 +963,17 @@ jobs:
         RESOURCE_GROUP: pcf
         LOCATION: ((azurestack_region))
       ensure: *make-state-commit
+    - task: import-installation
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/import-installation.yaml
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        INSTALLATION_FILE: installation*.yml
+      input_mapping:
+        env: interpolated-creds
+        installation: installation
+#        vars: variable        
+
 #    - task: configure-director
 #      image: platform-automation-image
 #      file: platform-automation-tasks/tasks/configure-director.yml
