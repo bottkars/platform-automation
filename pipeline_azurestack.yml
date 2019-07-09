@@ -542,7 +542,7 @@ jobs:
       AZURE_CLIENT_SECRET: ((client-secret))
       AZURE_SUBSCRIPTION_ID: ((subscription-id))
       RESOURCE_GROUP: pcf
-      VM_NAME: ops-man-vm
+      VM_NAME: ops_man_vm
       LOCATION: ((azurestack_region))
       
 - name: delete-orphan-azurevm-images
@@ -951,7 +951,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        #- get: installation
+        - get: installation
         #  passed: [ export-installation ]
         - get: configuration
         - get: variable
@@ -975,7 +975,7 @@ jobs:
         AZURE_CLIENT_SECRET: ((client-secret))
         AZURE_SUBSCRIPTION_ID: ((subscription-id))
         RESOURCE_GROUP: pcf
-        VM_NAME: ops-man-vm
+        VM_NAME: ops_man_vm
         LOCATION: ((azurestack_region))
 
  
@@ -1013,11 +1013,11 @@ jobs:
       ensure: *make-state-commit
     - task: import-installation
       image: platform-automation-image
-      file: platform-automation-tasks/tasks/import-installation.yaml
+      file: platform-automation-tasks/tasks/import-installation.yml
       attempts: 10
       params:
         ENV_FILE: ((foundation))/env/env.yml
-        INSTALLATION_FILE: installation*.yml
+        INSTALLATION_FILE: installation*.zip
       input_mapping:
         env: interpolated-creds
         installation: installation
@@ -1034,13 +1034,13 @@ jobs:
  #       VARS_FILES: vars/((foundation))/vars/director-vars.yml
 #        ENV_FILE: ((foundation))/env/env.yml
 #        DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
-#    - task: apply-director-changes
-#      image: platform-automation-image
-#      file: platform-automation-tasks/tasks/apply-director-changes.yml
-#      input_mapping:
-#        env: interpolated-creds
-#      params:
-#        ENV_FILE: ((foundation))/env/env.yml
+    - task: apply-director-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-director-changes.yml
+      input_mapping:
+        env: interpolated-creds
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
 
 - name: get-platform-automation
   plan:
