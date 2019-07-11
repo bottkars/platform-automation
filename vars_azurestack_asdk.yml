@@ -9,3 +9,21 @@ arm_profile: "2019-03-01-hybrid"
 vault-dns: vault.local.azurestack.external
 suffix-storage-endpoint: local.azurestack.external
 pcf_version: "2.6"
+runtime: srt # pas or srt
+passed_configs: 
+  - configure-pivotal-mysql
+ # - configure-p-spring-cloud-services
+ # - configure-p-spring-cloud-services-3
+ # - configure-p-rabbitmq
+  - configure-srt
+  - configure-p-healthwatch
+ # - configure-wavefront-nozzle
+ # - configure-p-event-alerts
+inactive_get:
+  - get-pas  
+inactive_configure:
+  - configure-pas
+inactive-upload:
+  - upload-and-stage-pas    
+
+

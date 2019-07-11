@@ -381,7 +381,6 @@ jobs:
   - get: azs-concourse
     trigger: true
   - get: az-cli-image
-    trigger: true
   - task: test-azcli
     image: az-cli-image
     file: azs-concourse/ci/tasks/test-task.yml
@@ -804,6 +803,9 @@ jobs:
   plan:
   - in_parallel:
     - get: variable
+      passed:
+      - install-opsman
+      trigger: true
     - get: configuration
     - get: platform-automation-image
       params:
@@ -835,6 +837,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
+      passed:
+       - configure-opsman 
+      trigger: true
   - task: interpolate-creds
     <<: *interpolate-creds          
   - task: apply-director-changes
@@ -848,7 +853,7 @@ jobs:
 - name: get-opsman
   plan:
   - in_parallel:
-    - get: daily-trigger
+    # - get: daily-trigger
     #  trigger: true
     - get: platform-automation-image
       params:
@@ -874,7 +879,6 @@ jobs:
   plan:
   - get: opsman-product
   - get: azs-concourse
-    trigger: true
   - get: az-cli-image
     trigger: true
   - task: test-azcli
@@ -940,8 +944,8 @@ jobs:
   serial_groups: [ install ]
   plan:
     - in_parallel:
-        # - get: one-time-trigger
-        #  passed: [ export-installation ]
+        - get: one-time-trigger
+          passed: [ export-installation ]
         - get: azs-concourse  
         - get: az-cli-image  
         - get: platform-automation-image
@@ -952,7 +956,7 @@ jobs:
           params:
             unpack: true
         - get: installation
-        #  passed: [ export-installation ]
+          passed: [ export-installation ]
         - get: configuration
         - get: variable
         - get: opsman-product
@@ -1089,8 +1093,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    - get: daily-trigger
-      trigger: true
+    # - get: daily-trigger
+    #  trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1119,8 +1123,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    - get: daily-trigger
-      trigger: true
+    # - get: daily-trigger
+    #  trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1149,8 +1153,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    - get: daily-trigger
-      trigger: true
+    # - get: daily-trigger
+    #  trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1300,8 +1304,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    - get: daily-trigger
-      trigger: true
+    # - get: daily-trigger
+    #  trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1329,8 +1333,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    - get: daily-trigger
-      trigger: true
+    # - get: daily-trigger
+    #  trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1856,6 +1860,9 @@ jobs:
   plan:
     - in_parallel:
         - get: azs-concourse
+        - get: platform-automation-tasks
+          params:
+            unpack: true
         - get: platform-automation-image
           params:
             unpack: true
@@ -2212,7 +2219,7 @@ groups:
 - name: get-products
   jobs:
   - get-platform-automation
-  - get-pas
+  - get-srt
   - get-pas-windows
   - get-p-spring-cloud-services
   - get-p-spring-cloud-services-3
@@ -2225,7 +2232,7 @@ groups:
 - name: upgrade-products
   jobs:
   #- export-installation
-  - upload-and-stage-pas
+  - upload-and-stage-srt
   - upload-and-stage-pas-windows  
   - upload-and-stage-pivotal-mysql
   - upload-and-stage-p-spring-cloud-services
@@ -2236,7 +2243,7 @@ groups:
   - upload-and-stage-p-event-alerts
 - name: configure-products
   jobs:
-  - configure-pas
+  - configure-srt
   - configure-pas-windows
   - configure-p-rabbitmq
   - configure-pivotal-mysql
@@ -2260,8 +2267,8 @@ groups:
   - testing
 - name: inactive
   jobs: 
-   - get-srt
-   - upload-and-stage-srt
-   - configure-srt
+   - get-pas
+   - upload-and-stage-pas
+   - configure-pas
 
 

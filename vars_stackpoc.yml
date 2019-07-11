@@ -9,20 +9,20 @@ arm_profile: "2019-03-01-hybrid"
 pcf_version: "2.6"
 opsman_image_location: west_us
 azurestack_region: westus
-runtime: pas # pas or srt
+runtime: srt # pas or srt
 passed_configs: 
   - configure-pivotal-mysql
-  - configure-p-spring-cloud-services
-  - configure-p-spring-cloud-services-3
-  - configure-p-rabbitmq
-  - configure-pas
-  - configure-p-healthwatch
-  - configure-wavefront-nozzle
-  - configure-p-event-alerts
-inactive_get:
-  - get-srt  
-inactive_configure:
+ # - configure-p-spring-cloud-services
+ # - configure-p-spring-cloud-services-3
+ # - configure-p-rabbitmq
   - configure-srt
+  - configure-p-healthwatch
+ # - configure-wavefront-nozzle
+ # - configure-p-event-alerts
+inactive_get:
+  - get-pas  
+inactive_configure:
+  - configure-pas
 inactive-upload:
-  - upload-and-stage-srt    
+  - upload-and-stage-pas    
 
