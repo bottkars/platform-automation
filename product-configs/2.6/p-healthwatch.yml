@@ -9,7 +9,7 @@ network-properties:
     name: ((singleton_zone))
 product-properties:
   .properties.opsman.enable.url:
-    value: ((opsman_enable_url))
+    value: https://pcf.((foundation)).((domain))
   .properties.boshtasks:
     value: disable
   .healthwatch-forwarder.health_check_az:
