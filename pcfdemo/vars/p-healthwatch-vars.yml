@@ -3,3 +3,4 @@ pcf_pas_network: pcf-pas-subnet
 pcf_service_network: pcf-services-subnet
 singleton_zone: 'Availability Sets'
 zones_map: 'Availability Sets'
+opsman_enable_url: https://pcf.pcfdemo.local.azurestack.external
