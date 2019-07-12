@@ -13,6 +13,16 @@ resources:
   source:
     interval: 24h
 
+get-resources:
+- name: after-midnight
+  icon: calendar-clock
+  type: time
+  source:
+    start: 12:00 AM
+    stop: 5:00 AM
+    location: Europe/Berlin
+
+
 - name: one-time-trigger
   icon: calendar-clock
   type: time
@@ -853,8 +863,8 @@ jobs:
 - name: get-opsman
   plan:
   - in_parallel:
-    # - get: daily-trigger
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1061,8 +1071,8 @@ jobs:
 - name: get-pas
   plan:
   - in_parallel:
-    #- get: daily
-    #  trigger: true
+    - get: daily
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1093,8 +1103,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    # - get: daily-trigger
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1123,8 +1133,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    # - get: daily-trigger
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1153,8 +1163,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    # - get: daily-trigger
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1183,8 +1193,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-#    - get: daily-trigger
-#      trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1213,8 +1223,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-#    - get: daily-trigger
-#      trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1243,8 +1253,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-#    - get: daily-trigger
-#      trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1273,8 +1283,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-#    - get: daily-trigger
-#      trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1304,8 +1314,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    # - get: daily-trigger
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -1333,8 +1343,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    # - get: daily-trigger
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true

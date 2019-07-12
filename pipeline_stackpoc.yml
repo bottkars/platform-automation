@@ -687,8 +687,8 @@ jobs:
 - name: get-pas
   plan:
   - aggregate:
-    #- get: daily
-    #  trigger: true
+    - get: daily
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
