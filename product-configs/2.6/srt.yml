@@ -69,8 +69,8 @@ product-properties:
     value: ((uaa.saml.sso_name))
   .properties.uaa.saml.display_name:
     value: ((uaa.saml.display_name))
-  .properties.uaa.saml.sso_xml:
-    value: ((uaa.saml.sso_xml))
+  .properties.uaa.saml.sso_url:
+    value: ((uaa.saml.sso_url))
   .properties.uaa.saml.email_domains:
     value: ((uaa.saml.email_domains)) 
   .properties.uaa.saml.first_name_attribute:
