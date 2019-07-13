@@ -20,12 +20,12 @@ compute_instances: 3
 singleton_zone: 'null'
 zones_map: 'null'
 smtp_enable_starttls_auto: true
-uaa.saml.sso_name: labbuildr
-uaa.saml.display_name: labbuildr_AAD
-uaa.saml.sso_url: 'https://login.microsoftonline.com/5f7dfed5-1a3d-424f-8e22-4661ae54b53b/federationmetadata/2007-06/federationmetadata.xml?appid=aa964dcc-38a5-438e-85d4-37a26058138e'
-uaa.saml.email_domains: labbuildr.com
-uaa.saml.first_name_attribute: user.givenname
-uaa.saml.last_name_attribute: user.surname
-uaa.saml.email_attribute: user.mail
-uaa.saml.groups_attribute: user.groups
+uaa_saml_sso_name: labbuildr
+uaa_saml_display_name: labbuildr_AAD
+uaa_saml_sso_url: 'https://login.microsoftonline.com/5f7dfed5-1a3d-424f-8e22-4661ae54b53b/federationmetadata/2007-06/federationmetadata.xml?appid=aa964dcc-38a5-438e-85d4-37a26058138e'
+uaa_saml_email_domains: labbuildr.com
+uaa_saml_first_name_attribute: user.givenname
+uaa_saml_last_name_attribute: user.surname
+uaa_saml_email_attribute: user.mail
+uaa_saml_groups_attribute: user.groups
 
