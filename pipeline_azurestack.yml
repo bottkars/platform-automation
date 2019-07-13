@@ -13,15 +13,6 @@ resources:
   source:
     interval: 24h
 
-get-resources:
-- name: after-midnight
-  icon: calendar-clock
-  type: time
-  source:
-    start: 12:00 AM
-    stop: 5:00 AM
-    location: Europe/Berlin
-
 
 - name: one-time-trigger
   icon: calendar-clock
@@ -29,13 +20,13 @@ get-resources:
   source:
     interval: 999999h
 
-#- name: after-midnight
-#  type: time
-#  source:
-#    start: 12:00 AM
-#    stop: 6:00 AM
-#    interval: 24h
-#    location: Europe/Berlin 
+- name: after-midnight
+  type: time
+  source:
+    start: 12:00 AM
+    stop: 6:00 AM
+    interval: 24h
+    location: Europe/Berlin 
 
 ### opsman ends 
 
@@ -1071,7 +1062,7 @@ jobs:
 - name: get-pas
   plan:
   - in_parallel:
-    - get: daily
+    - get: after-midnight
       trigger: true
     - get: platform-automation-image
       params:
