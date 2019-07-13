@@ -3,7 +3,7 @@
 # password: Password123!
 precreated-client-secret: b11279aae7a94f9a9d11c601db0b593e-r
 decryption-passphrase: b11279aae7a94f9a9d11c601db0b593e-r
-saml-idp-metadata: https://login.microsoftonline.com/5f7dfed5-1a3d-424f-8e22-4661ae54b53b/federationmetadata/2007-06/federationmetadata.xml?appid=535bdec2-35a6-486b-a052-db1cb4a4c4ad
-saml-bosh-idp-metadata: https://login.microsoftonline.com/5f7dfed5-1a3d-424f-8e22-4661ae54b53b/federationmetadata/2007-06/federationmetadata.xml?appid=535bdec2-35a6-486b-a052-db1cb4a4c4ad
+saml-idp-metadata: "https://login.microsoftonline.com/5f7dfed5-1a3d-424f-8e22-4661ae54b53b/federationmetadata/2007-06/federationmetadata.xml?appid=535bdec2-35a6-486b-a052-db1cb4a4c4ad"
+saml-bosh-idp-metadata: "https://login.microsoftonline.com/5f7dfed5-1a3d-424f-8e22-4661ae54b53b/federationmetadata/2007-06/federationmetadata.xml?appid=535bdec2-35a6-486b-a052-db1cb4a4c4ad"
 saml-rbac-admin-group: 112856b1-b566-4fa2-a081-ff876aff8f13
 saml-rbac-groups-attribute: user.groups

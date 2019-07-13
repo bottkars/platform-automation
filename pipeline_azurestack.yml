@@ -770,9 +770,9 @@ jobs:
             params:
               repository: configuration-commit
               merge: true
-    - task: configure-authentication
+    - task: configure-saml-authentication
       image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-authentication.yml
+      file: platform-automation-tasks/tasks/configure-saml-authentication.yml
       attempts: 10
       input_mapping:
         env: configuration
