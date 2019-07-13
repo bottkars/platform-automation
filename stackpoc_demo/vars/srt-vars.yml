@@ -25,7 +25,7 @@ uaa.saml.sso_name: labbuildr
 uaa.saml.display_name: "labbuildr AAD"
 uaa.saml.sso_url: "https://login.microsoftonline.com/5f7dfed5-1a3d-424f-8e22-4661ae54b53b/federationmetadata/2007-06/federationmetadata.xml?appid=39463aa7-ff19-4063-a0a9-77e83e87b182"
 uaa.saml.email_domains: "labbuildr.com"
-uaa.saml.first_name_attribute: "user.givenname"
+uaa.saml.first_name_attribute: 'user.givenname'
 uaa.saml.last_name_attribute: "user.surname"
 uaa.saml.email_attribute: "user.mail"
 uaa.saml.groups_attribute: "user.groups"
