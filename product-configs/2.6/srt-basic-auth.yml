@@ -65,22 +65,6 @@ product-properties:
     value: true
   .properties.istio:
     value: disable
-  .properties.uaa.saml.sso_name: 
-    value: ((uaa.saml.sso_name))
-  .properties.uaa.saml.display_name:
-    value: ((uaa.saml.display_name))
-  .properties.uaa.saml.sso_xml:
-    value: ((uaa.saml.sso_xml))
-  .properties.uaa.saml.email_domains:
-    value: ((uaa.saml.email_domains)) 
-  .properties.uaa.saml.first_name_attribute:
-    value: ((uaa.saml.first_name_attribute))
-  .properties.uaa.saml.last_name_attribute:
-    value: ((uaa.saml.last_name_attribute))
-  .properties.uaa.saml.email_attribute:
-    value: ((uaa.saml.email_attribute))           
-  .properties.uaa.saml.groups_attribute:
-    value: ((uaa.saml.groups_attribute))           
 resource-config:
   router:
     elb_names:
