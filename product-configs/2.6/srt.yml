@@ -80,7 +80,11 @@ product-properties:
   .properties.uaa.saml.email_attribute:
     value: ((uaa.saml.email_attribute))           
   .properties.uaa.saml.groups_attribute:
-    value: ((uaa.saml.groups_attribute))           
+    value: ((uaa.saml.groups_attribute))
+  .properties.uaa: 
+    value: "saml"
+    selected_option: "saml"
+           
 resource-config:
   router:
     elb_names:
