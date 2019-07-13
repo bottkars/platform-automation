@@ -82,8 +82,8 @@ product-properties:
   .properties.uaa.saml.groups_attribute:
     value: ((uaa.saml.groups_attribute))
   .properties.uaa: 
-    value: "saml"
-    selected_option: "saml"
+    value: saml
+    selected_option: saml
            
 resource-config:
   router:
