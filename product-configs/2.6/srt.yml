@@ -79,7 +79,7 @@ product-properties:
     value: ((uaa_saml_last_name_attribute))
   .properties.uaa.saml.email_attribute:
     value: ((uaa_saml_email_attribute))           
-  .properties.uaa.saml.groups_attribute:
+  .properties.uaa.saml.external_groups_attribute:
     value: ((uaa_saml_groups_attribute))
   .properties.uaa: 
     value: saml
