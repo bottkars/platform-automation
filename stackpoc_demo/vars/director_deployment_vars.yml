@@ -1,2 +1,4 @@
 deployments_storage_account_name: xtrastrgavw5gjrr3gn7a
 bosh_storage_account_name: pcfkbboshstorage
+azure_storage_access_key: 39r+C0R9hs2QZxF0ZTcHizqL0gLLUKbvazmNow65ynHLuigYKwYmWUrXADaaJPU7vZGrogbya9jDdlc4x1Zutg==
+azure_account: mysqlstrgavw5gjrr3gn7a
