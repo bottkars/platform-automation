@@ -1,0 +1,13 @@
+---
+pivnet-api-token: ((pivnet_token))
+pivnet-file-glob: "reliability-view*.pivotal"
+pivnet-product-slug: reliability_view_pcf
+product-version-regex: ^0\.3\..*$
+stemcell-iaas: azure
+s3-access-key-id: ((access_key_id))
+s3-secret-access-key: ((secret_access_key))
+s3-bucket: pivnet.products
+s3-endpoint: ((s3_endpoint))
+s3-stemcell-path: reliability-view-stemcell
+s3-product-path: pas-product
+s3-region-name: ((s3_region_name))
