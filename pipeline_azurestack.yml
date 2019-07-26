@@ -925,7 +925,7 @@ jobs:
         - get: configuration
         - get: variable
         - get: one-time-trigger
-          passed: [ install-opsman ]
+          passed: [ install-opsman, apply-director]
     - task: interpolate-creds
       <<: *interpolate-creds
     - task: export-installation
