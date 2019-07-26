@@ -946,7 +946,7 @@ jobs:
   plan:
     - in_parallel:
         - get: one-time-trigger
-          passed: [ export-installation ]
+          passed: [ export-installation, get-opsman-image ]
         - get: azs-concourse  
         - get: az-cli-image  
         - get: platform-automation-image
@@ -2254,7 +2254,7 @@ groups:
   - configure-wavefront-nozzle
   - configure-p-event-alerts
   - apply-product-changes-sup
-- name: deploy-asdk-1906
+- name: deploy-asdk-1907-plans
   jobs:  
   - deploy-asdk
 - name: azcli-jobs
