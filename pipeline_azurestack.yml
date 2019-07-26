@@ -598,19 +598,18 @@ jobs:
   serial: true
   serial_groups: [ install ]
   plan:
-    - in_parallel:
-      - get: config
-      - get: configuration
-      - get: azs-concourse
-      - get: az-cli-image
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: one-time-trigger
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
+    - get: config
+    - get: configuration
+    - get: azs-concourse
+    - get: az-cli-image
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: one-time-trigger
+      trigger: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
     - task: interpolate-creds
       <<: *interpolate-creds          
     - task: credhub-interpolate
