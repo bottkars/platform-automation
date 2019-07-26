@@ -51,7 +51,7 @@ $DIRECTOR_FOUNDATION_FILE="$HOME\director_pcf.json"
 
 $DIRECTOR_FOUNDATION = Get-Content $DIRECTOR_FOUNDATION_FILE | ConvertFrom-Json
 $FOUNDATION=$DIRECTOR_FOUNDATION.PCF_SUBDOMAIN_NAME
-($CA_CERT | Out-String) | set-content $HOME\credhub_ca_cert
+($CONTROL_CRED_CA_CERT | Out-String) | set-content $HOME\credhub_ca_cert
 
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/secret_access_key /type:value --value $($env_vars.PIVNET_UAA_TOKEN)
@@ -77,10 +77,11 @@ credhub set /name:/concourse/main/$FOUNDATION/domain /type:value --value local.a
 
 #### stackpoc
 
-credhub set /name:/concourse/main/credhub-client /type:value --value $CLIENT_NAME
-credhub set /name:/concourse/main/credhub-secret /type:value --value $CREDHUB_PASSWORD
-credhub set /name:/concourse/main/credhub-server /type:value --value $CREDHUB_URL
-credhub set /name:/concourse/main/credhub-ca-cert /type:certificate /root:"$HOME\credhub_ca_cert"
+credhub set /name:/concourse/main/$($FOUNDATION)/credhub-client /type:value --value $CLIENT_NAME
+credhub set /name:/concourse/main/$($FOUNDATION)/credhub-secret /type:value --value $CREDHUB_PASSWORD
+credhub set /name:/concourse/main/$($FOUNDATION)/credhub-server /type:value --value $CREDHUB_URL
+credhub set /name:/concourse/main/$($FOUNDATION)/credhub-ca-cert /type:certificate /certificate:"$HOME\credhub_ca_cert"
+
 
 credhub set /name:/concourse/main/$($FOUNDATION)/access_key_id /type:value --value s3admin
 credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_tasks /type:value --value tasks
@@ -135,11 +136,11 @@ credhub set /name:/concourse/main/$($FOUNDATION)/ops-manager-dns /type:value --v
 ### asdk things
 credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate `
  /certificate:$HOME\pcfdemo.local.azurestack.external.crt `
- /public:$HOME\pcfdemo.local.azurestack.external.key
+ /private:$HOME\pcfdemo.local.azurestack.external.key 
 
  credhub set /name:/concourse/main/$FOUNDATION/pcf_opsman_cert /type:certificate `
  /certificate:$HOME\pcf.pcfdemo.local.azurestack.external.crt `
- /public:$HOME\pcf.pcfdemo.local.azurestack.external.key
+ /private:$HOME\pcf.pcfdemo.local.azurestack.external.key
 
 
  credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate `
