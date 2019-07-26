@@ -53,10 +53,9 @@ $DIRECTOR_FOUNDATION = Get-Content $DIRECTOR_FOUNDATION_FILE | ConvertFrom-Json
 $FOUNDATION=$DIRECTOR_FOUNDATION.PCF_SUBDOMAIN_NAME
 ($CA_CERT | Out-String) | set-content $HOME\credhub_ca_cert
 
-credhub set /name:/concourse/main/$($FOUNDATION)/pivnet_token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
+credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/secret_access_key /type:value --value $($env_vars.PIVNET_UAA_TOKEN)
-credhub set /name:/concourse/main/pivnet_token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
-credhub set /name:/concourse/main/$($FOUNDATION)/pivnet_token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
+credhub set /name:/concourse/main/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 
 credhub set /name:/concourse/main/$FOUNDATION/azs_ca /type:certificate /certificate:$HOME/root.pem 
@@ -69,30 +68,14 @@ credhub set /name:/concourse/main/$($FOUNDATION)/client-id /type:value --value $
 credhub set /name:/concourse/main/$($FOUNDATION)/client-secret /type:value --value $($env_vars.client_secret)
 credhub set /name:/concourse/main/$($FOUNDATION)/subscription-id /type:value --value $(Get-AzureRmSubscription).SubscriptionId
 
-credhub set /name:/concourse/main/azurestack_asdk/tenant-id /type:value --value 5f7dfed5-1a3d-424f-8e22-4661ae54b53b
-credhub set /name:/concourse/main/azurestack_asdk/client-id /type:value --value $($env_vars.client_id)
-credhub set /name:/concourse/main/azurestack_asdk/client-secret /type:value --value $($env_vars.client_secret)
-credhub set /name:/concourse/main/azurestack_asdk/subscription-id /type:value --value 57230479-98a0-4777-a763-8c024866a52a
 
-
-
-credhub set /name:/concourse/main/aztest/tenant-id /type:value --value 5f7dfed5-1a3d-424f-8e22-4661ae54b53b
-credhub set /name:/concourse/main/aztest/client-id /type:value --value $($env_vars.client_id)
-credhub set /name:/concourse/main/aztest/client-secret /type:value --value $($env_vars.client_secret)
-credhub set /name:/concourse/main/aztest/subscription-id /type:value --value 57230479-98a0-4777-a763-8c024866a52a
-credhub set /name:/concourse/main/$pipeline/endpoint-resource-manager /type:value --value https://management.local.azurestack.external
+credhub set /name:/concourse/main/$($FOUNDATION)/endpoint-resource-manager /type:value --value https://management.local.azurestack.external
 
 
 credhub set /name:/concourse/main/$FOUNDATION/tenant-endpoint-resource /type:value --value $(Get-AzureRmContext).Environment.ActiveDirectoryServiceEndpointResourceId
 credhub set /name:/concourse/main/$FOUNDATION/domain /type:value --value local.azurestack.external
 
 #### stackpoc
-
-credhub set /name:/concourse/main/$pipeline/tenant-id /type:value --value $(Get-AzureRmSubscription).TenantId
-credhub set /name:/concourse/main/$pipeline/client-id /type:value --value $($env_vars.client_id)
-credhub set /name:/concourse/main/$pipeline/client-secret /type:value --value $($env_vars.client_secret)
-credhub set /name:/concourse/main/$pipeline/subscription-id /type:value --value $(Get-AzureRmSubscription).SubscriptionId
-credhub set /name:/concourse/main/$pipeline/endpoint-resource-manager /type:value --value https://management.local.azurestack.external
 
 credhub set /name:/concourse/main/credhub-client /type:value --value $CLIENT_NAME
 credhub set /name:/concourse/main/credhub-secret /type:value --value $CREDHUB_PASSWORD
