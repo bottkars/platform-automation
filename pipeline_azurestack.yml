@@ -23,7 +23,7 @@ resources:
 - name: after-midnight
   type: time
   source:
-    start: 12:00 AM
+    start: 01:00 AM
     stop: 6:00 AM
     interval: 24h
     location: Europe/Berlin 
@@ -1853,11 +1853,10 @@ jobs:
         env: interpolated-creds
       params:
         ENV_FILE: ((foundation))/env/env.yml        
-- name: apply-product-changes-sup
+- name: apply-product-changes
   serial: true
   plan:
     - in_parallel:
-        - get: azs-concourse
         - get: platform-automation-tasks
           params:
             unpack: true
@@ -1870,9 +1869,9 @@ jobs:
         - get: variable
     - task: interpolate-creds
       <<: *interpolate-creds
-    - task: apply-product-changes-sup
+    - task: apply-product-changes
       image: platform-automation-image
-      file: azs-concourse/ci/tasks/apply-changes.yml
+      file: platform-automation-tasks/tasks/apply-changes.yml
       input_mapping:
         env: interpolated-creds
       params:
@@ -2249,7 +2248,7 @@ groups:
   - configure-p-healthwatch
   - configure-wavefront-nozzle
   - configure-p-event-alerts
-  - apply-product-changes-sup
+  - apply-product-changes
 - name: deploy-asdk-1907-plans
   jobs:  
   - deploy-asdk

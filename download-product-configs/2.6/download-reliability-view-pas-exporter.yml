@@ -1,6 +1,6 @@
 ---
 pivnet-api-token: ((pivnet_token))
-pivnet-file-glob: "reliability-view*.pivotal"
+pivnet-file-glob: "reliability-view-pas-exporter*.pivotal"
 pivnet-product-slug: reliability_view_pcf
 product-version-regex: ^0\.3\..*$
 stemcell-iaas: azure
