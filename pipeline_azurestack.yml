@@ -2195,6 +2195,7 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
+        - get: state
     - task: interpolate-creds
       <<: *interpolate-creds
     - task: staged-config
@@ -2205,8 +2206,11 @@ jobs:
       params:
         PRODUCT_NAME: cf
         ENV_FILE: ((foundation))/env/env.yml
-      ensure: *make-state-commit 
-
+      ensure: &put-state
+          do:
+            - put: state
+              params:
+                file: state/state.yml
 
 
 groups:
