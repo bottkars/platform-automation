@@ -18,8 +18,8 @@ smtp_from: pcfuser@labbuildr.com
 smtp_port: 587
 pcf_notifications_email: pcfuser@labbuildr.com
 compute_instances: 3
-singleton_zone: 'null'
-zones_map: 'null'
+singleton_zone: 'Availability Sets'
+zones_map: 'Availability Sets'
 smtp_enable_starttls_auto: true
 uaa_saml_sso_name: labbuildr
 uaa_saml_display_name: labbuildr_AAD

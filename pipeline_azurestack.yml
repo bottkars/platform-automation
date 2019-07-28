@@ -29,6 +29,17 @@ resources:
     location: Europe/Berlin 
 
 ### opsman ends 
+# VM state and foundation configuration
+- name: state
+  icon: amazon-drive
+  type: s3
+  source:
+    access_key_id: ((access_key_id))
+    bucket: ((s3_foundation_state_bucket))
+    endpoint:  ((s3_endpoint))
+    region_name: ((s3_region_name))
+    secret_access_key: ((secret_access_key))
+    versioned_file: state.yml
 
 - name: installation
   icon: amazon-drive

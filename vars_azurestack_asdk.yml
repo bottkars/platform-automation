@@ -11,6 +11,7 @@ vault-dns: vault.local.azurestack.external
 suffix-storage-endpoint: local.azurestack.external
 pcf_version: "2.6"
 runtime: srt # pas or srt
+s3_foundation_state_bucket: "pcfdemo.state"
 passed_configs: 
   - configure-pivotal-mysql
  # - configure-p-spring-cloud-services
