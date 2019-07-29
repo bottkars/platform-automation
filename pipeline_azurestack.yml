@@ -380,12 +380,27 @@ interpolate-creds: &interpolate-creds
     CREDHUB_SERVER: ((credhub-server))
     PREFIX: /concourse/main/((foundation))
     CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env  download-product-configs/((pcf_version)) product-configs/((pcf_version))
+    INTERPOLATION_PATHS: download-product-configs/((pcf_version)) product-configs/((pcf_version))
     SKIP_MISSING: true
   input_mapping:
     files: configuration
   output_mapping:
     interpolated-files: interpolated-creds
+interpolate-vars: &interpolate-variable
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    CREDHUB_CLIENT: ((credhub-client))
+    CREDHUB_SECRET: ((credhub-secret))
+    CREDHUB_SERVER: ((credhub-server))
+    PREFIX: /concourse/main/((foundation))
+    CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env
+    SKIP_MISSING: true
+  input_mapping:
+    files: variable
+  output_mapping:
+    interpolated-files: interpolated-variable
 
 jobs:
 - name: test-azcli 
@@ -905,13 +920,13 @@ jobs:
         - get: platform-automation-image
           params: {unpack: true}
         - get: configuration
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-variable
+      <<: *interpolate-variable
     - task: staged-director-config
       image: platform-automation-image
       file: platform-automation-tasks/tasks/staged-director-config.yml
       input_mapping:
-        env: interpolated-creds
+        env: interpolated-variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
       ensure: *make-state-commit
@@ -2194,8 +2209,8 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-variable
+      <<: *interpolate-variable
     - task: staged-config
       image: platform-automation-image
       file: platform-automation-tasks/tasks/staged-config.yml
