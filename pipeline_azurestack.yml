@@ -319,25 +319,25 @@ resources:
   #  private_key: ((configuration.private_key))
   # uri: ((configuration.uri))
     branch: master
-    uri: ((pipeline-repo))
-    private_key: ((plat-auto-pipes-deploy-key.private_key))  
+    uri: ((config-repo))
+    private_key: ((config-deploy-key.private_key))  
     submodules: all
 #    depth: 1
-
+## repo for general config templates
 - name: configuration
   icon: github-circle
   type: git  
   source:
-    uri: ((pipeline-repo))
-    private_key: ((plat-auto-pipes-deploy-key.private_key))
+    uri: ((template-repo))
+    private_key: ((template-deploy-key.private_key))
     branch: master
 
 - name: variable
   icon: github-circle
   type: git  
   source:
-    uri: ((pipeline-repo))
-    private_key: ((plat-auto-pipes-deploy-key.private_key))
+    uri: ((variable-repo))
+    private_key: ((variable-deploy-key.private_key))
     branch: master
 ##
 - name: azs-concourse
