@@ -2194,16 +2194,17 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate
+      <<: *credhub-interpolate
     - task: staged-config
       image: platform-automation-image
       file: platform-automation-tasks/tasks/staged-config.yml
       input_mapping:
-        env: interpolated-creds
+        env: config
       params:
         PRODUCT_NAME: cf
         ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
       ensure: &make-config-commit
         do:
           - task: make-commit
