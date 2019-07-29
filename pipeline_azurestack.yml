@@ -2192,15 +2192,15 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: config
+        - get: configuration
         - get: variable
-    - task: interpolate
-      <<: *credhub-interpolate
+    - task: interpolate-creds
+      <<: *interpolate-creds
     - task: staged-config
       image: platform-automation-image
       file: platform-automation-tasks/tasks/staged-config.yml
       input_mapping:
-        env: config
+        env: interpolated-creds
       params:
         PRODUCT_NAME: cf
         ENV_FILE: ((foundation))/env/env.yml
