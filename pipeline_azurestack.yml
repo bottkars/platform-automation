@@ -2211,10 +2211,10 @@ jobs:
             image: platform-automation-image
             file: platform-automation-tasks/tasks/make-git-commit.yml
             input_mapping:
-              repository: configuration
+              repository: variable
               file-source: generated-config
             output_mapping:
-              repository-commit: configuration-commit
+              repository-commit: variasble-commit
             params:
               FILE_SOURCE_PATH: cf.yml
               FILE_DESTINATION_PATH: ((foundation))/config/cf.yml
