@@ -501,13 +501,15 @@ jobs:
       passed: [ export-installation ]  
     - get: azs-concourse
     - get: az-cli-image
+    - get: variable
   - task: copy-opsman-image
     file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
     image: az-cli-image
     input_mapping:
       image: opsman-product
-      root_ca: configuration
-      config: configuration
+      root_ca: variable
+#      config: configuration
+      config: variable
     params:
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
       PROFILE: ((arm_profile))
@@ -2215,7 +2217,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/staged-config.yml
       input_mapping:
-        env: interpolated-creds
+        env: interpolated-variable
       params:
         PRODUCT_NAME: cf
         ENV_FILE: ((foundation))/env/env.yml
