@@ -99,7 +99,18 @@ credhub set /name:/concourse/main/plat-auto-pipes-deploy-key /type:ssh `
 credhub set /name:/concourse/main/plat-auto-pipes-deploy-key /type:ssh `
          /private:$HOME\.ssh\pcfdemo_asdk_config `
          /public:$HOME\.ssh\pcfdemo_asdk_config.pub 
+
+         credhub set /name:/concourse/main/$FOUNDATION/config-deploy-key /type:ssh `
+         /private:$HOME\.ssh\git_deploy `
+         /public:$HOME\.ssh\git_deploy.pub
+credhub set /name:/concourse/main/$FOUNDATION/template-deploy-key /type:ssh `
+        /private:$HOME\.ssh\git_deploy `
+        /public:$HOME\.ssh\git_deploy.pub
          
+         
+credhub set /name:/concourse/main/$FOUNDATION/variable-deploy-key /type:ssh `
+         /private:$HOME\.ssh\pcfdemo_asdk_config `
+         /public:$HOME\.ssh\pcfdemo_asdk_config.pub         
          
 credhub set /name:/concourse/main/buckets_pivnet_tasks /type:value --value tasks
 credhub set /name:/concourse/main/buckets_pivnet_image /type:value --value image
