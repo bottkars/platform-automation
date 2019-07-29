@@ -717,7 +717,6 @@ jobs:
         BOSHSTORAGEACCOUNT: pcfkbboshstorage
         LOCATION: ((azurestack_region))
         STATE_FILE: director_deployment_vars.yml
-        LOCATION: ((azurestack_region))
 
       on_success: &make-config-director-commit
         do:
