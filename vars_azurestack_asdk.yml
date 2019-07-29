@@ -1,7 +1,7 @@
 platform-automation-bucket: platform-automation
 credhub-server: https://plane.control.local.azurestack.external:8844
 opsman-url: https://plane.control.local.azurestack.external
-pipeline-repo: git@github.com:bottkars/platform-automation
+pipeline-repo: git@github.com:bottkars/pcfdemo_asdk_config
 foundation: pcfdemo
 opsman_image_location: west_europe
 azurestack_region: local

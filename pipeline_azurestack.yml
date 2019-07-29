@@ -320,7 +320,7 @@ resources:
   # uri: ((configuration.uri))
     branch: master
     uri: ((pipeline-repo))
-    private_key: ((plat-auto-pipes-deploy-key.private_key))  
+    private_key: ((foundation))/((plat-auto-pipes-deploy-key.private_key))  
     submodules: all
 #    depth: 1
 
@@ -328,7 +328,7 @@ resources:
   icon: github-circle
   type: git  
   source:
-    uri: ((pipeline-repo))
+    uri: ((foundation))/((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
 
@@ -336,7 +336,7 @@ resources:
   icon: github-circle
   type: git  
   source:
-    uri: ((pipeline-repo))
+    uri: ((foundation))/((pipeline-repo))
     private_key: ((plat-auto-pipes-deploy-key.private_key))
     branch: master
 ##
