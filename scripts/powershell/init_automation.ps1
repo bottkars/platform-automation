@@ -104,8 +104,8 @@ credhub set /name:/concourse/main/plat-auto-pipes-deploy-key /type:ssh `
          /private:$HOME\.ssh\git_deploy `
          /public:$HOME\.ssh\git_deploy.pub
 credhub set /name:/concourse/main/$FOUNDATION/template-deploy-key /type:ssh `
-        /private:$HOME\.ssh\git_deploy `
-        /public:$HOME\.ssh\git_deploy.pub
+        /private:$HOME\.ssh\template_deploy `
+        /public:$HOME\.ssh\tempalte_deploy.pub
          
          
 credhub set /name:/concourse/main/$FOUNDATION/variable-deploy-key /type:ssh `
