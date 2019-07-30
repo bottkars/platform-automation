@@ -354,20 +354,20 @@ jobs:
 
 - name: run-azcli-get-vms
   plan:
-  - get: configuration
+  - get: variable
   - get: azs-concourse
   - get: az-cli-image
   - task: get-vms
     image: az-cli-image
     file: azs-concourse/ci/tasks/get-vms.yml  
     input_mapping:
-      root_ca: configuration
+      config: variable
     params:
       <<: *azure_env
 - name: deploy-opsman-from-arm
   plan:
   - in_parallel:
-    - get: configuration
+    - get: variable
     - get: azs-concourse
     - get: az-cli-image
     - get: opsman-product
@@ -381,7 +381,7 @@ jobs:
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       RESOURCE_GROUP: pcf
-      BOSHSTORAGEACCOUNT: boshstorage
+      BOSHSTORAGEACCOUNT: ((boshstorageaccount))
       ADDITIONAL_PARAMETERS: "OpsManImageURI=https://opsmanagerimage.blob.local.azurestack.external/images/((opsman_image))"
   - task: deploy-opsman-template 
     image: az-cli-image
@@ -394,7 +394,7 @@ jobs:
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       RESOURCE_GROUP: pcf
-      BOSHSTORAGEACCOUNT: boshstorage
+      BOSHSTORAGEACCOUNT: ((boshstorageaccount))
 
 - name: get-opsman-image
   serial: true
@@ -425,7 +425,7 @@ jobs:
       ACCOUNT_NAME: opsmanagerimage
       ACCOUNT_KEY: ((storage_account_key))
       DESTINATION_CONTAINER: images
-
+      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
 #  - task: check-copy-status-success
 #    image: az-cli-image
 #    file: azs-concourse/ci/tasks/copy-status-until-success.yml  
@@ -456,7 +456,6 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/delete-vm.yml  
     input_mapping:
-#      root_ca: configuration
       config: variable
     params:
       <<: *azure_env
@@ -498,6 +497,7 @@ jobs:
   serial_groups: [ install ]
   plan:
     - get: config
+    - get: variable
     - get: configuration
     - get: azs-concourse
     - get: az-cli-image
@@ -516,8 +516,6 @@ jobs:
     - task: download-opsman-pivnet
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product.yml
-  #    input_mapping:
-  #      config: interpolated-creds      
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
     - in_parallel:
@@ -539,14 +537,13 @@ jobs:
       image: az-cli-image
       input_mapping:
         image: opsman-product
-        root_ca: configuration
-        config: configuration
+        config: variable
       params:
         <<: *azure_env
         ACCOUNT_NAME: opsmanagerimage
         ACCOUNT_KEY: ((storage_account_key))
         DESTINATION_CONTAINER: images
-    - get: variable
+        OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
     - task: validate-template
       image: az-cli-image
       file: azs-concourse/ci/tasks/validate-pcf-template.yml  
@@ -558,7 +555,7 @@ jobs:
         TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
         PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
         RESOURCE_GROUP: pcf
-        BOSHSTORAGEACCOUNT: boshstorage
+        BOSHSTORAGEACCOUNT: ((boshstorageaccount))
     
     - task: deploy-opsman-template 
       image: az-cli-image
@@ -571,7 +568,7 @@ jobs:
         TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
         PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
         RESOURCE_GROUP: pcf
-        BOSHSTORAGEACCOUNT: pcfkbboshstorage
+        BOSHSTORAGEACCOUNT: ((boshstorageaccount))
         STATE_FILE: director_deployment_vars.yml
 
       on_success: &make-config-director-commit
@@ -594,16 +591,15 @@ jobs:
             params:
               repository: variable-commit
               merge: true
-
     - task: validate-vm
       image: az-cli-image
       file: azs-concourse/ci/tasks/query-vm.yml  
       input_mapping:
-        config: configuration
-        root_ca: configuration
+        config: variable
       params:
         <<: *azure_env
         VM_NAME: ops_man_vm
+        STATE_FILE: ((foundation))/state/state.yml 
       ensure: &make-state-commit
         do:
           - task: make-commit
@@ -629,7 +625,7 @@ jobs:
       file: platform-automation-tasks/tasks/configure-saml-authentication.yml
       attempts: 10
       input_mapping:
-        env: configuration
+        env: variable
         config: interpolated-creds
       params:
         ENV_FILE: ((foundation))/env/env.yml

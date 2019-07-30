@@ -4,7 +4,7 @@ opsman-url: https://plane.control.local.azurestack.external
 config-repo: git@github.com:bottkars/platform-automation
 template-repo: git@github.com:bottkars/pas_templates
 variable-repo: git@github.com:bottkars/pcfdemo_asdk_config
-
+boshstorageaccount: pcfkbboshstorage
 foundation: pcfdemo
 opsman_image_location: west_europe
 azurestack_region: local
