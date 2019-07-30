@@ -715,8 +715,8 @@ jobs:
   - task: download-opsman-pivnet
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
-#    input_mapping:
-#      config: interpolated-product-templates      
+    input_mapping:
+      config: interpolated-product-downloads      
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
   - in_parallel:
