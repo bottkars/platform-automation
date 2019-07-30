@@ -889,8 +889,11 @@ jobs:
 
 - name: get-platform-automation
   plan:
-  - get: platform-automation-pivnet
-    trigger: true
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-pivnet
+      trigger: true
   - in_parallel:
     - put: platform-automation-tasks
       params:
