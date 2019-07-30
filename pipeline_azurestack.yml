@@ -7,6 +7,7 @@ s3_env: &s3_env
 azure_env: &azure_env
   PROFILE: ((arm_profile))
   CA_CERT: ((foundation))/cert/root.pem
+  AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
   ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
   VAULT_DNS:  ((vault-dns))
   SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
@@ -301,12 +302,12 @@ resources:
     branch: master
     private_key: ((azs-resource-key.private_key))
 
-- name: az-cli-image
-  icon: azure
-  type: docker-image
-  source: 
-    repository: microsoft/azure-cli
-    tag: latest
+#- name: az-cli-image
+#  icon: azure
+#  type: docker-image
+#  source: 
+#    repository: microsoft/azure-cli
+#    tag: latest
 
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
@@ -346,18 +347,22 @@ jobs:
 - name: test-azcli 
   plan:
   - get: azs-concourse
-  - get: az-cli-image
+  - get: platform-automation-image
+    params:
+      unpack: true
   - task: test-azcli
-    image: az-cli-image
+    image: platform-automation-image
     file: azs-concourse/ci/tasks/test-task.yml
 
 - name: run-azcli-get-vms
   plan:
   - get: variable
   - get: azs-concourse
-  - get: az-cli-image
+  - get: platform-automation-image
+    params:
+      unpack: true
   - task: get-vms
-    image: az-cli-image
+    image: platform-automation-image
     file: azs-concourse/ci/tasks/get-vms.yml  
     input_mapping:
       config: variable
@@ -368,10 +373,12 @@ jobs:
   - in_parallel:
     - get: variable
     - get: azs-concourse
-    - get: az-cli-image
+    - get: platform-automation-image
+      params:
+        unpack: true
     - get: opsman-product
   - task: validate-template
-    image: az-cli-image
+    image: platform-automation-image
     file: azs-concourse/ci/tasks/validate-template.yml  
     input_mapping:
       config: variable
@@ -383,7 +390,7 @@ jobs:
       BOSHSTORAGEACCOUNT: ((boshstorageaccount))
       ADDITIONAL_PARAMETERS: "OpsManImageURI=https://opsmanagerimage.blob.local.azurestack.external/images/((opsman_image))"
   - task: deploy-opsman-template 
-    image: az-cli-image
+    image: platform-automation-image
     file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
     input_mapping:
       config: variable
@@ -409,11 +416,13 @@ jobs:
     - get: installation
       passed: [ export-installation ]  
     - get: azs-concourse
-    - get: az-cli-image
+    - get: platform-automation-image
+      params:
+        unpack: true
     - get: variable
   - task: copy-opsman-image
     file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
-    image: az-cli-image
+    image: platform-automation-image
     input_mapping:
       image: opsman-product
 #      root_ca: variable
@@ -426,7 +435,7 @@ jobs:
       DESTINATION_CONTAINER: images
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
 #  - task: check-copy-status-success
-#    image: az-cli-image
+#    image: platform-automation-image
 #    file: azs-concourse/ci/tasks/copy-status-until-success.yml  
 #    input_mapping:
 #      image: opsman-product
@@ -450,9 +459,11 @@ jobs:
   plan:
   - get: variable
   - get: azs-concourse
-  - get: az-cli-image
+  - get: platform-automation-image
+    params:
+      unpack: true
   - task: delete-vm
-    image: az-cli-image
+    image: platform-automation-image
     file: azs-concourse/ci/tasks/delete-vm.yml  
     input_mapping:
       config: variable
@@ -465,9 +476,11 @@ jobs:
   plan:
   - get: variable
   - get: azs-concourse
-  - get: az-cli-image
+  - get: platform-automation-image
+    params:
+      unpack: true
   - task: delete-images
-    image: az-cli-image
+    image: platform-automation-image
     file: azs-concourse/ci/tasks/delete-vm-images.yml  
     input_mapping:
       config: variable
@@ -479,9 +492,11 @@ jobs:
   plan:
   - get: variable
   - get: azs-concourse
-  - get: az-cli-image
+  - get: platform-automation-image
+    params:
+      unpack: true
   - task: delete-rg
-    image: az-cli-image
+    image: platform-automation-image
     file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
     input_mapping:
       config: variable
@@ -499,7 +514,6 @@ jobs:
     - get: variable
     - get: configuration
     - get: azs-concourse
-    - get: az-cli-image
     - get: platform-automation-image
       params:
         unpack: true
@@ -533,7 +547,7 @@ jobs:
 
     - task: copy-opsman-image
       file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
-      image: az-cli-image
+      image: platform-automation-image
       input_mapping:
         image: opsman-product
         config: variable
@@ -544,7 +558,7 @@ jobs:
         DESTINATION_CONTAINER: images
         OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
     - task: validate-template
-      image: az-cli-image
+      image: platform-automation-image
       file: azs-concourse/ci/tasks/validate-pcf-template.yml  
       input_mapping:
         config: variable
@@ -557,7 +571,7 @@ jobs:
         BOSHSTORAGEACCOUNT: ((boshstorageaccount))
     
     - task: deploy-opsman-template 
-      image: az-cli-image
+      image: platform-automation-image
       file: azs-concourse/ci/tasks/deploy-pcf-template.yml  
       input_mapping:
         config: variable
@@ -591,7 +605,7 @@ jobs:
               repository: variable-commit
               merge: true
     - task: validate-vm
-      image: az-cli-image
+      image: platform-automation-image
       file: azs-concourse/ci/tasks/query-vm.yml  
       input_mapping:
         config: variable
@@ -727,9 +741,11 @@ jobs:
   plan:
   - get: opsman-product
   - get: azs-concourse
-  - get: az-cli-image
+  - get: platform-automation-image
+    params:
+      unpack: true
   - task: test-azcli
-    image: az-cli-image
+    image: platform-automation-image
     input_mapping:
       image: opsman-product
     file: azs-concourse/ci/tasks/task1.yml
@@ -794,7 +810,6 @@ jobs:
         - get: one-time-trigger
           passed: [ export-installation, get-opsman-image ]
         - get: azs-concourse  
-        - get: az-cli-image  
         - get: platform-automation-image
           params:
             unpack: true
@@ -810,7 +825,7 @@ jobs:
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
     - task: delete-existing-opsman
-      image: az-cli-image
+      image: platform-automation-image
       file: azs-concourse/ci/tasks/delete-vm.yml  
       input_mapping:
         config: variable
@@ -829,7 +844,7 @@ jobs:
       output_mapping:
         downloaded-product: opsman-image
     - task: create-vm
-      image: az-cli-image
+      image: platform-automation-image
       file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
       input_mapping:
         config: variable
