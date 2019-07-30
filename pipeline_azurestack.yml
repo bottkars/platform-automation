@@ -1,4 +1,13 @@
 ---
+s3_env: &s3_env
+  access_key_id: ((access_key_id))
+  endpoint:  ((s3_endpoint))
+  region_name: ((s3_region_name))
+  secret_access_key: ((secret_access_key))
+
+credhub_env: &credhub_env
+<<: *credhub_env
+
 resource_types:
 - name: pivnet
   type: docker-image
@@ -34,22 +43,19 @@ resources:
 #  icon: amazon-drive
 #  type: s3
 #  source:
- #   access_key_id: ((access_key_id))
+ #   <<: *s3_env
  #   bucket: ((s3_foundation_state_bucket))
- #   endpoint:  ((s3_endpoint))
- #   region_name: ((s3_region_name))
- #   secret_access_key: ((secret_access_key))
+ # 
+ # 
+ # 
  #   versioned_file: state.yml
 
 - name: installation
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_installation))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: ((foundation))/installation-(.*).zip    
 - name: platform-automation-pivnet
   type: pivnet
@@ -63,130 +69,95 @@ resources:
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_tasks))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_image))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: platform-automation-image-(.*).tgz
 - name: pas-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    secret_access_key: ((secret_access_key))
     regexp: pas-product/\[elastic-runtime,(.*)\]cf-.*.pivotal
 
 - name: pas-windows-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: pas-windows-product/\[pas-windows,(.*)\]pas-windows-.*.pivotal
 
 - name: srt-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    secret_access_key: ((secret_access_key))
     regexp: srt-product/\[elastic-runtime,(.*)\]srt-.*.pivotal
 
 - name: p-spring-cloud-services-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-spring-cloud-services-product/\[p-spring-cloud-services,(.*)\]p-spring-cloud-services-.*.pivotal
 
 - name: p-spring-cloud-services-3-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-spring-cloud-services-3-product/\[p-spring-cloud-services,(.*)\]p_spring-cloud-services-.*.pivotal
-
 
 - name: p-rabbitmq-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-rabbitmq-product/\[p-rabbitmq,(.*)\]p-rabbitmq-.*.pivotal
 
 - name: pivotal-mysql-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: pivotal-mysql-product/\[pivotal-mysql,(.*)\]pivotal-mysql-.*.pivotal
 
 - name: p-healthwatch-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]p-healthwatch-.*.pivotal
 
 - name: wavefront-nozzle-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: wavefront-nozzle-product/\[wavefront-nozzle,(.*)\]wavefront-nozzle-.*.pivotal
 
 - name: p-event-alerts-product
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-event-alerts-product/\[p-event-alerts,(.*)\]p-event-alerts-.*.pivotal
 
 
@@ -194,78 +165,56 @@ resources:
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: pas-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: srt-stemcell
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: srt-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: p-spring-cloud-services-stemcell
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-spring-cloud-services-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: p-spring-cloud-services-3-stemcell
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-spring-cloud-services-3-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
-
 
 - name: p-rabbitmq-stemcell
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-rabbitmq-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: pivotal-mysql-stemcell
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
 
 - name: p-healthwatch-stemcell
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-healthwatch-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
 
 
@@ -273,43 +222,31 @@ resources:
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: wavefront-nozzle-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
 
 - name: p-event-alerts-stemcell
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: p-event-alerts-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: pas-windows-stemcell
   icon: amazon-drive
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-2019.*-azure.*\.tgz
 
 - name: opsman-product
   type: s3
   source:
-    access_key_id: ((access_key_id))
+    <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    endpoint:  ((s3_endpoint))
-    region_name: ((s3_region_name))
-    secret_access_key: ((secret_access_key))
     regexp: \[ops-manager,(.*)\].*.yml
 
 - name: config
@@ -359,11 +296,7 @@ credhub-interpolate: &credhub-interpolate
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
-    CREDHUB_CLIENT: ((credhub-client))
-    CREDHUB_SECRET: ((credhub-secret))
-    CREDHUB_SERVER: ((credhub-server))
-    PREFIX: /concourse/main/((foundation))
-    CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+    <<: *credhub_env
     INTERPOLATION_PATHS: "download-product-configs/((pcf_version))"
    # INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env ((foundation))/vars download-product-configs
   input_mapping:
@@ -375,11 +308,7 @@ interpolate-creds: &interpolate-creds
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
-    CREDHUB_CLIENT: ((credhub-client))
-    CREDHUB_SECRET: ((credhub-secret))
-    CREDHUB_SERVER: ((credhub-server))
-    PREFIX: /concourse/main/((foundation))
-    CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+    <<: *credhub_env
     INTERPOLATION_PATHS: download-product-configs/((pcf_version)) product-configs/((pcf_version))
     SKIP_MISSING: true
   input_mapping:
@@ -390,11 +319,7 @@ interpolate-vars: &interpolate-variable
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
-    CREDHUB_CLIENT: ((credhub-client))
-    CREDHUB_SECRET: ((credhub-secret))
-    CREDHUB_SERVER: ((credhub-server))
-    PREFIX: /concourse/main/((foundation))
-    CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+    <<: *credhub_env
     INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env
     SKIP_MISSING: true
   input_mapping:
@@ -443,8 +368,7 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/validate-template.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+      config: variable
     params:
       PROFILE: ((arm_profile))
       CA_CERT: ((foundation))/cert/root.pem
@@ -467,8 +391,7 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+      config: variable
       image: opsman-product
     params:
       PROFILE: ((arm_profile))
@@ -507,7 +430,7 @@ jobs:
     image: az-cli-image
     input_mapping:
       image: opsman-product
-      root_ca: variable
+#      root_ca: variable
 #      config: configuration
       config: variable
     params:
@@ -549,15 +472,15 @@ jobs:
 
 - name: delete-opsman-vm
   plan:
-  - get: configuration
+  - get: variable
   - get: azs-concourse
   - get: az-cli-image
   - task: delete-vm
     image: az-cli-image
     file: azs-concourse/ci/tasks/delete-vm.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+#      root_ca: configuration
+      config: variable
     params:
       PROFILE: ((arm_profile))
       CA_CERT: ((foundation))/cert/root.pem
@@ -574,15 +497,14 @@ jobs:
       
 - name: delete-orphan-azurevm-images
   plan:
-  - get: configuration
+  - get: variable
   - get: azs-concourse
   - get: az-cli-image
   - task: delete-images
     image: az-cli-image
     file: azs-concourse/ci/tasks/delete-vm-images.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+      config: variable
     params:
       PROFILE: ((arm_profile))
       CA_CERT: ((foundation))/cert/root.pem
@@ -598,15 +520,14 @@ jobs:
 
 - name: delete-pcf
   plan:
-  - get: configuration
+  - get: variable
   - get: azs-concourse
   - get: az-cli-image
   - task: delete-rg
     image: az-cli-image
     file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+      config: variable
     params:
       PROFILE: ((arm_profile))
       CA_CERT: ((foundation))/cert/root.pem
@@ -684,9 +605,7 @@ jobs:
         ACCOUNT_KEY: ((storage_account_key))
         DESTINATION_CONTAINER: images
         LOCATION: ((azurestack_region))
-
     - get: variable
-    
     - task: validate-template
       image: az-cli-image
       file: azs-concourse/ci/tasks/validate-pcf-template.yml  
@@ -715,8 +634,7 @@ jobs:
       image: az-cli-image
       file: azs-concourse/ci/tasks/deploy-pcf-template.yml  
       input_mapping:
-        root_ca: configuration
-        config: configuration
+        config: variable
         image: opsman-product
       params:
         PROFILE: ((arm_profile))
@@ -741,19 +659,19 @@ jobs:
             image: platform-automation-image
             file: platform-automation-tasks/tasks/make-git-commit.yml
             input_mapping:
-              repository: configuration
+              repository: variable
               file-source: generated-state
             output_mapping:
-              repository-commit: configuration-commit
+              repository-commit: variable-commit
             params:
               FILE_SOURCE_PATH: director_deployment_vars.yml
               FILE_DESTINATION_PATH: ((foundation))/vars/director_deployment_vars.yml
               GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
               GIT_AUTHOR_NAME: "Platform Automation Bot"
-              COMMIT_MESSAGE: 'Update vars file'
-          - put: configuration
+              COMMIT_MESSAGE: 'Update director state file'
+          - put: variable
             params:
-              repository: configuration-commit
+              repository: variable-commit
               merge: true
 
     - task: validate-vm
@@ -781,19 +699,19 @@ jobs:
             image: platform-automation-image
             file: platform-automation-tasks/tasks/make-git-commit.yml
             input_mapping:
-              repository: configuration
+              repository: variable
               file-source: generated-state
             output_mapping:
-              repository-commit: configuration-commit
+              repository-commit: variable-commit
             params:
               FILE_SOURCE_PATH: state.yml
               FILE_DESTINATION_PATH: ((foundation))/state/state.yml
               GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
               GIT_AUTHOR_NAME: "Platform Automation Bot"
               COMMIT_MESSAGE: 'Update state file'
-          - put: configuration
+          - put: variable
             params:
-              repository: configuration-commit
+              repository: variable-commit
               merge: true
     - task: configure-saml-authentication
       image: platform-automation-image
@@ -866,13 +784,13 @@ jobs:
       passed:
        - configure-opsman 
       trigger: true
-  - task: interpolate-creds
-    <<: *interpolate-creds          
+  - task: interpolate-variable
+    <<: *interpolate-variable          
   - task: apply-director-changes
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-director-changes.yml
     input_mapping:
-      env: interpolated-creds
+      env: interpolated-variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
 
@@ -921,7 +839,7 @@ jobs:
           params: {unpack: true}
         - get: platform-automation-image
           params: {unpack: true}
-        - get: configuration
+        - get: variable
     - task: interpolate-variable
       <<: *interpolate-variable
     - task: staged-director-config
@@ -950,13 +868,13 @@ jobs:
         - get: variable
         - get: one-time-trigger
           passed: [ install-opsman ]
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-variable
+      <<: *interpolate-variable
     - task: export-installation
       image: platform-automation-image
       file: platform-automation-tasks/tasks/export-installation.yml
       input_mapping:
-        env: interpolated-creds
+        env: interpolated-variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
         INSTALLATION_FILE: installation-$timestamp.zip
@@ -987,12 +905,13 @@ jobs:
         - get: opsman-product
     - task: interpolate-creds
       <<: *interpolate-creds
+    - task: interpolate-variable
+      <<: *interpolate-variable      
     - task: delete-existing-opsman
       image: az-cli-image
       file: azs-concourse/ci/tasks/delete-vm.yml  
       input_mapping:
-        root_ca: configuration
-        config: configuration
+        config: variable
       params:
         PROFILE: ((arm_profile))
         CA_CERT: ((foundation))/cert/root.pem
@@ -1008,7 +927,7 @@ jobs:
         LOCATION: ((azurestack_region))
 
  
-    - task: download-opsman-pivnet
+    - task: download-opsman-s3
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
@@ -1021,8 +940,7 @@ jobs:
       image: az-cli-image
       file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
       input_mapping:
-        root_ca: configuration
-        config: configuration
+        config: variable
         image: opsman-product
       params:
         PROFILE: ((arm_profile))
@@ -1048,7 +966,7 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml
         INSTALLATION_FILE: installation*.zip
       input_mapping:
-        env: interpolated-creds
+        env: interpolated-variable
         installation: installation
 #        vars: variable        
 
@@ -1067,7 +985,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-director-changes.yml
       input_mapping:
-        env: interpolated-creds
+        env: interpolated-variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
 

@@ -419,8 +419,7 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/validate-template.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+      config: variable
     params:
       PROFILE: ((arm_profile))
       CA_CERT: ((foundation))/cert/root.pem
@@ -443,8 +442,7 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+      config: variable
       image: opsman-product
     params:
       PROFILE: ((arm_profile))
@@ -482,8 +480,7 @@ jobs:
     image: az-cli-image
     input_mapping:
       image: opsman-product
-      root_ca: configuration
-      config: configuration
+      config: variable
     params:
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
       PROFILE: ((arm_profile))
@@ -530,8 +527,7 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/delete-vm.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+      config: variable
     params:
       PROFILE: ((arm_profile))
       CA_CERT: ((foundation))/cert/root.pem
@@ -555,8 +551,7 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/delete-vm-images.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+      config: variable
     params:
       PROFILE: ((arm_profile))
       CA_CERT: ((foundation))/cert/root.pem
@@ -579,8 +574,7 @@ jobs:
     image: az-cli-image
     file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
     input_mapping:
-      root_ca: configuration
-      config: configuration
+      config: variable
     params:
       PROFILE: ((arm_profile))
       CA_CERT: ((foundation))/cert/root.pem
