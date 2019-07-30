@@ -308,40 +308,39 @@ resources:
     repository: microsoft/azure-cli
     tag: latest
 
-credhub-interpolate: &credhub-interpolate
+interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
     INTERPOLATION_PATHS: "download-product-configs/((pcf_version))"
-   # INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env ((foundation))/vars download-product-configs
   input_mapping:
     files: config
   output_mapping:
-    interpolated-files: config
+    interpolated-files: interpolated-product-downloads
 
-interpolate-creds: &interpolate-creds
+interpolate-product-templates: &interpolate-product-templates
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: download-product-configs/((pcf_version)) product-configs/((pcf_version))
+    INTERPOLATION_PATHS: product-configs/((pcf_version))
     SKIP_MISSING: true
   input_mapping:
     files: configuration
   output_mapping:
-    interpolated-files: interpolated-creds
-interpolate-vars: &interpolate-variable
-  image: platform-automation-image
-  file: platform-automation-tasks/tasks/credhub-interpolate.yml
-  params:
-    <<: *credhub_env
-    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env
-    SKIP_MISSING: true
-  input_mapping:
-    files: variable
-  output_mapping:
-    interpolated-files: interpolated-variable
+    interpolated-files: interpolated-product-templates
+#interpolate-vars: &interpolate-variable
+#  image: platform-automation-image
+#  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+#  params:
+#    <<: *credhub_env
+#    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env
+#    SKIP_MISSING: true
+#  input_mapping:
+#    files: variable
+#  output_mapping:
+#    interpolated-files: interpolated-variable
 
 jobs:
 - name: test-azcli 
@@ -509,10 +508,10 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - task: interpolate-creds
-      <<: *interpolate-creds          
-    - task: credhub-interpolate
-      <<: *credhub-interpolate
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates          
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
     - task: download-opsman-pivnet
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product.yml
@@ -528,7 +527,7 @@ jobs:
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: opsman-image
 
@@ -626,7 +625,7 @@ jobs:
       attempts: 10
       input_mapping:
         env: variable
-        config: interpolated-creds
+        config: interpolated-product-templates
       params:
         ENV_FILE: ((foundation))/env/env.yml
         AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
@@ -634,8 +633,8 @@ jobs:
 #      image: platform-automation-image
 #      file: platform-automation-tasks/tasks/configure-director.yml
 #      input_mapping:
-#        config: interpolated-creds
-#        env: interpolated-creds
+#        config: interpolated-product-templates
+#        env: interpolated-product-templates
 #        vars: variable
 #      params:
 #        VARS_FILES: vars/((foundation))/vars/director-vars.yml generated.state/director_deployment_vars.yml
@@ -645,7 +644,7 @@ jobs:
 #      image: platform-automation-image
 #      file: platform-automation-tasks/tasks/apply-director-changes.yml
 #      input_mapping:
-#        env: interpolated-creds
+#        env: interpolated-product-templates
 #      params:
 #        ENV_FILE: ((foundation))/env/env.yml
 
@@ -664,14 +663,14 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-  - task: interpolate-creds
-    <<: *interpolate-creds          
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates          
   - task: configure-director
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
     input_mapping:
-      config: interpolated-creds
-      env: interpolated-creds
+      config: interpolated-product-templates
+      env: interpolated-product-templates
       vars: variable
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
@@ -691,13 +690,11 @@ jobs:
       passed:
        - configure-opsman 
       trigger: true
-  - task: interpolate-variable
-    <<: *interpolate-variable          
   - task: apply-director-changes
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-director-changes.yml
     input_mapping:
-      env: interpolated-variable
+      env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
 
@@ -713,13 +710,13 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-opsman-pivnet
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
 #    input_mapping:
-#      config: interpolated-creds      
+#      config: interpolated-product-templates      
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
   - in_parallel:
@@ -747,13 +744,13 @@ jobs:
         - get: platform-automation-image
           params: {unpack: true}
         - get: variable
-    - task: interpolate-variable
-      <<: *interpolate-variable
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
     - task: staged-director-config
       image: platform-automation-image
       file: platform-automation-tasks/tasks/staged-director-config.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
       ensure: *make-state-commit
@@ -775,13 +772,13 @@ jobs:
         - get: variable
         - get: one-time-trigger
           passed: [ install-opsman ]
-    - task: interpolate-variable
-      <<: *interpolate-variable
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
     - task: export-installation
       image: platform-automation-image
       file: platform-automation-tasks/tasks/export-installation.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
         INSTALLATION_FILE: installation-$timestamp.zip
@@ -810,10 +807,8 @@ jobs:
         - get: configuration
         - get: variable
         - get: opsman-product
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable      
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
     - task: delete-existing-opsman
       image: az-cli-image
       file: azs-concourse/ci/tasks/delete-vm.yml  
@@ -830,7 +825,7 @@ jobs:
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: opsman-image
     - task: create-vm
@@ -854,7 +849,7 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml
         INSTALLATION_FILE: installation*.zip
       input_mapping:
-        env: interpolated-variable
+        env: variable
         installation: installation
 #        vars: variable        
 
@@ -862,8 +857,8 @@ jobs:
 #      image: platform-automation-image
 #      file: platform-automation-tasks/tasks/configure-director.yml
 #      input_mapping:
-#        config: interpolated-creds
-#        env: interpolated-creds
+#        config: interpolated-product-templates
+#        env: interpolated-product-templates
 #        vars: variable
  #     params:
  #       VARS_FILES: vars/((foundation))/vars/director-vars.yml
@@ -873,7 +868,7 @@ jobs:
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-director-changes.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
 
@@ -901,13 +896,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-pas-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-pas.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: pas-stemcell}
   - in_parallel:
     - put: pas-product
@@ -933,13 +930,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-srt-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-srt.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: srt-stemcell}
   - in_parallel:
     - put: srt-product
@@ -963,13 +962,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-p-spring-cloud-services-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-spring-cloud-services-stemcell}
   - in_parallel:
     - put: p-spring-cloud-services-product
@@ -993,13 +994,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-p-spring-cloud-services-3-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services-3.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
   - in_parallel:
     - put: p-spring-cloud-services-3-product
@@ -1023,13 +1026,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-pivotal-mysql-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-pivotal-mysql.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: pivotal-mysql-stemcell}
   - in_parallel:
     - put: pivotal-mysql-product
@@ -1053,13 +1058,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-p-healthwatch-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-p-healthwatch.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-healthwatch-stemcell}
   - in_parallel:
     - put: p-healthwatch-product
@@ -1083,13 +1090,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-wavefront-nozzle-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-wavefront-nozzle.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
   - in_parallel:
     - put: wavefront-nozzle-product
@@ -1113,13 +1122,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-p-event-alerts-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-p-event-alerts.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-event-alerts-stemcell}
   - in_parallel:
     - put: p-event-alerts-product
@@ -1144,13 +1155,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-p-rabbitmq-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-p-rabbitmq.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-rabbitmq-stemcell}
   - in_parallel:
     - put: p-rabbitmq-product
@@ -1173,15 +1186,15 @@ jobs:
       params:
         unpack: true
     - get: config
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
-  - task: credhub-interpolate
-    <<: *credhub-interpolate
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
   - task: download-pas-windows-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pcf_version))/download-pas-windows.yml
+    input_mapping:
+      config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: pas-windows-stemcell}
   - in_parallel:
     - put: pas-windows-product
@@ -1203,17 +1216,15 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable      
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
     - task: download-pas
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-pas.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: pas-product
         downloaded-stemcell: pas-stemcell
@@ -1222,14 +1233,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: pas-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-pas-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: pas-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1238,7 +1249,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: pas-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
 
@@ -1249,23 +1260,21 @@ jobs:
         - get: platform-automation-image
           params:
             unpack: true
-
         - get: platform-automation-tasks
           params:
             unpack: true
         - get: configuration
+        - get: config
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable  
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
     - task: download-srt
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-srt.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: srt-product
         downloaded-stemcell: srt-stemcell
@@ -1274,14 +1283,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: srt-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-srt-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: srt-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1290,7 +1299,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: srt-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 - name: upload-and-stage-pas-windows
@@ -1305,17 +1314,15 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable      
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
     - task: download-pas-windows
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-pas-windows.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: pas-windows-product
         downloaded-stemcell: pas-windows-stemcell
@@ -1324,14 +1331,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: pas-windows-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-pas-windows-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: pas-windows-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1340,7 +1347,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: pas-windows-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml      
 
@@ -1356,17 +1363,15 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable        
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads       
     - task: download-pivotal-mysql
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-pivotal-mysql.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: pivotal-mysql-product
         downloaded-stemcell: pivotal-mysql-stemcell
@@ -1375,14 +1380,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: pivotal-mysql-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-pivotal-mysql-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: pivotal-mysql-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1391,7 +1396,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: pivotal-mysql-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml   
 
@@ -1407,17 +1412,15 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable      
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
     - task: download-p-healthwatch
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-p-healthwatch.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: p-healthwatch-product
         downloaded-stemcell: p-healthwatch-stemcell
@@ -1426,14 +1429,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: p-healthwatch-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-p-healthwatch-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: p-healthwatch-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1442,7 +1445,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: p-healthwatch-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 
@@ -1458,17 +1461,15 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable      
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
     - task: download-wavefront-nozzle
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-wavefront-nozzle.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: wavefront-nozzle-product
         downloaded-stemcell: wavefront-nozzle-stemcell
@@ -1477,14 +1478,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: wavefront-nozzle-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-wavefront-nozzle-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: wavefront-nozzle-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1493,7 +1494,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: wavefront-nozzle-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 
@@ -1509,17 +1510,17 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
     - task: download-p-event-alerts
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-p-event-alerts.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: p-event-alerts-product
         downloaded-stemcell: p-event-alerts-stemcell
@@ -1528,14 +1529,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: p-event-alerts-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-p-event-alerts-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: p-event-alerts-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1544,7 +1545,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: p-event-alerts-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 
@@ -1560,17 +1561,15 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable        
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads       
     - task: download-p-spring-cloud-services
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: p-spring-cloud-services-product
         downloaded-stemcell: p-spring-cloud-services-stemcell
@@ -1579,14 +1578,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: p-spring-cloud-services-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-p-spring-cloud-services-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: p-spring-cloud-services-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1595,7 +1594,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: p-spring-cloud-services-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml   
 
@@ -1611,17 +1610,15 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable      
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
     - task: download-p-spring-cloud-services-3
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services-3.yml
       input_mapping:
-        config: interpolated-creds
+        config: config
       output_mapping:
         downloaded-product: p-spring-cloud-services-3-product
         downloaded-stemcell: p-spring-cloud-services-3-stemcell
@@ -1630,14 +1627,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: p-spring-cloud-services-3-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-p-spring-cloud-services-3-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: p-spring-cloud-services-3-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1646,7 +1643,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: p-spring-cloud-services-3-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml   
 
@@ -1662,17 +1659,15 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
-    - task: interpolate-variable
-      <<: *interpolate-variable        
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads       
     - task: download-p-rabbitmq
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-p-rabbitmq.yml
       input_mapping:
-        config: interpolated-creds
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: p-rabbitmq-product
         downloaded-stemcell: p-rabbitmq-stemcell
@@ -1681,14 +1676,14 @@ jobs:
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: p-rabbitmq-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: upload-p-rabbitmq-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
         stemcell: p-rabbitmq-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
@@ -1697,7 +1692,7 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: p-rabbitmq-product
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 - name: apply-product-changes
@@ -1713,13 +1708,13 @@ jobs:
           passed: ((passed_configs))
           trigger: true
         - get: variable
-    - task: interpolate-variable
-      <<: *interpolate-variable
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
     - task: apply-product-changes
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-changes.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
 - name: configure-pas
@@ -1737,14 +1732,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-pas
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/pas.yml
@@ -1766,14 +1761,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-pas-windows
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/pas-windows.yml
@@ -1794,14 +1789,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-p-rabbitmq
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/p-rabbitmq.yml
@@ -1823,14 +1818,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-pivotal-mysql
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/pivotal-mysql.yml
@@ -1852,14 +1847,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-p-healthwatch
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/p-healthwatch.yml
@@ -1881,14 +1876,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-wavefront-nozzle
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/wavefront-nozzle.yml
@@ -1910,14 +1905,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-p-event-alerts
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/p-event-alerts.yml
@@ -1940,14 +1935,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-p-spring-cloud-services
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/p-spring-cloud-services.yml
@@ -1968,14 +1963,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-p-spring-cloud-services
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/p-spring-cloud-services-3.yml
@@ -1996,14 +1991,14 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-creds
-      <<: *interpolate-creds
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
     - task: configure-srt
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
-        config: interpolated-creds
-        env: interpolated-creds
+        config: interpolated-product-templates
+        env: variable
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pcf_version))/srt.yml
@@ -2030,13 +2025,13 @@ jobs:
             unpack: true
         - get: configuration
         - get: variable
-    - task: interpolate-variable
-      <<: *interpolate-variable
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
     - task: staged-config
       image: platform-automation-image
       file: platform-automation-tasks/tasks/staged-config.yml
       input_mapping:
-        env: interpolated-variable
+        env: variable
       params:
         PRODUCT_NAME: cf
         ENV_FILE: ((foundation))/env/env.yml
