@@ -417,7 +417,7 @@ jobs:
       <<: *azure_env
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
-      RESOURCE_GROUP: pcf
+      RESOURCE_GROUP: ((resource_group))
       BOSHSTORAGEACCOUNT: ((boshstorageaccount))
       ADDITIONAL_PARAMETERS: "OpsManImageURI=https://opsmanagerimage.blob.local.azurestack.external/images/((opsman_image))"
   - task: deploy-opsman-template 
@@ -430,7 +430,7 @@ jobs:
       <<: *azure_env
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
-      RESOURCE_GROUP: pcf
+      RESOURCE_GROUP: ((resource_group))
       BOSHSTORAGEACCOUNT: ((boshstorageaccount))
 
 - name: get-opsman-image
@@ -500,7 +500,7 @@ jobs:
       config: variable
     params:
       <<: *azure_env
-      RESOURCE_GROUP: pcf
+      RESOURCE_GROUP: ((resource_group))
       VM_NAME: ops_man_vm
       
 - name: delete-orphan-azurevm-images
@@ -517,7 +517,7 @@ jobs:
       config: variable
     params:
       <<: *azure_env
-      RESOURCE_GROUP: pcf
+      RESOURCE_GROUP: ((resource_group))
 
 - name: delete-pcf
   plan:
@@ -533,7 +533,7 @@ jobs:
       config: variable
     params:
       <<: *azure_env
-      RESOURCE_GROUP: pcf
+      RESOURCE_GROUP: ((resource_group))
      
 
 ## opsman starts here
@@ -598,7 +598,7 @@ jobs:
         <<: *azure_env
         TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
         PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
-        RESOURCE_GROUP: pcf
+        RESOURCE_GROUP: ((resource_group))
         BOSHSTORAGEACCOUNT: ((boshstorageaccount))
     
     - task: deploy-opsman-template 
@@ -611,7 +611,7 @@ jobs:
         <<: *azure_env
         TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
         PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
-        RESOURCE_GROUP: pcf
+        RESOURCE_GROUP: ((resource_group))
         BOSHSTORAGEACCOUNT: ((boshstorageaccount))
         STATE_FILE: director_deployment_vars.yml
 
@@ -862,7 +862,7 @@ jobs:
         config: variable
       params:
         <<: *azure_env
-        RESOURCE_GROUP: pcf
+        RESOURCE_GROUP: ((resource_group))
         VM_NAME: ops_man_vm
  
     - task: download-opsman-s3
@@ -884,7 +884,7 @@ jobs:
         <<: *azure_env
         TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
         PARAMETER_FILE: ((foundation))/config/parameters_opsman_update.json
-        RESOURCE_GROUP: pcf
+        RESOURCE_GROUP: ((resource_group))
         STATE_FILE: state.yml
       ensure: *make-state-commit
     - task: import-installation

@@ -13,6 +13,7 @@ arm_profile: "2019-03-01-hybrid"
 vault-dns: vault.local.azurestack.external
 suffix-storage-endpoint: local.azurestack.external
 pcf_version: "2.6"
+resource_group: "pcf"
 runtime: srt # pas or srt
 s3_foundation_state_bucket: "pcfdemo.state"
 passed_configs: 
