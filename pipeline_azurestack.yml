@@ -328,7 +328,7 @@ interpolate-product-templates: &interpolate-product-templates
     INTERPOLATION_PATHS: product-configs/((pcf_version))
     SKIP_MISSING: true
   input_mapping:
-    files: configuration
+    files: templates
   output_mapping:
     interpolated-files: interpolated-product-templates
 #interpolate-vars: &interpolate-variable
