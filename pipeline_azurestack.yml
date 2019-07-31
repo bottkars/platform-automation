@@ -278,7 +278,7 @@ resources:
     submodules: all
 #    depth: 1
 ## repo for general config templates
-- name: configuration
+- name: templates
   icon: github-circle
   type: git  
   source:
@@ -316,7 +316,7 @@ interpolate-product-downloads: &interpolate-product-downloads
     <<: *credhub_env
     INTERPOLATION_PATHS: "download-product-configs/((pcf_version))"
   input_mapping:
-    files: config
+    files: templates
   output_mapping:
     interpolated-files: interpolated-product-downloads
 
@@ -407,7 +407,7 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    - get: configuration
+    - get: templates
     - get: opsman-product
       passed: 
       - get-opsman 
@@ -512,7 +512,7 @@ jobs:
   plan:
     - get: config
     - get: variable
-    - get: configuration
+    - get: templates
     - get: azs-concourse
     - get: platform-automation-image
       params:
@@ -670,7 +670,7 @@ jobs:
       passed:
       - install-opsman
       trigger: true
-    - get: configuration
+    - get: templates
     - get: platform-automation-image
       params:
         unpack: true
@@ -694,7 +694,7 @@ jobs:
   plan:
   - in_parallel:
     - get: variable
-    - get: configuration
+    - get: templates
     - get: platform-automation-image
       params:
         unpack: true
@@ -723,7 +723,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-opsman-pivnet
@@ -784,7 +784,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
         - get: one-time-trigger
           passed: [ install-opsman ]
@@ -819,7 +819,7 @@ jobs:
             unpack: true
         - get: installation
           passed: [ export-installation ]
-        - get: configuration
+        - get: templates
         - get: variable
         - get: opsman-product
     - task: interpolate-product-downloads
@@ -913,7 +913,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-pas-product-and-stemcell
@@ -947,7 +947,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-srt-product-and-stemcell
@@ -979,7 +979,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-p-spring-cloud-services-product-and-stemcell
@@ -1011,7 +1011,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-p-spring-cloud-services-3-product-and-stemcell
@@ -1043,7 +1043,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-pivotal-mysql-product-and-stemcell
@@ -1075,7 +1075,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-p-healthwatch-product-and-stemcell
@@ -1107,7 +1107,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-wavefront-nozzle-product-and-stemcell
@@ -1139,7 +1139,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-p-event-alerts-product-and-stemcell
@@ -1172,7 +1172,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-p-rabbitmq-product-and-stemcell
@@ -1203,7 +1203,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-    - get: config
+    - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-pas-windows-product-and-stemcell
@@ -1232,7 +1232,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
@@ -1281,8 +1281,8 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
-        - get: config
+        - get: templates
+        - get: templates
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads
@@ -1330,7 +1330,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
@@ -1379,7 +1379,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads       
@@ -1428,7 +1428,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
@@ -1477,7 +1477,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
@@ -1526,7 +1526,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -1577,7 +1577,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads       
@@ -1626,7 +1626,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
@@ -1675,7 +1675,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads       
@@ -1748,7 +1748,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -1777,7 +1777,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -1805,7 +1805,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -1834,7 +1834,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -1863,7 +1863,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -1892,7 +1892,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -1921,7 +1921,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -1951,7 +1951,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -1979,7 +1979,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -2007,7 +2007,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
@@ -2041,7 +2041,7 @@ jobs:
         - get: platform-automation-tasks
           params:
             unpack: true
-        - get: configuration
+        - get: templates
         - get: variable
 #    - task: interpolate-variable
 #      <<: *interpolate-variable
