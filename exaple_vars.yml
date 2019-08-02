@@ -1,14 +1,13 @@
 platform-automation-bucket: platform-automation
 credhub-server: https://plane.control.local.azurestack.external:8844
 opsman-url: https://plane.control.local.azurestack.external
-config-repo: git@github.com:bottkars/platform-automation
 template-repo: git@github.com:bottkars/pas_templates
 variable-repo: git@github.com:bottkars/pcfdemo_asdk_config
 boshstorageaccount: pcfkbboshstorage
 foundation: pcfdemo
 opsman_image_location: west_europe
 azurestack_region: local
-storage_account_key: "UAdObNQxdnDiUMRiq5pETD+5I1z82wuUi0EHVpgnL20kBDnur0B0vCvGGOP7BmG89hBWMRGG/9DFuDkfVXentQ=="
+storage_account_key: "<key for the account opsman images are stored>"
 arm_profile: "2019-03-01-hybrid"
 vault-dns: vault.local.azurestack.external
 suffix-storage-endpoint: local.azurestack.external

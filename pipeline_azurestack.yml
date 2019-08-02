@@ -558,7 +558,6 @@ jobs:
   serial: true
   serial_groups: [ install ]
   plan:
-    - get: config
     - get: variable
     - get: templates
     - get: azs-concourse
