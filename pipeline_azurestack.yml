@@ -208,6 +208,14 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: p-event-alerts-product/\[p-event-alerts,(.*)\]p-event-alerts-.*.pivotal
 
+- name: p-compliance-scanner-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-compliance-scanner-product/\[p-compliance-scanner,(.*)\]p-compliance-scanner-.*.pivotal
+
 
 - name: pas-stemcell
   icon: amazon-drive
@@ -281,6 +289,15 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: p-event-alerts-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: p-compliance-scanner-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-compliance-scanner-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
 
 - name: pas-windows-stemcell
   icon: amazon-drive
@@ -784,6 +801,8 @@ jobs:
 
 - name: staged-director-config
   serial: true
+  serial_groups: [ staged-products ]
+
   plan:
     - in_parallel:
         - get: platform-automation-tasks
@@ -1157,6 +1176,7 @@ jobs:
       params:
         file: wavefront-nozzle-stemcell/*.tgz
 
+
 - name: get-p-event-alerts
   serial: true
   serial_groups: [ get-products ]
@@ -1188,6 +1208,40 @@ jobs:
     - put: p-event-alerts-stemcell
       params:
         file: p-event-alerts-stemcell/*.tgz
+
+
+
+- name: get-p-compliance-scanner
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-compliance-scanner-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-compliance-scanner.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-compliance-scanner-stemcell}
+  - in_parallel:
+    - put: p-compliance-scanner-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-compliance-scanner-stemcell
+      params:
+        file: p-compliance-scanner-stemcell/*.tgz
 
 
 - name: get-p-rabbitmq
@@ -1545,7 +1599,6 @@ jobs:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml        
-
 - name: upload-and-stage-p-event-alerts
   serial: true
   plan:
@@ -1593,6 +1646,58 @@ jobs:
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
         product: p-event-alerts-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+
+
+- name: upload-and-stage-p-compliance-scanner
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: download-p-compliance-scanner
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-p-compliance-scanner.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: p-compliance-scanner-product
+        downloaded-stemcell: p-compliance-scanner-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-compliance-scanner-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-compliance-scanner-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: p-compliance-scanner-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-compliance-scanner-product
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml        
@@ -1937,7 +2042,6 @@ jobs:
         CONFIG_FILE: product-configs/((pcf_version))/wavefront-nozzle.yml
         VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
-
 - name: configure-p-event-alerts
   serial: true
   plan:
@@ -1965,6 +2069,36 @@ jobs:
       params:
         CONFIG_FILE: product-configs/((pcf_version))/p-event-alerts.yml
         VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+
+- name: configure-p-compliance-scanner
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-compliance-scanner
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-compliance-scanner
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pcf_version))/p-compliance-scanner.yml
+        VARS_FILES: vars/((foundation))/vars/p-compliance-scanner-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 
 
@@ -2063,6 +2197,8 @@ jobs:
       params:
         file: platform-automation-pivnet/*image*.tgz   
 - name: staged-pas-config
+  serial_groups:
+  - staged-configs
   plan:
     - in_parallel:
         <<: *stage_steps
@@ -2084,8 +2220,84 @@ jobs:
             params:
               repository: variable-commit
               merge: true
-              
+- name: staged-p-compliance-scanner-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-compliance-scanner
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p-compliance-scanner.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p-compliance-scanner.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+
+- name: staged-p-healthwatch-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-healthwatch
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p-healthwatch.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p-healthwatch.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+- name: staged-pas-windows-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: pas-windows
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: pas-windows.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/pas-windows.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+
+
 - name: staged-pivotal-mysql-config
+  serial_groups:
+  - staged-configs
   plan:
     - in_parallel:
         <<: *stage_steps
@@ -2109,6 +2321,8 @@ jobs:
               merge: true
               
 - name: staged-p-spring-cloud-services-config
+  serial_groups:
+  - staged-configs
   plan:
     - in_parallel:
         <<: *stage_steps
@@ -2131,6 +2345,8 @@ jobs:
               repository: variable-commit
               merge: true
 - name: staged-p-spring-cloud-services-3-config
+  serial_groups:
+  - staged-configs
   plan:
     - in_parallel:
         <<: *stage_steps
@@ -2154,6 +2370,8 @@ jobs:
               merge: true
 
 - name: staged-p-rabbitmq-config
+  serial_groups:
+  - staged-configs
   plan:
     - in_parallel:
         <<: *stage_steps
@@ -2185,6 +2403,9 @@ groups:
   - staged-p-spring-cloud-services-config
   - staged-p-spring-cloud-services-3-config
   - staged-p-rabbitmq-config
+  - staged-p-compliance-scanner-config
+  - staged-p-healthwatch-config
+  - staged-pas-windows-config
 
 - name: install-ops-manager
   jobs:
@@ -2209,6 +2430,8 @@ groups:
   - get-p-healthwatch
   - get-wavefront-nozzle
   - get-p-event-alerts
+  - get-p-compliance-scanner
+
 - name: upgrade-products
   jobs:
   #- export-installation
@@ -2221,6 +2444,7 @@ groups:
   - upload-and-stage-p-healthwatch
   - upload-and-stage-wavefront-nozzle
   - upload-and-stage-p-event-alerts
+  - upload-and-stage-p-compliance-scanner
 - name: configure-products
   jobs:
   - configure-srt
@@ -2232,6 +2456,7 @@ groups:
   - configure-p-healthwatch
   - configure-wavefront-nozzle
   - configure-p-event-alerts
+  - configure-p-compliance-scanner
   - apply-product-changes
 - name: deploy-asdk-1907-plans
   jobs:  
