@@ -1,0 +1,91 @@
+product-name: ((product_name))
+network-properties:
+  network:
+    name: ((pcf_pas_network))
+  service_network:
+    name: ((pcf_service_network))
+  other_availability_zones:
+  - name: ((zones_map))
+  singleton_availability_zone:
+    name: ((singleton_zone))
+product-properties:
+  .properties.plan1_selector.single_node.description: 
+    value: "This plan provides a small, single node, dedicated MySQL instance."
+  .properties.plan1_selector.single_node.instance_limit:
+    value: 10
+  .properties.plan1_selector:
+    value: single_node
+    selected_option: single_node
+  .properties.plan1_selector.single_node.az_multi_select:
+    value:
+    - ((zones_map))
+  .properties.plan1_selector.single_node.description: 
+    value: "This plan provides a medium, leader-follower MySQL instance."   
+  .properties.plan2_selector.leader_follower.instance_limit:
+    value: 5
+  .properties.plan2_selector:
+    value: leader_follower
+    selected_option: leader_follower  
+  .properties.plan2_selector.leader_follower.az_multi_select:
+    value:
+    - ((zones_map))
+  .properties.plan3_selector:
+    selected_option: galera
+    value: galera
+  .properties.plan3_selector.galera.access_dropdown:
+    value: enable
+  .properties.plan3_selector.galera.az_multi_select:
+    value:
+    - ((zones_map))
+  .properties.plan3_selector.galera.description:
+    value: This plan provides a small ha MySQL instance.
+  .properties.plan3_selector.galera.instance_limit:
+    value: 10
+  .properties.plan3_selector.galera.jumpbox_vm_type:
+    value: Standard_DS1_v2
+  .properties.plan3_selector.galera.name:
+    value: db-small-ha
+  .properties.plan3_selector.galera.paid_plan:
+    value: false
+  .properties.plan3_selector.galera.vm_type:
+    value: Standard_DS2_v2
+  .properties.plan4_selector:
+    value: Inactive
+    selected_option: inactive
+  .properties.plan5_selector:
+    value: Inactive
+    selected_option: inactive  
+  .properties.global_recipient_email:
+    value: ((global_recipient_email))
+  .properties.backups_selector.azure.account:
+    value: ((azure_account))
+  .properties.backups_selector.azure.storage_access_key:
+    credential: true
+    value:
+      secret: ((azure_storage_access_key))
+  .properties.backups_selector.azure.path:
+    value: dump
+  .properties.backups_selector.azure.cron_schedule:
+    value: 0 */8 * * *
+  .properties.backups_selector.azure.container:
+    value: backup
+  .properties.backups_selector.azure.endpoint:
+    value: ((blob_store_base_url))
+  .properties.backups_selector.azure.enable_email_alerts:
+    value: true
+  .properties.deprecated_bindings_string:
+    value: X
+  .properties.backups_selector:
+    value: Azure Backups
+    selected_option: azure
+errand-config:
+  delete-all-service-instances-and-deregister-broker:
+    pre-delete-state: true
+  register-broker:
+    post-deploy-state: true
+  smoke-tests:
+    post-deploy-state: false
+  upgrade-all-service-instances:
+    post-deploy-state: true
+  validate-before-upgrade-instances:
+    post-deploy-state: true    

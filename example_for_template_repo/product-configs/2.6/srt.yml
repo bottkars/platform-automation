@@ -1,0 +1,114 @@
+
+product-name: cf
+network-properties:
+  network:
+    name: ((pcf_pas_network))
+  other_availability_zones: ((zones_map))
+  singleton_availability_zone:
+    name: ((singleton_zone))
+product-properties:
+  .cloud_controller.apps_domain:
+    value: ((pcf_apps_domain))
+  .cloud_controller.system_domain:
+    value: ((pcf_system_domain))
+  .properties.haproxy_forward_tls:
+    value: disable
+  .ha_proxy.skip_cert_verify:
+    value: true
+  .properties.routing_tls_termination:
+    value: router
+  .router.frontend_idle_timeout:
+    value: 240  
+  .properties.security_acknowledgement:
+    value: X
+  .mysql_monitor.recipient_email:
+    value: ((pcf_notifications_email))
+  .uaa.service_provider_key_credentials:
+    value:
+      private_key_pem: |
+        ((pcf_domain_cert.private_key))
+      cert_pem: |
+        ((pcf_domain_cert.certificate))
+  .properties.networking_poe_ssl_certs:
+    value:
+    - name: default
+      certificate:
+        private_key_pem: |
+          ((pcf_domain_cert.private_key))
+        cert_pem: |
+          ((pcf_domain_cert.certificate))
+  .properties.credhub_key_encryption_passwords:
+    value:
+    - name: default
+      provider: internal
+      key:
+        secret: ((pcf_credhub_key))
+      primary: true
+  .properties.smtp_address:
+    value: ((smtp_address))
+  .properties.smtp_credentials:
+    value:
+      identity: ((smtp_identity))
+      password: ((smtp_password))
+  .properties.smtp_enable_starttls_auto:
+    value: ((smtp_enable_starttls_auto))
+  .properties.smtp_auth_mechanism:
+    value: plain 
+  .properties.smtp_from:
+    value: ((smtp_from))
+  .properties.smtp_port:
+    value: ((smtp_port))   
+  .cloud_controller.encrypt_key:
+    value:
+      secret: ((cloud_controller.encrypt_key)) 
+  .properties.metric_registrar_enabled:
+    value: true
+  .properties.istio:
+    value: disable
+  .properties.uaa.saml.sso_name: 
+    value: ((uaa_saml_sso_name))
+  .properties.uaa.saml.display_name:
+    value: ((uaa_saml_display_name))
+  .properties.uaa.saml.sso_url:
+    value: ((uaa_saml_sso_url))
+  .properties.uaa.saml.email_domains:
+    value: ((uaa_saml_email_domains)) 
+  .properties.uaa.saml.first_name_attribute:
+    value: ((uaa_saml_first_name_attribute))
+  .properties.uaa.saml.last_name_attribute:
+    value: ((uaa_saml_last_name_attribute))
+  .properties.uaa.saml.email_attribute:
+    value: ((uaa_saml_email_attribute))           
+  .properties.uaa.saml.external_groups_attribute:
+    value: ((uaa_saml_groups_attribute))
+  .properties.uaa: 
+    value: saml
+    selected_option: saml
+           
+resource-config:
+  router:
+    elb_names:
+    - ((pcf_web_lb))
+  compute:
+    instances: ((compute_instances))
+errand-config:
+  deploy-autoscaler:
+    post-deploy-state: true
+  deploy-notifications:
+    post-deploy-state: true
+  deploy-notifications-ui:
+    post-deploy-state: true
+  metric_registrar_smoke_test:
+    post-deploy-state: false
+  nfsbrokerpush:
+    post-deploy-state: true
+  push-apps-manager:
+    post-deploy-state: true
+  push-usage-service:
+    post-deploy-state: true
+  smbbrokerpush:
+    post-deploy-state: false
+  smoke_tests:
+    post-deploy-state: false
+  test-autoscaling:
+    post-deploy-state: false    
