@@ -2434,7 +2434,7 @@ groups:
 
 - name: upgrade-products
   jobs:
-  #- export-installation
+  - export-installation
   - upload-and-stage-srt
   - upload-and-stage-pas-windows  
   - upload-and-stage-pivotal-mysql
