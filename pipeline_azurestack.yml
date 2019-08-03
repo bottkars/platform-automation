@@ -1358,6 +1358,8 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml
 
 - name: upload-and-stage-srt
+  serial_groups:
+  - upload-and-stage
   serial: true
   plan:
     - in_parallel:
