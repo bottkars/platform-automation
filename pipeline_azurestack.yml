@@ -314,16 +314,16 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: \[ops-manager,(.*)\].*.yml
 
-- name: config
-  icon: github-circle
-  type: git
-  source:
+#- name: config
+#  icon: github-circle
+#  type: git
+#  source:
   #  private_key: ((configuration.private_key))
   # uri: ((configuration.uri))
-    branch: master
-    uri: ((config-repo))
-    private_key: ((config-deploy-key.private_key))  
-    submodules: all
+#    branch: master
+#    uri: ((config-repo))
+#    private_key: ((config-deploy-key.private_key))  
+#    submodules: all
 #    depth: 1
 ## repo for general config templates
 - name: templates
