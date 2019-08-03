@@ -543,7 +543,7 @@ jobs:
   - get: platform-automation-image
     params:
       unpack: true
-  - task: delete-images
+  - task: delete-azure-disks
     image: platform-automation-image
     file: azs-concourse/ci/tasks/delete-unattached-disks.yml  
     input_mapping:
@@ -559,7 +559,7 @@ jobs:
   - get: platform-automation-image
     params:
       unpack: true
-  - task: delete-images
+  - task: query-azure-disks
     image: platform-automation-image
     file: azs-concourse/ci/tasks/query-unattached-disks.yml 
     input_mapping:
