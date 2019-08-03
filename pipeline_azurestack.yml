@@ -1307,6 +1307,8 @@ jobs:
         file: pas-windows-stemcell/*.tgz
 
 - name: upload-and-stage-pas
+  serial_groups:
+  - upload-and-stage
   serial: true
   plan:
     - in_parallel:
@@ -1405,6 +1407,8 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml        
 - name: upload-and-stage-pas-windows
   serial: true
+  serial_groups:
+  - upload-and-stage
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -1454,6 +1458,8 @@ jobs:
 
 - name: upload-and-stage-pivotal-mysql
   serial: true
+  serial_groups:
+  - upload-and-stage
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -1503,6 +1509,8 @@ jobs:
 
 - name: upload-and-stage-p-healthwatch
   serial: true
+  serial_groups:
+  - upload-and-stage
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -1552,6 +1560,8 @@ jobs:
 
 - name: upload-and-stage-wavefront-nozzle
   serial: true
+  serial_groups:
+  - upload-and-stage
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -1599,6 +1609,8 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 - name: upload-and-stage-p-event-alerts
+  serial_groups:
+  - upload-and-stage
   serial: true
   plan:
     - in_parallel:
@@ -1652,6 +1664,8 @@ jobs:
 
 - name: upload-and-stage-p-compliance-scanner
   serial: true
+  serial_groups:
+  - upload-and-stage
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -1703,6 +1717,8 @@ jobs:
 
 - name: upload-and-stage-p-spring-cloud-services
   serial: true
+  serial_groups:
+  - upload-and-stage
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -1752,6 +1768,8 @@ jobs:
 
 - name: upload-and-stage-p-spring-cloud-services-3
   serial: true
+  serial_groups:
+  - upload-and-stage
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -1801,6 +1819,8 @@ jobs:
 
 - name: upload-and-stage-p-rabbitmq
   serial: true
+  serial_groups:
+  - upload-and-stage
   plan:
     - in_parallel:
         - get: platform-automation-image
