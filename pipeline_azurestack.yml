@@ -536,6 +536,39 @@ jobs:
       <<: *azure_env
       RESOURCE_GROUP: ((resource_group))
 
+- name: delete-unattached-azure-disks
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: delete-images
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-unattached-disk.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+
+- name: query-unattached-azure-disks
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: delete-images
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/query-unattached-disk.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+
+
 - name: delete-pcf
   plan:
   - get: variable
@@ -2485,6 +2518,8 @@ groups:
 - name: azcli-jobs
   jobs:
   - delete-orphan-azurevm-images
+  - query-unattached-azure-disks
+  - delete-unattached-azure-disks
   - delete-opsman-vm
   - delete-pcf
   - test-azcli
