@@ -1925,6 +1925,8 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
 - name: configure-pas
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -1954,6 +1956,8 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml        
 
 - name: configure-pas-windows
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -1982,6 +1986,8 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 - name: configure-p-rabbitmq
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -2011,6 +2017,8 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-pivotal-mysql
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -2040,6 +2048,8 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-healthwatch
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -2069,6 +2079,8 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-wavefront-nozzle
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -2097,6 +2109,8 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 - name: configure-p-event-alerts
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -2127,6 +2141,8 @@ jobs:
 
 
 - name: configure-p-compliance-scanner
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -2157,6 +2173,8 @@ jobs:
 
 
 - name: configure-p-spring-cloud-services
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -2185,6 +2203,8 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
 - name: configure-p-spring-cloud-services-3
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -2213,6 +2233,8 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
         ENV_FILE: ((foundation))/env/env.yml        
 - name: configure-srt
+  serial_groups:
+  - configure-products
   serial: true
   plan:
     - in_parallel:
