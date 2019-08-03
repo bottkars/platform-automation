@@ -561,7 +561,7 @@ jobs:
       unpack: true
   - task: delete-images
     image: platform-automation-image
-    file: azs-concourse/ci/tasks/query-unattached-disk.yml  
+    file: azs-concourse/ci/tasks/query-unattached-disks.yml 
     input_mapping:
       config: variable
     params:
