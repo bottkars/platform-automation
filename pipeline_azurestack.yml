@@ -1823,7 +1823,7 @@ jobs:
       params:
         CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services-3.yml
       input_mapping:
-        config: config
+        config: interpolated-product-downloads
       output_mapping:
         downloaded-product: p-spring-cloud-services-3-product
         downloaded-stemcell: p-spring-cloud-services-3-stemcell
