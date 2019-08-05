@@ -1001,8 +1001,8 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pcf_version))/srt.yml
-      VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+      CONFIG_FILE: product-configs/((pcf_version))/p-event-alerts.yml
+      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
       SKIP_MISSING: true    
 
 - name: get-pas
