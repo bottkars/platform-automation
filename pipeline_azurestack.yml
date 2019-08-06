@@ -2548,6 +2548,7 @@ groups:
   - get-p-spring-cloud-services-3
   - get-p-rabbitmq
   - get-pivotal-mysql
+  - get-opsman
   - get-opsman-image
   - get-p-healthwatch
   - get-wavefront-nozzle
