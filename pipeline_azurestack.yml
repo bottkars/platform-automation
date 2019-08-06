@@ -2607,6 +2607,7 @@ groups:
   jobs:
   - delete-orphan-azurevm-images
   - query-unattached-azure-disks
+  - query-unattached-azure-nics
   - delete-unattached-azure-disks
   - delete-opsman-vm
   - delete-pcf
