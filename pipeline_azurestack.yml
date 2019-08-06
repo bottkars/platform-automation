@@ -459,6 +459,7 @@ jobs:
     - get: opsman-product
       passed: 
       - get-opsman 
+      trigger: true
     - get: one-time-trigger
       passed: [ export-installation ]
     - get: installation
