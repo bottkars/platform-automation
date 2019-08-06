@@ -793,6 +793,7 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
 
 - name: get-opsman
+  serial_groups: [ get-products ]
   plan:
   - in_parallel:
     - get: after-midnight
