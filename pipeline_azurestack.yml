@@ -585,6 +585,22 @@ jobs:
       <<: *azure_env
       RESOURCE_GROUP: ((resource_group))
 
+- name: delete-unattached-azure-nics
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: delete-azure-nics
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-unattached-nics.yml 
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+
 
 - name: delete-pcf
   plan:
@@ -2609,6 +2625,7 @@ groups:
   - query-unattached-azure-disks
   - query-unattached-azure-nics
   - delete-unattached-azure-disks
+  - delete-unattached-azure-nics
   - delete-opsman-vm
   - delete-pcf
   - test-azcli
