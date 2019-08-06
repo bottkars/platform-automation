@@ -569,6 +569,22 @@ jobs:
       <<: *azure_env
       RESOURCE_GROUP: ((resource_group))
 
+- name: query-unattached-azure-nics
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: query-azure-nics
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/query-unattached-nics.yml 
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+
 
 - name: delete-pcf
   plan:
@@ -906,6 +922,7 @@ jobs:
         - get: templates
         - get: variable
         - get: opsman-product
+          trigger: true
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
     - task: delete-existing-opsman
