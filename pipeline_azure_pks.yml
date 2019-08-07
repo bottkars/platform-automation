@@ -400,7 +400,63 @@ jobs:
         file: installation/installation*.zip
 
 
-
+### upgrders
+- name: upgrade-opsman
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+#    - get: one-time-trigger
+#      passed: [ install-opsman ]
+    - get: platform-automation-image
+      params:
+        unpack: true
+        trigger: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: opsman-product
+    - get: installation
+      passed: [ export-installation ]
+    - get: templates
+    - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates          
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads  
+  - task: upgrade-opsman
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upgrade-opsman.yml
+    input_mapping:
+     image: opsman-product
+     state: variable
+#        config: interpolated-creds
+#        env: interpolated-creds
+#        vars: variable
+     config: variable
+     env: variable
+     vars: variable
+    params:
+     # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
+     ENV_FILE: ((foundation))/env/env.yml
+     OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+     STATE_FILE: ((foundation))/state/state.yml
+#      ensure: *make-state-commit
+  - task: apply-director-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-director-changes.yml
+    input_mapping:
+     env: variable
+    params:
+     ENV_FILE: ((foundation))/env/env.yml
+    ensure: #&make-config-commit
+        do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: generated-state/state.yml
+            FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+            <<: *git_commit_env
 
 ### parked resources
 - name: parked-triggers
@@ -424,4 +480,5 @@ groups:
     - export-installation
 - name: parked
   jobs:
-  - parked-triggers         
+  - parked-triggers  
+  - upgrade-opsman       
