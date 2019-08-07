@@ -458,8 +458,6 @@ jobs:
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
 
-
-
 groups:
 - name: get-products
   jobs:
