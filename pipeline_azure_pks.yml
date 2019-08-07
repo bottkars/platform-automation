@@ -415,6 +415,7 @@ groups:
     - get-pivotal-container-service
     - get-harbor-container-registry
     - get-platform-automation
+    - get-opsman
 - name: staged-configs
   jobs:
     - staged-harbor-container-registry-config
