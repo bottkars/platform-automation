@@ -311,7 +311,7 @@ jobs:
             <<: *do_stage_commit
             params:
               FILE_SOURCE_PATH: pivotal-container-service.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/pivotal-container-service.yml
+              FILE_DESTINATION_PATH: ((foundation))/generated-config/pivotal-container-service.yml
               <<: *git_commit_env
           - put: variable
             params:
@@ -336,7 +336,7 @@ jobs:
             <<: *do_stage_commit
             params:
               FILE_SOURCE_PATH: harbor-container-registry.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/harbor-container-registry.yml
+              FILE_DESTINATION_PATH: ((foundation))/generated-config/harbor-container-registry.yml
               <<: *git_commit_env
           - put: variable
             params:
@@ -363,7 +363,7 @@ jobs:
             <<: *do_stage_commit
             params:
               FILE_SOURCE_PATH: director.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/director.yml
+              FILE_DESTINATION_PATH: ((foundation))/generated-config/director.yml
               <<: *git_commit_env
           - put: variable
             params:
