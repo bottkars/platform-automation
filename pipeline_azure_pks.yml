@@ -458,12 +458,7 @@ jobs:
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
 
-### parked resources
-- name: parked-triggers
-  plan:
-  - in_parallel:
-    - get: after-midnight
-      trigger: true
+
 
 groups:
 - name: get-products
@@ -478,7 +473,6 @@ groups:
     - staged-pivotal-container-service-config
     - staged-director-config
     - export-installation
-- name: parked
+- name: Upgrade
   jobs:
-  - parked-triggers  
   - upgrade-opsman       
