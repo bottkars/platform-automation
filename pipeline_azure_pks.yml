@@ -454,7 +454,7 @@ jobs:
         - task: make-commit
           <<: *do_stage_commit
           params:
-            FILE_SOURCE_PATH: generated-state/state.yml
+            FILE_SOURCE_PATH: state/state.yml
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
 
