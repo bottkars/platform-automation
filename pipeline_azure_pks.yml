@@ -222,7 +222,7 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads      
     params:
-      CONFIG_FILE: download-product-configs/((pcf_version))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((pks_version))/download-opsman.yml
   - in_parallel:
     - put: opsman-product
       params:
@@ -233,8 +233,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    # - get: after-midnight
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -265,8 +265,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    # - get: after-midnight
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
