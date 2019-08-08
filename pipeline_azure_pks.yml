@@ -410,6 +410,110 @@ jobs:
     - put: installation
       params:
         file: installation/installation*.zip
+## upload and stage
+
+- name: upload-and-stage-pivotal-container-service
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads       
+    - task: download-pivotal-container-service
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: pivotal-container-service-product
+        downloaded-stemcell: pivotal-container-service-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: pivotal-container-service-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-pivotal-container-service-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: pivotal-container-service-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: pivotal-container-service-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml   
+
+
+- name: upload-and-stage-harebor-container-registry
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads       
+    - task: download-harebor-container-registry
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pks_version))/download-harebor-container-registry.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: harebor-container-registry-product
+        downloaded-stemcell: harebor-container-registry-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: harebor-container-registry-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-harebor-container-registry-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: harebor-container-registry-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: harebor-container-registry-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml   
 
 
 ### upgrders
@@ -479,6 +583,11 @@ groups:
     - get-harbor-container-registry
     - get-platform-automation
     - get-opsman
+- name: upload-and-stage-products
+  jobs:
+    - upload-and-stage-pivotal-container-service 
+    - upload-and-stage-harebor-container-registry    
+   
 - name: staged-configs
   jobs:
     - staged-harbor-container-registry-config
