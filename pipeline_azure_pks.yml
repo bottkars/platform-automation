@@ -464,7 +464,7 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml   
 
 
-- name: upload-and-stage-harebor-container-registry
+- name: upload-and-stage-harbor-container-registry
   serial: true
   serial_groups:
   - upload-and-stage
@@ -480,37 +480,37 @@ jobs:
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads       
-    - task: download-harebor-container-registry
+    - task: download-harbor-container-registry
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
-        CONFIG_FILE: download-product-configs/((pks_version))/download-harebor-container-registry.yml
+        CONFIG_FILE: download-product-configs/((pks_version))/download-harbor-container-registry.yml
       input_mapping:
         config: interpolated-product-downloads
       output_mapping:
-        downloaded-product: harebor-container-registry-product
-        downloaded-stemcell: harebor-container-registry-stemcell
+        downloaded-product: harbor-container-registry-product
+        downloaded-stemcell: harbor-container-registry-stemcell
     - task: upload-product
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
-        product: harebor-container-registry-product
+        product: harbor-container-registry-product
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-harebor-container-registry-stemcell
+    - task: upload-harbor-container-registry-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
       input_mapping:
         env: variable
-        stemcell: harebor-container-registry-stemcell
+        stemcell: harbor-container-registry-stemcell
       params:
         ENV_FILE: ((foundation))/env/env.yml
     - task: stage-product
       image: platform-automation-image
       file: platform-automation-tasks/tasks/stage-product.yml
       input_mapping:
-        product: harebor-container-registry-product
+        product: harbor-container-registry-product
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml   
@@ -586,7 +586,7 @@ groups:
 - name: upload-and-stage-products
   jobs:
     - upload-and-stage-pivotal-container-service 
-    - upload-and-stage-harebor-container-registry    
+    - upload-and-stage-harbor-container-registry    
    
 - name: staged-configs
   jobs:
