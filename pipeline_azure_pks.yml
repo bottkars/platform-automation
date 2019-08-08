@@ -441,6 +441,16 @@ jobs:
      ENV_FILE: ((foundation))/env/env.yml
      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
      STATE_FILE: ((foundation))/state/state.yml
+    #ensure: #&make-config-commit
+    #    do:
+    #    - task: make-commit
+    #      <<: *do_stage_commit
+    #      params:
+    #        FILE_SOURCE_PATH: state.yml
+    #        FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+    #        <<: *git_commit_env
+
+
 #      ensure: *make-state-commit
   - task: apply-director-changes
     image: platform-automation-image
@@ -454,7 +464,7 @@ jobs:
         - task: make-commit
           <<: *do_stage_commit
           params:
-            FILE_SOURCE_PATH: state/state.yml
+            FILE_SOURCE_PATH: state.yml
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
 
