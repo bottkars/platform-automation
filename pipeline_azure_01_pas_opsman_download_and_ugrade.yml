@@ -1,0 +1,367 @@
+s3_env: &s3_env
+  access_key_id: ((s3_access_key_id))
+  endpoint:  ((s3_endpoint))
+  region_name: ((s3_region_name))
+  secret_access_key: ((s3_secret_access_key))
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((credhub-client))
+  CREDHUB_SECRET: ((credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+
+stage_steps: &stage_steps
+  steps:
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+    - get: variable
+
+stage_config: &stage_config
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/staged-config.yml
+  input_mapping:
+    env: variable
+
+do_config_commit: &do_config_commit
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/make-git-commit.yml
+  input_mapping:
+    repository: variable
+    file-source: generated-config
+  output_mapping:
+    repository-commit: variable-commit
+
+do_state_commit: &do_state_commit
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/make-git-commit.yml
+  input_mapping:
+    repository: variable
+    file-source: generated-state
+  output_mapping:
+    repository-commit: variable-commit
+
+
+
+
+git_commit_env: &git_commit_env
+  GIT_AUTHOR_EMAIL: "pks-pipeline-bot@ebottnet.de"
+  GIT_AUTHOR_NAME: "Platform Automation Bot"
+  COMMIT_MESSAGE: 'Staged  Config Writer'
+
+interpolate-product-downloads: &interpolate-product-downloads
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: "download-product-configs/((pas_version))"
+  input_mapping:
+    files: templates
+  output_mapping:
+    interpolated-files: interpolated-product-downloads
+
+interpolate-product-templates: &interpolate-product-templates
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: product-configs/((pas_version))
+    SKIP_MISSING: true
+  input_mapping:
+    files: templates
+  output_mapping:
+    interpolated-files: interpolated-product-templates
+
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+resources:
+# triggers
+- name: daily-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 24h
+
+
+- name: one-time-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+- name: after-midnight
+  type: time
+  source:
+    start: 01:00 AM
+    stop: 6:00 AM
+    interval: 24h
+    location: Europe/Berlin 
+
+- name: installation
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_installation))
+    regexp: ((foundation))/installation-(.*).zip    
+- name: platform-automation-pivnet
+  type: pivnet
+  source:
+    api_token: ((pivnet-token))
+    product_slug: platform-automation
+    product_version: 3\.0\.(.*)
+    sort_by: semver
+
+- name: platform-automation-tasks
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_tasks))
+    regexp: platform-automation-tasks-(.*).zip
+
+- name: platform-automation-image
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+
+
+
+## core resources
+- name: templates
+  icon: github-circle
+  type: git  
+  source:
+    uri: ((template-repo))
+    private_key: ((template-deploy-key.private_key))
+    branch: master
+- name: variable
+  icon: github-circle
+  type: git  
+  source:
+    uri: ((variable-repo))
+    private_key: ((variable-deploy-key.private_key))
+    branch: master
+
+## product resources
+- name: opsman-product
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: \[ops-manager,(.*)\].*.yml
+
+## jobs
+jobs:
+- name: get-platform-automation
+  plan:
+  - in_parallel:
+    #- get: after-midnight
+      # trigger: true
+    - get: platform-automation-pivnet
+      trigger: true
+  - in_parallel:
+    - put: platform-automation-tasks
+      params:
+        file: platform-automation-pivnet/*tasks*.zip
+    - put: platform-automation-image
+      params:
+        file: platform-automation-pivnet/*image*.tgz
+        
+- name: get-opsman
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    #- get: after-midnight
+    #  trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-opsman-pivnet
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    input_mapping:
+      config: interpolated-product-downloads      
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+  - in_parallel:
+    - put: opsman-product
+      params:
+        file: downloaded-product/*
+
+#### get staged configs
+- name: staged-director-config
+  serial: true
+  serial_groups: [ staged-products ]
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-director-config
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/staged-director-config.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_config_commit
+            params:
+              FILE_SOURCE_PATH: director.yml
+              FILE_DESTINATION_PATH: ((foundation))/generated-config/director.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+              
+- name: export-installation
+  serial: true
+  plan:
+    - in_parallel:
+        - get: daily-trigger
+          trigger: true
+        - get: platform-automation-image
+          params:
+            unpack: true
+#          passed: [ install-opsman, apply-director ]
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+        - get: one-time-trigger
+#          passed: [ install-opsman ]
+    - task: export-installation
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/export-installation.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        INSTALLATION_FILE: installation-$timestamp.zip
+    - put: installation
+      params:
+        file: installation/installation*.zip
+## upload and stage
+
+### upgrders
+- name: upgrade-opsman
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+#    - get: one-time-trigger
+#      passed: [ install-opsman ]
+    - get: platform-automation-image
+      params:
+        unpack: true
+        trigger: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: opsman-product
+    - get: installation
+      passed: [ export-installation ]
+    - get: templates
+    - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates          
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads  
+  - task: upgrade-opsman
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upgrade-opsman.yml
+    input_mapping:
+     image: opsman-product
+     state: variable
+#        config: interpolated-creds
+#        env: interpolated-creds
+#        vars: variable
+     config: variable
+     env: variable
+     vars: variable
+    params:
+     # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
+     ENV_FILE: ((foundation))/env/env.yml
+     OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+     STATE_FILE: ((foundation))/state/state.yml
+    ensure: #&make-config-commit
+        do:
+        - task: make-commit
+          <<: *do_state_commit
+          params:
+            FILE_SOURCE_PATH: state.yml
+            FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+            <<: *git_commit_env
+## configure products
+- name: apply-product-changes
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: platform-automation-image
+          params:
+            unpack: true
+          # passed: # ((passed_configs))
+            # - configure-pivotal-container-service 
+            # - configure-harbor-container-registry
+          # trigger: true
+        - get: variable
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: apply-product-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-changes.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+
+- name: zzz
+  plan:
+   - get: after-midnight        
+groups:
+- name: get-products
+  jobs:
+    - get-opsman
+    - get-platform-automation
+- name: upload-and-stage-products
+  jobs:
+- name: configure-products
+  jobs:
+    - apply-product-changes
+
+- name: staged-configs
+  jobs:
+    - staged-director-config
+    - export-installation
+
+- name: Upgrade
+  jobs:
+  - upgrade-opsman  
+- name: zzz_Unused
+  jobs:
+  - zzz           

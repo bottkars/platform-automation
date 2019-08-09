@@ -179,7 +179,14 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: pivotal-container-service-product/\[pivotal-container-service,(.*)\]pivotal-container-service-.*.pivotal
 
-
+- name: pivotal-container-service-cli
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: pivotal-container-service-product/\[pivotal-container-service,(.*)\]pks-linux-amd64*
+# pks-linux-amd64-1.4.0-build.230
 - name: harbor-container-registry-stemcell
   icon: amazon-drive
   type: s3
@@ -271,6 +278,35 @@ jobs:
     - put: pivotal-container-service-stemcell
       params:
         file: pivotal-container-service-stemcell/*.tgz
+
+- name: get-pivotal-container-service-cli
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-pivotal-container-service-cli
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service.yml
+    input_mapping:
+      config: interpolated-product-downloads
+  - in_parallel:
+    - put: pivotal-container-service-cli
+      params:
+        file: downloaded-product/pks-linux-amd64*
+
 
 - name: get-harbor-container-registry
   serial: true
@@ -516,7 +552,7 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml   
 
 
-### upgrders
+### upgraders
 - name: upgrade-opsman
   serial: true
   serial_groups: [ install ]
@@ -565,16 +601,134 @@ jobs:
             FILE_SOURCE_PATH: state.yml
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
+## configure products
+- name: configure-pivotal-container-service
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-pivotal-container-service
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-pivotal-container-service
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pks_version))/pivotal-container-service.yml
+        VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
 
 
-#      ensure: *make-state-commit
-  - task: apply-director-changes
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/apply-director-changes.yml
-    input_mapping:
-     env: variable
+- name: configure-harbor-container-registry
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-harbor-container-registry
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-harbor-container-registry
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pks_version))/harbor-container-registry.yml
+        VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+        
+- name: apply-product-changes
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed: # ((passed_configs))
+            - configure-pivotal-container-service 
+            - configure-harbor-container-registry
+          trigger: true
+        - get: variable
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: apply-product-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-changes.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+- name: test-interpolate-pivotal-container-service
+  plan:
+  - get: variable
+  - get: templates
+  - get: platform-automation-image
     params:
-     ENV_FILE: ((foundation))/env/env.yml
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      unpack: true
+  - task: interpolate
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pks_version))/pivotal-container-service.yml
+      VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
+      SKIP_MISSING: true    
+- name: test-interpolate-harbor-container-registry
+  plan:
+  - get: variable
+  - get: templates
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      unpack: true
+  - task: interpolate
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pks_version))/harbor-container-registry.yml
+      VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
+      SKIP_MISSING: true    
 
 groups:
 - name: get-products
@@ -587,13 +741,22 @@ groups:
   jobs:
     - upload-and-stage-pivotal-container-service 
     - upload-and-stage-harbor-container-registry    
-   
+- name: configure-products
+  jobs:
+    - configure-pivotal-container-service 
+    - configure-harbor-container-registry
+    - apply-product-changes
+
 - name: staged-configs
   jobs:
     - staged-harbor-container-registry-config
     - staged-pivotal-container-service-config
     - staged-director-config
     - export-installation
+- name: test-interpolate
+  jobs: 
+    - test-interpolate-pivotal-container-service
+    - test-interpolate-harbor-container-registry    
 - name: Upgrade
   jobs:
   - upgrade-opsman       
