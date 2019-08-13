@@ -1,15 +1,15 @@
 s3_env: &s3_env
-  access_key_id: ((s3_access_key_id))
-  endpoint:  ((s3_endpoint))
-  region_name: ((s3_region_name))
-  secret_access_key: ((s3_secret_access_key))
+ access_key_id: ((s3_access_key_id))
+ endpoint:  ((s3_endpoint))
+ region_name: ((s3_region_name))
+ secret_access_key: ((s3_secret_access_key))
 
 credhub_env: &credhub_env
-  CREDHUB_CLIENT: ((credhub-client))
-  CREDHUB_SECRET: ((credhub-secret))
-  CREDHUB_SERVER: ((credhub-server))
-  PREFIX: /concourse/main/((foundation))
-  CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+ CREDHUB_CLIENT: ((credhub-client))
+ CREDHUB_SECRET: ((credhub-secret))
+ CREDHUB_SERVER: ((credhub-server))
+ PREFIX: /concourse/main/((foundation))
+ CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
 
 stage_steps: &stage_steps
   steps:
@@ -46,18 +46,18 @@ do_state_commit: &do_state_commit
   output_mapping:
     repository-commit: variable-commit
 
-
 git_commit_env: &git_commit_env
   GIT_AUTHOR_EMAIL: "pas-pipeline-bot@bottnet.de"
   GIT_AUTHOR_NAME: "Platform Automation Bot"
   COMMIT_MESSAGE: 'Staged Config Writer'
+
 
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: "download-product-configs/((pas_version))"
+    INTERPOLATION_PATHS: download-product-configs/((pcf_version))
   input_mapping:
     files: templates
   output_mapping:
@@ -111,6 +111,13 @@ resources:
     <<: *s3_env
     bucket: ((buckets_installation))
     regexp: ((foundation))/installation-(.*).zip    
+- name: additional-tasks
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_tasks))
+    regexp: additional-tasks-(.*).zip
 - name: platform-automation-pivnet
   type: pivnet
   source:
@@ -118,6 +125,7 @@ resources:
     product_slug: platform-automation
     product_version: 3\.0\.(.*)
     sort_by: semver
+
 
 - name: platform-automation-tasks
   icon: amazon-drive
@@ -168,8 +176,35 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: srt-product/\[elastic-runtime,(.*)\]srt-.*.pivotal
-
-
+#    regexp: srt-product/\[elastic-runtime,(2.6.*)\]srt-*.pivotal
+- name: p-event-alerts-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-event-alerts-product/\[p-event-alerts,(.*)\]p-event-alerts-.*.pivotal
+- name: p-healthwatch-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]p-healthwatch-.*.pivotal
+- name: pivotal-mysql-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: pivotal-mysql-product/\[pivotal-mysql,(.*)\]pivotal-mysql-.*.pivotal
+- name: p-spring-cloud-services-3-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-spring-cloud-services-3-product/\[p-spring-cloud-services,(.*)\]p_spring-cloud-services-.*.pivotal
 ## stemcells
 - name: srt-stemcell
   icon: amazon-drive
@@ -179,6 +214,37 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: srt-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
+- name: p-healthwatch-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-healthwatch-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: p-event-alerts-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-event-alerts/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: pivotal-mysql-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
+
+- name: p-spring-cloud-services-3-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-spring-cloud-services-3-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 jobs:
 - name: get-platform-automation
   plan:
@@ -208,6 +274,9 @@ jobs:
       - get: platform-automation-tasks
         params:
           unpack: true
+      - get: additional-tasks
+        params:
+          unpack: true    
       - get: templates
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads
@@ -263,6 +332,15 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
         AUTH_CONFIG_FILE: ((foundation))/config/auth.yml          
+    - task: update certficates
+      image: platform-automation-image
+      file: additional-tasks/tasks/update-ssl-certificate.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        CERTIFICATE_PEM: ((fullchain))
+        KEY_PEM: ((key)) 
     - task: configure-director
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-director.yml
@@ -273,7 +351,7 @@ jobs:
       params:
         VARS_FILES: vars/((foundation))/vars/director-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director.yml
+        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director.yml        
     - task: apply-director-changes
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-director-changes.yml
@@ -374,9 +452,8 @@ jobs:
         - get: platform-automation-image
           params:
             unpack: true
-          passed: 
-           - upgrade-opsman
-          trigger: true  
+          trigger: true
+          passed: [ "upgrade-opsman" ]  
         - get: platform-automation-tasks
           params:
             unpack: true
@@ -417,7 +494,219 @@ jobs:
         product: srt-product
         env: variable
       params:
+        ENV_FILE: ((foundation))/env/env.yml        
+
+- name: upload-and-stage-p-event-alerts
+  serial_groups:
+  - upload-and-stage
+  serial: true
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        unpack: true
+      # trigger: true
+      passed: [ "upgrade-opsman" ]  
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+    - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads     
+  - task: download-p-event-alerts
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-event-alerts.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: p-event-alerts-product
+      downloaded-stemcell: p-event-alerts-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: p-event-alerts-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-p-event-alerts-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: p-event-alerts-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: p-event-alerts-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml        
+
+- name: upload-and-stage-p-healthwatch
+  serial_groups:
+  - upload-and-stage
+  serial: true
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        unpack: true
+      trigger: true
+      passed: [ "upgrade-opsman" ]  
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+    - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads     
+  - task: download-p-healthwatch
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-healthwatch.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: p-healthwatch-product
+      downloaded-stemcell: p-healthwatch-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: p-healthwatch-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-p-healthwatch-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: p-healthwatch-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: p-healthwatch-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml        
+
+- name: upload-and-stage-pivotal-mysql
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          trigger: true
+          passed: [ "upgrade-opsman" ]      
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads       
+    - task: download-pivotal-mysql
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-pivotal-mysql.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: pivotal-mysql-product
+        downloaded-stemcell: pivotal-mysql-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: pivotal-mysql-product
+        env: variable
+      params:
         ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-pivotal-mysql-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: pivotal-mysql-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: pivotal-mysql-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml   
+- name: upload-and-stage-p-spring-cloud-services-3
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          trigger: true
+          passed: [ "upgrade-opsman" ]  
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
+    - task: download-p-spring-cloud-services-3
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services-3.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: p-spring-cloud-services-3-product
+        downloaded-stemcell: p-spring-cloud-services-3-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-3-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-spring-cloud-services-3-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: p-spring-cloud-services-3-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-3-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml   
+
 ### upgrders
 - name: upgrade-opsman
   serial: true
@@ -448,18 +737,14 @@ jobs:
     input_mapping:
      image: opsman-product
      state: variable
-#        config: interpolated-creds
-#        env: interpolated-creds
-#        vars: variable
      config: variable
      env: variable
      vars: variable
     params:
-     # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
      ENV_FILE: ((foundation))/env/env.yml
      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
      STATE_FILE: ((foundation))/state/state.yml
-    ensure: #&make-config-commit
+    ensure: 
         do:
         - task: make-commit
           <<: *do_state_commit
@@ -468,7 +753,6 @@ jobs:
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
 ## get products
-
 - name: get-srt
   serial: true
   serial_groups: [ get-products ]
@@ -501,9 +785,138 @@ jobs:
       params:
         file: srt-stemcell/*.tgz
 
+- name: get-pivotal-mysql
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-pivotal-mysql-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-pivotal-mysql.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: pivotal-mysql-stemcell}
+  - in_parallel:
+    - put: pivotal-mysql-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: pivotal-mysql-stemcell
+      params:
+        file: pivotal-mysql-stemcell/*.tgz
 
+
+
+
+- name: get-p-event-alerts
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-event-alerts-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-event-alerts.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-event-alerts-stemcell}
+  - in_parallel:
+    - put: p-event-alerts-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-event-alerts-stemcell
+      params:
+        file: p-event-alerts-stemcell/*.tgz
+
+
+- name: get-p-spring-cloud-services-3
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-spring-cloud-services-3-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-spring-cloud-services-3.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
+  - in_parallel:
+    - put: p-spring-cloud-services-3-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-spring-cloud-services-3-stemcell
+      params:
+        file: p-spring-cloud-services-3-stemcell/*.tgz
+
+- name: get-p-healthwatch
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-healthwatch-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pcf_version))/download-p-healthwatch.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-healthwatch-stemcell}
+  - in_parallel:
+    - put: p-healthwatch-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-healthwatch-stemcell
+      params:
+        file: p-healthwatch-stemcell/*.tgz
 ## configure products
-
 - name: configure-srt
   serial_groups:
   - configure-products
@@ -535,6 +948,132 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/srt-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
 
+
+- name: configure-p-event-alerts
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-event-alerts
+          # trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-event-alerts
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pcf_version))/p-event-alerts.yml
+        VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+- name: configure-pivotal-mysql
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-pivotal-mysql
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-pivotal-mysql
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pcf_version))/pivotal-mysql.yml
+        VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+
+- name: configure-p-healthwatch
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-healthwatch
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-healthwatch
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pcf_version))/p-healthwatch.yml
+        VARS_FILES: vars/((foundation))/vars/p-healthwatch-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+
+- name: configure-p-spring-cloud-services-3
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-spring-cloud-services-3
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-spring-cloud-services
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pcf_version))/p-spring-cloud-services-3.yml
+        VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml        
+
 - name: apply-product-changes
   serial: true
   plan:
@@ -546,9 +1085,7 @@ jobs:
           params:
             unpack: true
           passed: ((passed_configs))
-            # - configure-pivotal-container-service 
-            # - configure-harbor-container-registry
-          # trigger: true
+          trigger: true
         - get: variable
 #    - task: interpolate-variable
 #      <<: *interpolate-variable
@@ -559,6 +1096,31 @@ jobs:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
+- name: update-director-certicicates
+  serial: true
+  plan:
+    - in_parallel:
+        - get: additional-tasks
+          params:
+            unpack: true
+        - get: platform-automation-image
+          params:
+            unpack: true
+          # passed: ((passed_configs))
+          # trigger: true
+        - get: variable
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: update certficates
+      image: platform-automation-image
+      file: additional-tasks/tasks/update-ssl-certificate.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        CERTIFICATE_PEM: ((fullchain))
+        KEY_PEM: ((key))       
+
 - name: test-interpolate-director
   plan:
   - get: variable
@@ -599,6 +1161,26 @@ jobs:
       CONFIG_FILE: product-configs/((pas_version))/srt.yml
       VARS_FILES: vars/((foundation))/vars/srt-vars.yml
       SKIP_MISSING: true
+- name: test-interpolate-p-event-alerts
+  plan:
+  - get: variable
+  - get: templates
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      unpack: true
+  - task: interpolate
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+      SKIP_MISSING: true
 - name: delete-installation
   serial: true
   plan:
@@ -631,7 +1213,7 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
       OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
       STATE_FILE: ((foundation))/state/state.yml
-    ensure: #&make-config-commit
+    ensure: #&put-state
         do:
         - task: make-commit
           <<: *do_state_commit
@@ -644,6 +1226,35 @@ jobs:
             repository: variable-commit
             merge: true    
 
+
+
+###
+- name: staged-p-event-alerts-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-event-alerts
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_config_commit
+            params:
+              FILE_SOURCE_PATH: p-event-alerts.yml
+              FILE_DESTINATION_PATH: ((foundation))/generated-config/p-event-alerts.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+
+##
 groups:
 - name: 01-installation
   jobs:
@@ -654,20 +1265,48 @@ groups:
   - get-opsman
   - get-platform-automation
   - upload-and-stage-srt
+  - upload-and-stage-p-event-alerts
+  - upload-and-stage-p-healthwatch
+  - upload-and-stage-pivotal-mysql
+  - upload-and-stage-p-spring-cloud-services-3
   - configure-srt
+  - configure-p-event-alerts
+  - configure-p-healthwatch
+  - configure-pivotal-mysql
+  - configure-p-spring-cloud-services-3
   - apply-product-changes
-
-- name: upload-and-stage-products
+- name: upload-and-stage
+  jobs:
+  - upload-and-stage-srt
+  - upload-and-stage-p-event-alerts
+  - upload-and-stage-p-healthwatch
+  - upload-and-stage-pivotal-mysql
+  - upload-and-stage-p-spring-cloud-services-3
+- name: get-products
   jobs:
    - get-srt
+   - get-p-healthwatch
+   - get-p-event-alerts
+   - get-pivotal-mysql
+   - get-opsman
+   - get-p-spring-cloud-services-3
 - name: configure-products
   jobs:
-    - apply-product-changes
+  - configure-p-event-alerts
+  - configure-p-healthwatch
+  - configure-pivotal-mysql
+  - configure-p-spring-cloud-services-3
+  - apply-product-changes
 - name: interopolation-tests
   jobs:
   - test-interpolate-director
-  - test-interpolate-srt 
+  - test-interpolate-srt
+  - test-interpolate-p-event-alerts 
 
+- name: staged-configs
+  jobs:
+    - staged-p-event-alerts-config
 - name: zzz_delete
   jobs:
   - delete-installation
+  - update-director-certicicates

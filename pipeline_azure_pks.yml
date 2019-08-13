@@ -3,6 +3,7 @@ s3_env: &s3_env
   endpoint:  ((s3_endpoint))
   region_name: ((s3_region_name))
   secret_access_key: ((s3_secret_access_key))
+
 credhub_env: &credhub_env
   CREDHUB_CLIENT: ((credhub-client))
   CREDHUB_SECRET: ((credhub-secret))
@@ -457,6 +458,9 @@ jobs:
         - get: platform-automation-image
           params:
             unpack: true
+          passed:
+           - upgrade-opsman
+          trigger: true  
         - get: platform-automation-tasks
           params:
             unpack: true

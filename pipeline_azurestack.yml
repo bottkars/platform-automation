@@ -1,9 +1,9 @@
 ---
 s3_env: &s3_env
-  access_key_id: ((access_key_id))
+  access_key_id: ((s3_access_key_id))
   endpoint:  ((s3_endpoint))
   region_name: ((s3_region_name))
-  secret_access_key: ((secret_access_key))
+  secret_access_key: ((s3_secret_access_key))
 azure_env: &azure_env
   PROFILE: ((arm_profile))
   CA_CERT: ((foundation))/cert/root.pem
