@@ -53,13 +53,29 @@ $DIRECTOR_FOUNDATION = Get-Content $DIRECTOR_FOUNDATION_FILE | ConvertFrom-Json
 $FOUNDATION=$DIRECTOR_FOUNDATION.PCF_SUBDOMAIN_NAME
 ($CONTROL_CRED_CA_CERT | Out-String) | set-content $HOME\credhub_ca_cert
 
+
+$S3_ENDPOINT="http://minio.control.sc2.azurestack-rd.cf-app.com:9000"
+
+## vals for pivnet and s3, at the Foundation level ( foundation os the Pipelin Name)
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
-credhub set /name:/concourse/main/$($FOUNDATION)/secret_access_key /type:value --value $($env_vars.PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
+credhub set /name:/concourse/main/$($FOUNDATION)/s3_access_key_id /type:value --value s3admin
+credhub set /name:/concourse/main/$($FOUNDATION)/s3_endpoint /type:value --value $S3_ENDPOINT
+credhub set /name:/concourse/main/$($FOUNDATION)/s3_region_name /type:value --value region
+credhub set /name:/concourse/main/$($FOUNDATION)/s3_secret_access_key /type:value --value $($env_vars.PIVNET_UAA_TOKEN)
 
+
+
+
+credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_tasks /type:value --value tasks
+credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_image /type:value --value image
+credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_products /type:value --value pivnet.products
+credhub set /name:/concourse/main/$($FOUNDATION)/buckets_installation /type:value --value installation
+
+
+## azs root ca
 credhub set /name:/concourse/main/$FOUNDATION/azs_ca /type:certificate /certificate:$HOME/root.pem 
-credhub get /name:/concourse/main/$FOUNDATION/azs_ca /key:certificate
 
 
 
@@ -83,15 +99,16 @@ credhub set /name:/concourse/main/$($FOUNDATION)/credhub-server /type:value --va
 credhub set /name:/concourse/main/$($FOUNDATION)/credhub-ca-cert /type:certificate /certificate:"$HOME\credhub_ca_cert"
 
 
-credhub set /name:/concourse/main/$($FOUNDATION)/access_key_id /type:value --value s3admin
-credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_tasks /type:value --value tasks
-credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_image /type:value --value image
-credhub set /name:/concourse/main/$($FOUNDATION)/buckets_pivnet_products /type:value --value pivnet.products
-credhub set /name:/concourse/main/buckets_installation /type:value --value installation
 
-credhub set /name:/concourse/main/azs-resource-key /type:ssh `
+### git resources
+
+## create ssh keys for git resources
+
+
+
+credhub set /name:/concourse/main/$($FOUNDATION)/azs-resource-key /type:ssh `
          /private:$HOME\.ssh\azs_resource `
-         /public:$HOME\.ssh\git_azs-resource.pub
+         /public:$HOME\.ssh\azs-resource.pub
 
 credhub set /name:/concourse/main/plat-auto-pipes-deploy-key /type:ssh `
          /private:$HOME\.ssh\git_deploy `
