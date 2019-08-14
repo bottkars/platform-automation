@@ -2310,6 +2310,8 @@ jobs:
   plan:
   - get: platform-automation-pivnet
   - in_parallel:
+    - get: one-time-trigger
+      trigger: true
     - put: platform-automation-tasks
       params:
         file: platform-automation-pivnet/*tasks*.zip
@@ -2545,7 +2547,7 @@ groups:
 - name: deploy-asdk-1907-plans
   jobs:  
   - deploy-asdk
-  
+
 - name: install-ops-manager
   jobs:
   - get-opsman
