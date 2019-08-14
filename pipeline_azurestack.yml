@@ -1031,6 +1031,27 @@ jobs:
       CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
       VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
       SKIP_MISSING: true    
+- name: test-interpolate-srt
+  plan:
+  - get: variable
+  - get: templates
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      unpack: true
+  - task: interpolate
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/srt.yml
+      VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+      SKIP_MISSING: true  
+
 
 - name: get-pas
   plan:
@@ -2632,6 +2653,7 @@ groups:
   - run-azcli-get-vms
   - testing
   - test-interpolate
+  - test-interpolate-srt
 - name: inactive
   jobs: 
    - get-pas
