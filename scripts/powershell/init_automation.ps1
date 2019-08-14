@@ -87,7 +87,6 @@ credhub set /name:/concourse/main/$($FOUNDATION)/client_secret /type:value --val
 credhub set /name:/concourse/main/$($FOUNDATION)/subscription_id /type:value --value $(Get-AzureRmSubscription -SubscriptionName "PCF Foundation").SubscriptionId
 
 
-credhub set /name:/concourse/main/$($FOUNDATION)/client_secret /type:value --value $($env_vars.client_secret)
 
 
 credhub set /name:/concourse/main/$($FOUNDATION)/endpoint-resource-manager /type:value --value https://management.local.azurestack.external
