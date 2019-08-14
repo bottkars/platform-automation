@@ -782,13 +782,13 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-  - task: interpolate-product-templates
-    <<: *interpolate-product-templates          
+  #- task: interpolate-product-templates
+  #  <<: *interpolate-product-templates          
   - task: configure-director
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
     input_mapping:
-      config: interpolated-product-templates
+      config: variable
       env: variable
       vars: variable
     params:
