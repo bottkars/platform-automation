@@ -686,7 +686,9 @@ jobs:
         RESOURCE_GROUP: ((resource_group))
         BOSHSTORAGEACCOUNT: ((boshstorageaccount))
         STATE_FILE: director_deployment_vars.yml
-
+        ACCOUNT_NAME: ((image_account_name))
+        DESTINATION_CONTAINER: ((destination_container))
+        OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
       on_success: &make-config-director-commit
         do:
           - task: make-commit
