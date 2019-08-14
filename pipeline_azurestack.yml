@@ -782,19 +782,19 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
-#  - task: interpolate-product-templates
-#    <<: *interpolate-product-templates          
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates          
   - task: configure-director
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
     input_mapping:
-      config: variable
+      config: interpolated-product-templates
       env: variable
       vars: variable
     params:
-      VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director.yml  
 - name: apply-director 
   plan:
   - in_parallel:
