@@ -89,11 +89,11 @@ credhub set /name:/concourse/main/$($FOUNDATION)/subscription_id /type:value --v
 
 
 
-credhub set /name:/concourse/main/$($FOUNDATION)/endpoint-resource-manager /type:value --value https://management.local.azurestack.external
+credhub set /name:/concourse/main/$($FOUNDATION)/endpoint-resource-manager /type:value --value $(Get-AzureRmContext).Environment.ResourceManagerUrl
 
 
 credhub set /name:/concourse/main/$FOUNDATION/tenant-endpoint-resource /type:value --value $(Get-AzureRmContext).Environment.ActiveDirectoryServiceEndpointResourceId
-credhub set /name:/concourse/main/$FOUNDATION/domain /type:value --value local.azurestack.external
+credhub set /name:/concourse/main/$FOUNDATION/domain /type:value --value $(Get-AzureRmContext).Environment.StorageEndpointSuffix
 
 #### setup access for credhub interpolate jobs
 
