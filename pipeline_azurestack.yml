@@ -2542,6 +2542,22 @@ jobs:
 
 
 groups:
+- name: deploy-asdk-1907-plans
+  jobs:  
+  - deploy-asdk
+  
+- name: install-ops-manager
+  jobs:
+  - get-opsman
+  - upgrade-opsman
+  - export-installation
+  - staged-director-config 
+  - install-opsman 
+  - get-opsman-image
+  - configure-opsman
+  - apply-director
+
+
 - name: staged-configs
   jobs:
   - staged-pas-config
@@ -2554,16 +2570,7 @@ groups:
   - staged-pas-windows-config
   - staged-p-event-alerts-config
 
-- name: install-ops-manager
-  jobs:
-  - get-opsman
-  - upgrade-opsman
-  - export-installation
-  - staged-director-config 
-  - install-opsman 
-  - get-opsman-image
-  - configure-opsman
-  - apply-director
+
 - name: get-products
   jobs:
   - get-platform-automation
@@ -2606,9 +2613,7 @@ groups:
   - configure-p-event-alerts
   - configure-p-compliance-scanner
   - apply-product-changes
-- name: deploy-asdk-1907-plans
-  jobs:  
-  - deploy-asdk
+
 - name: service-jobs
   jobs:
   - delete-orphan-azurevm-images
