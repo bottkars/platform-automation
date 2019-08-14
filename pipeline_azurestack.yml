@@ -792,9 +792,9 @@ jobs:
       env: variable
       vars: variable
     params:
-      VARS_FILES: vars/((foundation))/vars/director-vars.yml  vars/((foundation))/vars/director_deployment_vars.yml
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director.yml  
+      DIRECTOR_CONFIG_FILE: vars/((foundation))/config/director.yml  
 - name: apply-director 
   plan:
   - in_parallel:

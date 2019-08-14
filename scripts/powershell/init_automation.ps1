@@ -196,7 +196,11 @@ credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate 
 credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate `
  /certificate:$HOME\pcfsc2.sc2.azurestack-rd.cf-app.com.crt `
  /private:$HOME\pcfsc2.sc2.azurestack-rd.cf-app.com.key 
+ 
 
+ credhub set /name:/concourse/main/$FOUNDATION/pcf_fullchain_cert /type:certificate `
+ /certificate:$HOME\pcfsc2.sc2.azurestack-rd.cf-app.com.crt `
+ /private:$HOME\pcfsc2.sc2.azurestack-rd.cf-app.com.key  
  ### opsman
  credhub set /name:/concourse/main/$FOUNDATION/pcf_opsman_cert /type:certificate `
  /certificate:$HOME\pcf.pcfdemo.local.azurestack.external.crt `
