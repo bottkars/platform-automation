@@ -2309,9 +2309,10 @@ jobs:
 - name: deploy-asdk
   plan:
   - get: platform-automation-pivnet
+    trigger: true
+  - get: one-time-trigger
+    trigger: true
   - in_parallel:
-    - get: one-time-trigger
-      trigger: true
     - put: platform-automation-tasks
       params:
         file: platform-automation-pivnet/*tasks*.zip
