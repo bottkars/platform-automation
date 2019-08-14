@@ -61,10 +61,12 @@ credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --valu
 credhub set /name:/concourse/main/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/pivnet-token /type:value --value $($env_vars.EMC_PIVNET_UAA_TOKEN)
 credhub set /name:/concourse/main/$($FOUNDATION)/s3_access_key_id /type:value --value s3admin
-credhub set /name:/concourse/main/$($FOUNDATION)/s3_endpoint /type:value --value $S3_ENDPOINT
+credhub set /name:/concourse/main/$($FOUNDATION)/s3_endpoint /type:value --value "http://minio.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME):9000"
 credhub set /name:/concourse/main/$($FOUNDATION)/s3_region_name /type:value --value region
 credhub set /name:/concourse/main/$($FOUNDATION)/s3_secret_access_key /type:value --value $($env_vars.PIVNET_UAA_TOKEN)
 
+# credhub set /name:/concourse/main/s3_endpoint /type:value --value "http://minio.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME):9000"
+# credhub set /name:/concourse/main/s3_region_name /type:value /value:region
 
 
 
@@ -91,7 +93,7 @@ credhub set /name:/concourse/main/$($FOUNDATION)/endpoint-resource-manager /type
 credhub set /name:/concourse/main/$FOUNDATION/tenant-endpoint-resource /type:value --value $(Get-AzureRmContext).Environment.ActiveDirectoryServiceEndpointResourceId
 credhub set /name:/concourse/main/$FOUNDATION/domain /type:value --value local.azurestack.external
 
-#### stackpoc
+#### setup access for credhub interpolate jobs
 
 credhub set /name:/concourse/main/$($FOUNDATION)/credhub-client /type:value --value $CLIENT_NAME
 credhub set /name:/concourse/main/$($FOUNDATION)/credhub-secret /type:value --value $CREDHUB_PASSWORD
@@ -99,13 +101,46 @@ credhub set /name:/concourse/main/$($FOUNDATION)/credhub-server /type:value --va
 credhub set /name:/concourse/main/$($FOUNDATION)/credhub-ca-cert /type:certificate /certificate:"$HOME\credhub_ca_cert"
 
 
+credhub set /name:/concourse/main/$($FOUNDATION)/credhub-client /type:value --value $CLIENT_NAME
+credhub set /name:/concourse/main/$($FOUNDATION)/credhub-secret /type:value --value $CREDHUB_PASSWORD
+credhub set /name:/concourse/main/$($FOUNDATION)/credhub-server /type:value --value $CREDHUB_URL
+credhub set /name:/concourse/main/$($FOUNDATION)/credhub-ca-cert /type:certificate /certificate:"$HOME\credhub_ca_cert"
+
 
 ### git resources
-
+# cerate a git repo for variables
+# variable.yml
+#  --foundation
+#               -- cert - root.pem
+#               -- config - parameters_opsman.json
+#               -- vars - director
 ## create ssh keys for git resources
+$KEY="variable-deploy-key"
+ssh-keygen -t rsa -b 4096 -C "$($KEY)@sc2.com" -f $HOME/.ssh/$KEY
+
+credhub set /name:/concourse/main/$FOUNDATION/$($KEY) /type:ssh `
+        /private:$HOME\.ssh\$($KEY) `
+        /public:$HOME\.ssh\$($KEY).pub
 
 
 
+# create a git repo holding your product templates
+# --download-product-configs
+# --product-configs
+## create ssh keys for git resources and add them to the according repo
+#
+$KEY="template-deploy-key"
+ssh-keygen -t rsa -b 4096 -C "$($KEY)@sc2.com" -f $HOME/.ssh/$KEY
+
+credhub set /name:/concourse/main/$FOUNDATION/$($KEY) /type:ssh `
+        /private:$HOME\.ssh\$($KEY) `
+        /public:$HOME\.ssh\$($KEY).pub
+         
+         
+
+
+
+## optional repo
 credhub set /name:/concourse/main/$($FOUNDATION)/azs-resource-key /type:ssh `
          /private:$HOME\.ssh\azs_resource `
          /public:$HOME\.ssh\azs-resource.pub
@@ -117,34 +152,14 @@ credhub set /name:/concourse/main/plat-auto-pipes-deploy-key /type:ssh `
          /private:$HOME\.ssh\pcfdemo_asdk_config `
          /public:$HOME\.ssh\pcfdemo_asdk_config.pub 
 
-credhub set /name:/concourse/main/$FOUNDATION/config-deploy-key /type:ssh `
-         /private:$HOME\.ssh\git_deploy `
-         /public:$HOME\.ssh\git_deploy.pub
-credhub set /name:/concourse/main/$FOUNDATION/template-deploy-key /type:ssh `
-        /private:$HOME\.ssh\template_deploy `
-        /public:$HOME\.ssh\tempalte_deploy.pub
-         
-         
-credhub set /name:/concourse/main/$FOUNDATION/variable-deploy-key /type:ssh `
-         /private:$HOME\.ssh\pcfdemo_asdk_config `
-         /public:$HOME\.ssh\pcfdemo_asdk_config.pub         
 
-credhub set /name:/concourse/main/$FOUNDATION/variable-deploy-key /type:ssh `
-         /private:$HOME\.ssh\stackpoc_azurestack `
-         /public:$HOME\.ssh\stackpoc_azurestack.pub    
-
-
-credhub set /name:/concourse/main/buckets_pivnet_tasks /type:value --value tasks
-credhub set /name:/concourse/main/buckets_pivnet_image /type:value --value image
-credhub set /name:/concourse/main/buckets_pivnet_products /type:value --value pivnet.products
-credhub set /name:/concourse/main/buckets_installation /type:value --value installation
+# credhub set /name:/concourse/main/buckets_pivnet_tasks /type:value --value tasks
+# credhub set /name:/concourse/main/buckets_pivnet_image /type:value --value image
+# credhub set /name:/concourse/main/buckets_pivnet_products /type:value --value pivnet.products
+# credhub set /name:/concourse/main/buckets_installation /type:value --value installation
 
 
 
-credhub set /name:/concourse/main/s3_endpoint /type:value --value "http://minio.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME):9000"
-credhub set /name:/concourse/main/s3_region_name /type:value /value:region
-credhub set /name:/concourse/main/$($FOUNDATION)/s3_endpoint /type:value --value "http://minio.$($PCF_SUBDOMAIN_NAME).$($PCF_DOMAIN_NAME):9000"
-credhub set /name:/concourse/main/$($FOUNDATION)/s3_region_name /type:value /value:region
 
 
 
@@ -168,11 +183,19 @@ credhub set /name:/concourse/main/$($FOUNDATION)/location /type:value --value ${
 credhub set /name:/concourse/main/$($FOUNDATION)/ops-manager-dns /type:value --value $(terraform output ops_manager_dns)
 #>
 
-### asdk things
+### certs
+# ASDK
 credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate `
  /certificate:$HOME\pcfdemo.local.azurestack.external.crt `
  /private:$HOME\pcfdemo.local.azurestack.external.key 
+## pcfsc2
+##
 
+credhub set /name:/concourse/main/$FOUNDATION/pcf_domain_cert /type:certificate `
+ /certificate:$HOME\pcfsc2.sc2.azurestack-rd.cf-app.com.crt `
+ /private:$HOME\pcfsc2.sc2.azurestack-rd.cf-app.com.key 
+
+ ### opsman
  credhub set /name:/concourse/main/$FOUNDATION/pcf_opsman_cert /type:certificate `
  /certificate:$HOME\pcf.pcfdemo.local.azurestack.external.crt `
  /private:$HOME\pcf.pcfdemo.local.azurestack.external.key
