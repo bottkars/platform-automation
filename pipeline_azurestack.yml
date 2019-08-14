@@ -467,9 +467,9 @@ jobs:
       config: variable
     params:
       <<: *azure_env
-      ACCOUNT_NAME: opsmanagerimage
+      ACCOUNT_NAME: ((image_account_name))
       ACCOUNT_KEY: ((storage_account_key))
-      DESTINATION_CONTAINER: images
+      DESTINATION_CONTAINER: ((destination_container))
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
 #  - task: check-copy-status-success
 #    image: platform-automation-image
@@ -488,8 +488,8 @@ jobs:
 #      AZURE_CLIENT_ID: ((client-id))
 #      AZURE_CLIENT_SECRET: ((client-secret))
 #      AZURE_SUBSCRIPTION_ID: ((subscription-id))
-#      ACCOUNT_NAME: opsmanagerimage
-#      DESTINATION_CONTAINER: images
+#      ACCOUNT_NAME: ((image_account_name))
+#      DESTINATION_CONTAINER: ((destination_container))
 #      DESTINATION_BLOB: ((opsman_image))
 
 - name: delete-opsman-vm
@@ -656,9 +656,9 @@ jobs:
         config: variable
       params:
         <<: *azure_env
-        ACCOUNT_NAME: opsmanagerimage
+        ACCOUNT_NAME: ((image_account_name))
         ACCOUNT_KEY: ((storage_account_key))
-        DESTINATION_CONTAINER: images
+        DESTINATION_CONTAINER: ((destination_container))
         OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
     - task: validate-template
       image: platform-automation-image
