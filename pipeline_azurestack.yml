@@ -744,7 +744,7 @@ jobs:
       attempts: 10
       input_mapping:
         env: variable
-        config: interpolated-product-templates
+        config: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
         AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
