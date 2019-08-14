@@ -789,12 +789,12 @@ jobs:
     file: platform-automation-tasks/tasks/configure-director.yml
     input_mapping:
       config: interpolated-product-templates
-      env: variable
+      env: interpolated-product-templates
       vars: variable
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: vars/((foundation))/config/director.yml  
+      DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml 
 - name: apply-director 
   plan:
   - in_parallel:
