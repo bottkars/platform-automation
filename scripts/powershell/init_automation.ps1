@@ -81,10 +81,13 @@ credhub set /name:/concourse/main/$FOUNDATION/azs_ca /type:certificate /certific
 
 
 
-credhub set /name:/concourse/main/$($FOUNDATION)/tenant-id /type:value --value $(Get-AzureRmSubscription).TenantId
-credhub set /name:/concourse/main/$($FOUNDATION)/client-id /type:value --value $($env_vars.client_id)
-credhub set /name:/concourse/main/$($FOUNDATION)/client-secret /type:value --value $($env_vars.client_secret)
-credhub set /name:/concourse/main/$($FOUNDATION)/subscription-id /type:value --value $(Get-AzureRmSubscription).SubscriptionId
+credhub set /name:/concourse/main/$($FOUNDATION)/tenant_id /type:value --value $(Get-AzureRmSubscription -SubscriptionName "PCF Foundation").TenantId
+credhub set /name:/concourse/main/$($FOUNDATION)/client_id /type:value --value $($env_vars.client_id)
+credhub set /name:/concourse/main/$($FOUNDATION)/client_secret /type:value --value $($env_vars.client_secret)
+credhub set /name:/concourse/main/$($FOUNDATION)/subscription_id /type:value --value $(Get-AzureRmSubscription -SubscriptionName "PCF Foundation").SubscriptionId
+
+
+credhub set /name:/concourse/main/$($FOUNDATION)/client_secret /type:value --value $($env_vars.client_secret)
 
 
 credhub set /name:/concourse/main/$($FOUNDATION)/endpoint-resource-manager /type:value --value https://management.local.azurestack.external
