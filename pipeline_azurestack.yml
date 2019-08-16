@@ -2582,8 +2582,7 @@ groups:
   - get-opsman-image
   - configure-opsman
   - apply-director
-- name: get-products
-  jobs:
+#
   - get-platform-automation
   - get-srt
   - get-pas-windows
