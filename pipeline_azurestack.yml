@@ -963,6 +963,7 @@ jobs:
         TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
         PARAMETER_FILE: ((foundation))/config/parameters_opsman_update.json
         RESOURCE_GROUP: ((resource_group))
+        ACCOUNT_NAME: ((image_account_name))
         STATE_FILE: state.yml
       ensure: *make-state-commit
     - task: import-installation
