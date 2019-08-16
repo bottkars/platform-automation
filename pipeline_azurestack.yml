@@ -2572,7 +2572,7 @@ groups:
   jobs:  
   - deploy-asdk
 
-- name: install-ops-manager
+- name: install-pivotal-platform
   jobs:
   - get-opsman
   - upgrade-opsman
@@ -2582,8 +2582,46 @@ groups:
   - get-opsman-image
   - configure-opsman
   - apply-director
-
-
+- name: get-products
+  jobs:
+  - get-platform-automation
+  - get-srt
+  - get-pas-windows
+  - get-p-spring-cloud-services
+  - get-p-spring-cloud-services-3
+  - get-p-rabbitmq
+  - get-pivotal-mysql
+  - get-opsman
+  - get-opsman-image
+  - get-p-healthwatch
+  - get-wavefront-nozzle
+  - get-p-event-alerts
+  - get-p-compliance-scanner
+#
+  - export-installation
+  - upload-and-stage-srt
+  - upload-and-stage-pas-windows  
+  - upload-and-stage-pivotal-mysql
+  - upload-and-stage-p-spring-cloud-services
+  - upload-and-stage-p-spring-cloud-services-3
+  - upload-and-stage-p-rabbitmq
+  - upload-and-stage-p-healthwatch
+  - upload-and-stage-wavefront-nozzle
+  - upload-and-stage-p-event-alerts
+  - upload-and-stage-p-compliance-scanner
+#  
+  - configure-srt
+  - configure-pas-windows
+  - configure-p-rabbitmq
+  - configure-pivotal-mysql
+  - configure-p-spring-cloud-services
+  - configure-p-spring-cloud-services-3
+  - configure-p-healthwatch
+  - configure-wavefront-nozzle
+  - configure-p-event-alerts
+  - configure-p-compliance-scanner
+  - apply-product-changes
+###
 - name: staged-configs
   jobs:
   - staged-pas-config
