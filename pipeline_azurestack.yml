@@ -440,7 +440,7 @@ jobs:
 
 - name: get-opsman-image
   serial: true
-  serial_groups: [ get-products ]
+  serial_groups: [ get-products, upgrade-opsman ]
   plan:
   - in_parallel:
     - get: templates
@@ -912,7 +912,7 @@ jobs:
 
 - name: upgrade-opsman
   serial: true
-  serial_groups: [ install ]
+  serial_groups: [ install, get-products, upgrade-opsman ]
   plan:
     - in_parallel:
         - get: one-time-trigger
