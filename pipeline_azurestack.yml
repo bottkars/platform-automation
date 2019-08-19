@@ -1343,7 +1343,7 @@ jobs:
 
 
 
-- name: get-reliability_view_pcf_exporter
+- name: get-p-compliance-scanner
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1359,21 +1359,21 @@ jobs:
     - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
-  - task: download-reliability_view_pcf_exporter-product-and-stemcell
+  - task: download-p-compliance-scanner-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability_view_pcf_exporter.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: reliability_view_pcf_exporter-stemcell}
+    output_mapping: {downloaded-stemcell: p-compliance-scanner-stemcell}
   - in_parallel:
-    - put: reliability_view_pcf_exporter-product
+    - put: p-compliance-scanner-product
       params:
         file: downloaded-product/*.pivotal
-    - put: reliability_view_pcf_exporter-stemcell
+    - put: p-compliance-scanner-stemcell
       params:
-        file: reliability_view_pcf_exporter-stemcell/*.tgz
+        file: p-compliance-scanner-stemcell/*.tgz
 - name: get-reliability_view_pcf_exporter
   serial: true
   serial_groups: [ get-products ]
