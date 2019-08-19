@@ -2437,6 +2437,67 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/p-compliance-scanner-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 
+- name: configure-reliability-view-pcf
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-reliability-view-pcf
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-reliability-view-pcf
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/reliability-view-pcf.yml
+        VARS_FILES: vars/((foundation))/vars/reliability-view-pcf-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-reliability-view-pas-exporter
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-reliability-view-pas-exporter
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-reliability-view-pas-exporter
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/reliability-view-pas-exporter.yml
+        VARS_FILES: vars/((foundation))/vars/reliability-view-pas-exporter-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-spring-cloud-services
   serial_groups:
