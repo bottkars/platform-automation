@@ -216,20 +216,20 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: p-compliance-scanner-product/\[p-compliance-scanner,(.*)\]p-compliance-scanner-.*.pivotal
 
-- name: reliability_view_pcf-product
+- name: reliability-view-pcf-product
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: reliability_view_pcf-product/\[reliability_view_pcf,(.*)\]reliability_view_pcf-.*.pivotal
-- name: reliability_view_pcf_exporter-product
+    regexp: reliability-view-pcf-product/\[reliability-view-pcf,(.*)\]reliability-view-pcf-.*.pivotal
+- name: reliability-view-pas-exporter-product
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: reliability_view_pcf_exporter-product/\[reliability_view_pcf_exporter,(.*)\]reliability_view_pcf_exporter-.*.pivotal
+    regexp: reliability-view-pas-exporter-product/\[reliability-view-pas-exporter,(.*)\]reliability-view-pas-exporter-.*.pivotal
 
 
 - name: pas-stemcell
@@ -312,21 +312,21 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: p-compliance-scanner-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
-- name: reliability_view_pcf-stemcell
+- name: reliability-view-pcf-stemcell
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: reliability_view_pcf-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+    regexp: reliability-view-pcf-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
-- name: reliability_view_pcf_exporter-stemcell
+- name: reliability-view-pas-exporter-stemcell
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: reliability_view_pcf_exporter-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+    regexp: reliability-view-pas-exporter-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 
 - name: pas-windows-stemcell
@@ -1374,7 +1374,7 @@ jobs:
     - put: p-compliance-scanner-stemcell
       params:
         file: p-compliance-scanner-stemcell/*.tgz
-- name: get-reliability_view_pcf_exporter
+- name: get-reliability-view-pas-exporter
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1390,23 +1390,23 @@ jobs:
     - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
-  - task: download-reliability_view_pcf_exporter-product-and-stemcell
+  - task: download-reliability-view-pas-exporter-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability_view_pcf_exporter.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pas-exporter.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: reliability_view_pcf_exporter-stemcell}
+    output_mapping: {downloaded-stemcell: reliability-view-pas-exporter-stemcell}
   - in_parallel:
-    - put: reliability_view_pcf_exporter-product
+    - put: reliability-view-pas-exporter-product
       params:
         file: downloaded-product/*.pivotal
-    - put: reliability_view_pcf_exporter-stemcell
+    - put: reliability-view-pas-exporter-stemcell
       params:
-        file: reliability_view_pcf_exporter-stemcell/*.tgz
+        file: reliability-view-pas-exporter-stemcell/*.tgz
 
-- name: get-reliability_view_pcf
+- name: get-reliability-view-pcf
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1422,21 +1422,21 @@ jobs:
     - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
-  - task: download-reliability_view_pcf-product-and-stemcell
+  - task: download-reliability-view-pcf-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability_view_pcf.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pcf.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: reliability_view_pcf-stemcell}
+    output_mapping: {downloaded-stemcell: reliability-view-pcf-stemcell}
   - in_parallel:
-    - put: reliability_view_pcf-product
+    - put: reliability-view-pcf-product
       params:
         file: downloaded-product/*.pivotal
-    - put: reliability_view_pcf-stemcell
+    - put: reliability-view-pcf-stemcell
       params:
-        file: reliability_view_pcf-stemcell/*.tgz
+        file: reliability-view-pcf-stemcell/*.tgz
 
 
 - name: get-p-rabbitmq
@@ -2689,8 +2689,8 @@ groups:
   - get-wavefront-nozzle
   - get-p-event-alerts
   - get-p-compliance-scanner
-  - get-reliability_view_pcf
-  - get-reliability_view_pcf_exporter
+  - get-reliability-view-pcf
+  - get-reliability-view-pas-exporter
 #
   - export-installation
   - upload-and-stage-srt
@@ -2744,8 +2744,8 @@ groups:
   - get-wavefront-nozzle
   - get-p-event-alerts
   - get-p-compliance-scanner
-  - get-reliability_view_pcf
-  - get-reliability_view_pcf_exporter
+  - get-reliability-view-pcf
+  - get-reliability-view-pas-exporter
 
 - name: upgrade-products
   jobs:
