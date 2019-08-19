@@ -216,6 +216,21 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: p-compliance-scanner-product/\[p-compliance-scanner,(.*)\]p-compliance-scanner-.*.pivotal
 
+- name: reliability_view_pcf-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: reliability_view_pcf-product/\[reliability_view_pcf,(.*)\]reliability_view_pcf-.*.pivotal
+- name: reliability_view_pcf_exporter-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: reliability_view_pcf_exporter-product/\[reliability_view_pcf_exporter,(.*)\]reliability_view_pcf_exporter-.*.pivotal
+
 
 - name: pas-stemcell
   icon: amazon-drive
@@ -297,6 +312,21 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: p-compliance-scanner-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+- name: reliability_view_pcf-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: reliability_view_pcf-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: reliability_view_pcf_exporter-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: reliability_view_pcf_exporter-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 
 - name: pas-windows-stemcell
@@ -1313,7 +1343,7 @@ jobs:
 
 
 
-- name: get-p-compliance-scanner
+- name: get-reliability_view_pcf_exporter
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1329,21 +1359,84 @@ jobs:
     - get: templates
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
-  - task: download-p-compliance-scanner-product-and-stemcell
+  - task: download-reliability_view_pcf_exporter-product-and-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability_view_pcf_exporter.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: p-compliance-scanner-stemcell}
+    output_mapping: {downloaded-stemcell: reliability_view_pcf_exporter-stemcell}
   - in_parallel:
-    - put: p-compliance-scanner-product
+    - put: reliability_view_pcf_exporter-product
       params:
         file: downloaded-product/*.pivotal
-    - put: p-compliance-scanner-stemcell
+    - put: reliability_view_pcf_exporter-stemcell
       params:
-        file: p-compliance-scanner-stemcell/*.tgz
+        file: reliability_view_pcf_exporter-stemcell/*.tgz
+- name: get-reliability_view_pcf_exporter
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-reliability_view_pcf_exporter-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability_view_pcf_exporter.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: reliability_view_pcf_exporter-stemcell}
+  - in_parallel:
+    - put: reliability_view_pcf_exporter-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: reliability_view_pcf_exporter-stemcell
+      params:
+        file: reliability_view_pcf_exporter-stemcell/*.tgz
+
+- name: get-reliability_view_pcf
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-reliability_view_pcf-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability_view_pcf.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: reliability_view_pcf-stemcell}
+  - in_parallel:
+    - put: reliability_view_pcf-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: reliability_view_pcf-stemcell
+      params:
+        file: reliability_view_pcf-stemcell/*.tgz
 
 
 - name: get-p-rabbitmq
@@ -2596,6 +2689,8 @@ groups:
   - get-wavefront-nozzle
   - get-p-event-alerts
   - get-p-compliance-scanner
+  - get-reliability_view_pcf
+  - get-reliability_view_pcf_exporter
 #
   - export-installation
   - upload-and-stage-srt
@@ -2649,6 +2744,8 @@ groups:
   - get-wavefront-nozzle
   - get-p-event-alerts
   - get-p-compliance-scanner
+  - get-reliability_view_pcf
+  - get-reliability_view_pcf_exporter
 
 - name: upgrade-products
   jobs:
