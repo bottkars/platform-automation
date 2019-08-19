@@ -1911,6 +1911,59 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 
+- name: upload-and-stage-reliability-view-pcf
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: download-reliability-view-pcf
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pcf.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: reliability-view-pcf-product
+        downloaded-stemcell: reliability-view-pcf-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: reliability-view-pcf-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-reliability-view-pcf-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: reliability-view-pcf-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: reliability-view-pcf-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml  
+
 - name: upload-and-stage-p-spring-cloud-services
   serial: true
   serial_groups:
