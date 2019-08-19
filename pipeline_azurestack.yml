@@ -1964,6 +1964,58 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml  
 
+- name: upload-and-stage-reliability-view-pas-exporter
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: download-reliability-view-pas-exporter
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pas-exporter.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: reliability-view-pas-exporter-product
+        downloaded-stemcell: reliability-view-pas-exporter-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: reliability-view-pas-exporter-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-reliability-view-pas-exporter-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: reliability-view-pas-exporter-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: reliability-view-pas-exporter-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml  
 - name: upload-and-stage-p-spring-cloud-services
   serial: true
   serial_groups:
@@ -2780,6 +2832,9 @@ groups:
   - upload-and-stage-wavefront-nozzle
   - upload-and-stage-p-event-alerts
   - upload-and-stage-p-compliance-scanner
+  - upload-and-stage-reliability-view-pcf
+  - upload-and-stage-reliability-view-pas-exporter
+
 #  
   - configure-srt
   - configure-pas-windows
@@ -2838,6 +2893,8 @@ groups:
   - upload-and-stage-wavefront-nozzle
   - upload-and-stage-p-event-alerts
   - upload-and-stage-p-compliance-scanner
+  - upload-and-stage-reliability-view-pcf
+  - upload-and-stage-reliability-view-pas-exporter
 - name: configure-products
   jobs:
   - configure-srt
