@@ -2751,6 +2751,7 @@ groups:
   - staged-p-healthwatch-config
   - staged-pas-windows-config
   - staged-p-event-alerts-config
+  - staged-reliability-view-pcf-config
 
 
 - name: get-products
