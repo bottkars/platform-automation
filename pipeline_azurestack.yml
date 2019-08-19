@@ -2885,6 +2885,7 @@ groups:
   - staged-pas-windows-config
   - staged-p-event-alerts-config
   - staged-reliability-view-pcf-config
+  - staged-reliability-view-pas-exporter-config
 
 
 - name: get-products
