@@ -222,14 +222,14 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: reliability-view-pcf-product/\[reliability-view-pcf,(.*)\]reliability-view-.*.pivotal
+    regexp: reliability-view-pcf-product/\[reliability_view_pcf,(.*)\]reliability-view-.*.pivotal
 - name: reliability-view-pas-exporter-product
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: reliability-view-pas-exporter-product/\[reliability-view-pas-exporter,(.*)\]reliability-view-pas-exporter-.*.pivotal
+    regexp: reliability-view-pas-exporter-product/\[reliability_view_pcf,(.*)\]reliability-view-pas-exporter-.*.pivotal
 
 
 - name: pas-stemcell
