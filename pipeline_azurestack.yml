@@ -2996,6 +2996,8 @@ groups:
   - configure-wavefront-nozzle
   - configure-p-event-alerts
   - configure-p-compliance-scanner
+  - configure-reliability-view-pcf
+  - configure-reliability-view-pas-exporter
   - apply-product-changes
 
 - name: service-jobs
