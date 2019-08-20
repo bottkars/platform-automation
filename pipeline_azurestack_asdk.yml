@@ -845,16 +845,16 @@ jobs:
       put: notify
       params:
         text: |
-            "Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
-            build $BUILD_NAME for team $BUILD_TEAM_NAME at
-            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+          "Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+          build $BUILD_NAME for team $BUILD_TEAM_NAME at
+          $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
     on_success:  
       put: notify
       params:
         text: |
-            "Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
-            build $BUILD_NAME for team $BUILD_TEAM_NAME at
-            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+          "Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+          build $BUILD_NAME for team $BUILD_TEAM_NAME at
+          $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
 
 - name: get-opsman
   serial_groups: [ get-products ]
@@ -1021,10 +1021,10 @@ jobs:
       on_success:  
         put: notify
         params:
-          text:  |
-            	"Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
-              build $BUILD_NAME for team $BUILD_TEAM_NAME at
-              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
+          text: |
+            "Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+            build $BUILD_NAME for team $BUILD_TEAM_NAME at
+            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
 
     - task: import-installation
       image: platform-automation-image
@@ -1047,17 +1047,17 @@ jobs:
       on_failure:
         put: notify
         params:
-          text:  |
-            	"Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
-              build $BUILD_NAME for team $BUILD_TEAM_NAME at
-              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+          text: |
+            "Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+            build $BUILD_NAME for team $BUILD_TEAM_NAME at
+            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
       on_success:  
         put: notify
         params:
-          text:  |
-            	"Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
-              build $BUILD_NAME for team $BUILD_TEAM_NAME at
-              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+          text: |
+            "Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+            build $BUILD_NAME for team $BUILD_TEAM_NAME at
+            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
 
 
 - name: get-platform-automation
@@ -2227,16 +2227,16 @@ jobs:
         put: notify
         params:
           text: |
-            	"Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
-              build $BUILD_NAME for team $BUILD_TEAM_NAME at
-              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
+            "Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+            build $BUILD_NAME for team $BUILD_TEAM_NAME at
+            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
       on_success:  
         put: notify
         params:
           text: |
-            	"Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
-              build $BUILD_NAME for team $BUILD_TEAM_NAME at
-              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
+            "Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+            build $BUILD_NAME for team $BUILD_TEAM_NAME at
+            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
     
   
 - name: configure-pas
