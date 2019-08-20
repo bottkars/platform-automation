@@ -512,7 +512,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  serial: true
+      <<: *slack_succeeded_param
+  serial: true
   serial_groups: [ get-products, upgrade-opsman ]
   plan:
   - in_parallel:
@@ -722,7 +723,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  serial: true
+      <<: *slack_succeeded_param
+  serial: true
   serial_groups: [ install ]
   plan:
     - get: variable
@@ -956,7 +958,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  serial_groups: [ get-products ]
+      <<: *slack_succeeded_param
+  serial_groups: [ get-products ]
   plan:
   - in_parallel:
     - get: after-midnight
