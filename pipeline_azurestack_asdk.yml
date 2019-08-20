@@ -844,11 +844,25 @@ jobs:
     on_failure:
       put: notify
       params:
-        text: "Job 'apply-director-changes' failed" 
+        text: | 
+          "Job 'apply-director-changes' failed
+          $BUILD_ID
+          $BUILD_NAME
+          $BUILD_JOB_NAME
+          $BUILD_PIPELINE_NAME
+          $BUILD_TEAM_NAME
+          $ATC_EXTERNAL_URL" 
     on_success:  
       put: notify
       params:
-        text: "Job 'apply-director-changes' succeeded" 
+        text: |
+          "Job 'apply-director-changes' succeeded
+          $BUILD_ID
+          $BUILD_NAME
+          $BUILD_JOB_NAME
+          $BUILD_PIPELINE_NAME
+          $BUILD_TEAM_NAME
+          $ATC_EXTERNAL_URL"
      
 
 - name: get-opsman
@@ -967,7 +981,14 @@ jobs:
           trigger: true
         - put: notify
           params:
-            text: "Job Upgrade Director" 
+            text: |
+              "Job Upgrade Director started 
+              $BUILD_ID
+              $BUILD_NAME
+              $BUILD_JOB_NAME
+              $BUILD_PIPELINE_NAME
+              $BUILD_TEAM_NAME
+              $ATC_EXTERNAL_URL" 
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
     - task: delete-existing-opsman
