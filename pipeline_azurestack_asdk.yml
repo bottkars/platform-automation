@@ -458,7 +458,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -483,7 +483,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: variable
     - get: azs-concourse
@@ -530,7 +530,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: templates
     - get: opsman-product
@@ -570,7 +570,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -598,7 +598,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -625,7 +625,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -652,7 +652,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -679,7 +679,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -706,7 +706,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -734,7 +734,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -765,7 +765,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: templates
   - get: azs-concourse
@@ -917,7 +917,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: variable
       passed:
@@ -966,7 +966,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: variable
     - get: templates
@@ -1007,7 +1007,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1043,7 +1043,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: opsman-product
   - get: azs-concourse
   - get: platform-automation-image
@@ -1070,7 +1070,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-tasks
         params: {unpack: true}
@@ -1100,7 +1100,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: daily-trigger
         trigger: true
@@ -1141,7 +1141,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: one-time-trigger
         passed: [ export-installation, get-opsman-image ]
@@ -1223,7 +1223,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1249,7 +1249,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -1272,7 +1272,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -1305,7 +1305,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1350,7 +1350,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1393,7 +1393,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1436,7 +1436,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1479,7 +1479,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1522,7 +1522,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1565,7 +1565,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1609,7 +1609,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1654,7 +1654,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1696,7 +1696,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1739,7 +1739,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1783,7 +1783,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1825,7 +1825,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1869,7 +1869,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -1931,7 +1931,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -1992,7 +1992,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2054,7 +2054,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       params:
@@ -2116,7 +2116,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2178,7 +2178,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2239,7 +2239,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2301,7 +2301,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2363,7 +2363,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2425,7 +2425,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2487,7 +2487,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2549,7 +2549,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2611,7 +2611,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2670,7 +2670,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-tasks
         params:
@@ -2704,7 +2704,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2746,7 +2746,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2788,7 +2788,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2830,7 +2830,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2872,7 +2872,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2914,7 +2914,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2956,7 +2956,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -2998,7 +2998,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -3040,7 +3040,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -3082,7 +3082,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -3124,7 +3124,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -3166,7 +3166,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -3208,7 +3208,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         params:
@@ -3247,7 +3247,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - get: platform-automation-pivnet
   - in_parallel:
     - get: one-time-trigger
@@ -3273,7 +3273,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3309,7 +3309,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3345,7 +3345,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3381,7 +3381,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3417,7 +3417,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3454,7 +3454,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3489,7 +3489,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3525,7 +3525,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3561,7 +3561,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3596,7 +3596,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -3632,7 +3632,7 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+      <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
