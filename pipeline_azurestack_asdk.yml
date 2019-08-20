@@ -844,26 +844,17 @@ jobs:
     on_failure:
       put: notify
       params:
-        text: | 
-          "Job 'apply-director-changes' failed
-          $BUILD_ID
-          $BUILD_NAME
-          $BUILD_JOB_NAME
-          $BUILD_PIPELINE_NAME
-          $BUILD_TEAM_NAME
-          $ATC_EXTERNAL_URL" 
+        text: |
+            	"Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+              build $BUILD_NAME for team $BUILD_TEAM_NAME at
+              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
     on_success:  
       put: notify
       params:
         text: |
-          "Job 'apply-director-changes' succeeded
-          $BUILD_ID
-          $BUILD_NAME
-          $BUILD_JOB_NAME
-          $BUILD_PIPELINE_NAME
-          $BUILD_TEAM_NAME
-          $ATC_EXTERNAL_URL"
-     
+            	"Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+              build $BUILD_NAME for team $BUILD_TEAM_NAME at
+              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
 
 - name: get-opsman
   serial_groups: [ get-products ]
@@ -982,13 +973,9 @@ jobs:
         - put: notify
           params:
             text: |
-              "Job Upgrade Director started 
-              $BUILD_ID
-              $BUILD_NAME
-              $BUILD_JOB_NAME
-              $BUILD_PIPELINE_NAME
-              $BUILD_TEAM_NAME
-              $ATC_EXTERNAL_URL" 
+              "Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
+              build $BUILD_NAME for team $BUILD_TEAM_NAME at
+              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
     - task: delete-existing-opsman
@@ -1027,11 +1014,17 @@ jobs:
       on_failure:
         put: notify
         params:
-          text: "Job 'create-vm' failed" 
+          text: |
+            	"Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+              build $BUILD_NAME for team $BUILD_TEAM_NAME at
+              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
       on_success:  
         put: notify
         params:
-          text: "Job 'create-vm' succeeded" 
+          text:  |
+            	"Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+              build $BUILD_NAME for team $BUILD_TEAM_NAME at
+              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
 
     - task: import-installation
       image: platform-automation-image
@@ -1054,11 +1047,17 @@ jobs:
       on_failure:
         put: notify
         params:
-          text: "Job 'apply-director-changes' failed" 
+          text:  |
+            	"Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+              build $BUILD_NAME for team $BUILD_TEAM_NAME at
+              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
       on_success:  
         put: notify
         params:
-          text: "Job 'apply-director-changes' succeeded" 
+          text:  |
+            	"Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+              build $BUILD_NAME for team $BUILD_TEAM_NAME at
+              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
 
 
 - name: get-platform-automation
@@ -2227,11 +2226,17 @@ jobs:
       on_failure:
         put: notify
         params:
-          text: "Job 'apply-changes' failed" 
+          text: |
+            	"Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+              build $BUILD_NAME for team $BUILD_TEAM_NAME at
+              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
       on_success:  
         put: notify
         params:
-          text: "Job 'apply-changes' succeeded" 
+          text: |
+            	"Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+              build $BUILD_NAME for team $BUILD_TEAM_NAME at
+              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
     
   
 - name: configure-pas
