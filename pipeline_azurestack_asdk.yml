@@ -434,10 +434,10 @@ jobs:
   plan:
   - put: notify
     params:
-    <<: *slack_start_param
+     <<: *slack_start_param
   - put: notify
     params:
-    <<: *slack_start_param
+     <<: *slack_start_param
   - get: azs-concourse
   - get: platform-automation-image
     params:
