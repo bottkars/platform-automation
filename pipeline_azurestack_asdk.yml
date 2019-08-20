@@ -56,6 +56,13 @@ git_commit_env: &git_commit_env
   GIT_AUTHOR_NAME: "Platform Automation Bot"
   COMMIT_MESSAGE: 'Staged  Config Writer'
 
+slack_start_param: &slack_start_param
+  text: |
+    "Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+  icon_emoji: ":concourse-started:"
+
 resource_types:
 - name: pivnet
   type: docker-image
@@ -972,10 +979,7 @@ jobs:
           trigger: true
         - put: notify
           params:
-            text: |
-              "Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
-              build $BUILD_NAME for team $BUILD_TEAM_NAME at
-              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+            *slack_start_param
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
     - task: delete-existing-opsman
