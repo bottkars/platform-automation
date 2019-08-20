@@ -1870,51 +1870,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads     
-    - task: download-pas
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-pas.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: pas-product
-        downloaded-stemcell: pas-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: pas-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-pas-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: pas-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: pas-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads     
+  - task: download-pas
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pas.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: pas-product
+      downloaded-stemcell: pas-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: pas-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-pas-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: pas-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: pas-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
 
 - name: upload-and-stage-srt
   on_failure:
