@@ -1993,51 +1993,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads     
-    - task: download-pas-windows
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: pas-windows-product
-        downloaded-stemcell: pas-windows-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: pas-windows-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-pas-windows-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: pas-windows-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: pas-windows-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml      
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads     
+  - task: download-pas-windows
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: pas-windows-product
+      downloaded-stemcell: pas-windows-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: pas-windows-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-pas-windows-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: pas-windows-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: pas-windows-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml      
 
 - name: upload-and-stage-pivotal-mysql
   on_failure:
@@ -2056,14 +2056,14 @@ jobs:
     params:
     <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+    - get: variable
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads       
   - task: download-pivotal-mysql
