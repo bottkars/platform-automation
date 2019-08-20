@@ -979,7 +979,7 @@ jobs:
           trigger: true
         - put: notify
           params:
-            *slack_start_param
+            <<: *slack_start_param
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
     - task: delete-existing-opsman
