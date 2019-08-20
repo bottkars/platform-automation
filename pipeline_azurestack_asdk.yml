@@ -430,7 +430,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - get: azs-concourse
   - get: platform-automation-image
     params:
@@ -447,7 +448,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -468,7 +470,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - in_parallel:
     - get: variable
     - get: azs-concourse
@@ -547,7 +550,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -571,7 +575,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -594,7 +599,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -617,7 +623,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -640,7 +647,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -663,7 +671,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -687,7 +696,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -863,7 +873,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - in_parallel:
     - get: variable
       passed:
@@ -908,7 +919,8 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  plan:
+      <<: *slack_succeeded_param  
+  plan:
   - in_parallel:
     - get: variable
     - get: templates
