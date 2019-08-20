@@ -58,10 +58,25 @@ git_commit_env: &git_commit_env
 
 slack_start_param: &slack_start_param
   text: |
-    "Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
+    Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
     build $BUILD_NAME for team $BUILD_TEAM_NAME at
-    $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+    $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME
   icon_emoji: ":concourse-started:"
+
+slack_succeeded_param: &slack_succeeded_param
+  text: |
+    Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME
+  icon_emoji: ":concourse-succeeded:"
+
+slack_failed_param: &slack_failed_param
+  text: |
+    Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME
+  icon_emoji: ":concourse-failed:"
+
 
 resource_types:
 - name: pivnet
@@ -655,6 +670,9 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
+    - put: notify
+      params:
+        <<: *slack_start_param
     - task: interpolate-product-templates
       <<: *interpolate-product-templates          
     - task: interpolate-product-downloads
@@ -704,7 +722,14 @@ jobs:
         PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
         RESOURCE_GROUP: ((resource_group))
         BOSHSTORAGEACCOUNT: ((boshstorageaccount))
-    
+      on_failure:
+        put: notify
+        params:
+          <<: *slack_failed_param
+      on_success:  
+        put: notify
+        params:
+          <<: *slack_succeeded_param
     - task: deploy-opsman-template 
       image: platform-automation-image
       file: azs-concourse/ci/tasks/deploy-pcf-template.yml  
@@ -721,7 +746,14 @@ jobs:
         ACCOUNT_NAME: ((image_account_name))
         DESTINATION_CONTAINER: ((destination_container))
         OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+      on_failure:
+        put: notify
+        params:
+          <<: *slack_failed_param
       on_success: &make-config-director-commit
+        put: notify
+        params:
+          <<: *slack_succeeded_param
         do:
           - task: make-commit
             image: platform-automation-image
@@ -814,6 +846,8 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
+    - put: notify
+      <<: *slack_start_param    
   - task: interpolate-product-templates
     <<: *interpolate-product-templates          
   - task: configure-director
@@ -827,6 +861,14 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
       DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director-azurestack.yml
+    on_success:  
+      put: notify
+      params:
+        <<: *slack_succeeded_param
+    on_failure:
+      put: notify
+      params:
+        <<: *slack_failed_param        
 - name: apply-director 
   plan:
   - in_parallel:
@@ -851,18 +893,11 @@ jobs:
     on_failure:
       put: notify
       params:
-        text: |
-          "Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
-          build $BUILD_NAME for team $BUILD_TEAM_NAME at
-          $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+        <<: *slack_failed_param
     on_success:  
       put: notify
       params:
-        text: |
-          "Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
-          build $BUILD_NAME for team $BUILD_TEAM_NAME at
-          $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
-
+        <<: *slack_succeeded_param
 - name: get-opsman
   serial_groups: [ get-products ]
   plan:
@@ -1018,17 +1053,11 @@ jobs:
       on_failure:
         put: notify
         params:
-          text: |
-            "Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
-            build $BUILD_NAME for team $BUILD_TEAM_NAME at
-            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+          <<: *slack_failed_param
       on_success:  
         put: notify
         params:
-          text: |
-            "Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
-            build $BUILD_NAME for team $BUILD_TEAM_NAME at
-            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
+          <<: *slack_succeeded_param
 
     - task: import-installation
       image: platform-automation-image
@@ -1051,17 +1080,11 @@ jobs:
       on_failure:
         put: notify
         params:
-          text: |
-            "Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
-            build $BUILD_NAME for team $BUILD_TEAM_NAME at
-            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+          <<: *slack_failed_param
       on_success:  
         put: notify
         params:
-          text: |
-            "Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
-            build $BUILD_NAME for team $BUILD_TEAM_NAME at
-            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+          <<: *slack_succeeded_param
 
 
 - name: get-platform-automation
@@ -2230,17 +2253,11 @@ jobs:
       on_failure:
         put: notify
         params:
-          text: |
-            "Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
-            build $BUILD_NAME for team $BUILD_TEAM_NAME at
-            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
+          <<: *slack_failed_param
       on_success:  
         put: notify
         params:
-          text: |
-            "Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
-            build $BUILD_NAME for team $BUILD_TEAM_NAME at
-            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME" 
+          <<: *slack_succeeded_param
     
   
 - name: configure-pas
