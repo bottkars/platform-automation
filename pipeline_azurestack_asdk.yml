@@ -728,14 +728,6 @@ jobs:
         PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
         RESOURCE_GROUP: ((resource_group))
         BOSHSTORAGEACCOUNT: ((boshstorageaccount))
-      on_failure:
-        put: notify
-        params:
-          <<: *slack_failed_param
-      on_success:  
-        put: notify
-        params:
-          <<: *slack_succeeded_param
     - task: deploy-opsman-template 
       image: platform-automation-image
       file: azs-concourse/ci/tasks/deploy-pcf-template.yml  
@@ -752,15 +744,8 @@ jobs:
         ACCOUNT_NAME: ((image_account_name))
         DESTINATION_CONTAINER: ((destination_container))
         OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
-      on_failure:
-        put: notify
-        params:
-          <<: *slack_failed_param
       on_success: &make-config-director-commit
         do:
-          - put: notify
-            params:
-              <<: *slack_succeeded_param
           - task: make-commit
             image: platform-automation-image
             file: platform-automation-tasks/tasks/make-git-commit.yml
@@ -984,8 +969,6 @@ jobs:
         - get: variable
         - get: one-time-trigger
           passed: [ install-opsman ]
-#    - task: interpolate-variable
-#      <<: *interpolate-variable
     - task: export-installation
       image: platform-automation-image
       file: platform-automation-tasks/tasks/export-installation.yml
@@ -997,10 +980,26 @@ jobs:
     - put: installation
       params:
         file: installation/installation*.zip
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
 
 - name: upgrade-opsman
   serial: true
   serial_groups: [ install, get-products, upgrade-opsman ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
     - in_parallel:
         - get: one-time-trigger
@@ -1057,14 +1056,7 @@ jobs:
         ACCOUNT_NAME: ((image_account_name))
         STATE_FILE: state.yml
       ensure: *make-state-commit
-      on_failure:
-        put: notify
-        params:
-          <<: *slack_failed_param
-      on_success:  
-        put: notify
-        params:
-          <<: *slack_succeeded_param
+
 
     - task: import-installation
       image: platform-automation-image
@@ -1084,14 +1076,7 @@ jobs:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
-      on_failure:
-        put: notify
-        params:
-          <<: *slack_failed_param
-      on_success:  
-        put: notify
-        params:
-          <<: *slack_succeeded_param
+
 
 
 - name: get-platform-automation
@@ -1152,6 +1137,14 @@ jobs:
 
 
 - name: get-pas
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -1184,6 +1177,14 @@ jobs:
 
 
 - name: get-srt
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1216,6 +1217,14 @@ jobs:
         file: srt-stemcell/*.tgz
 
 - name: get-p-spring-cloud-services
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1248,6 +1257,14 @@ jobs:
         file: p-spring-cloud-services-stemcell/*.tgz
 
 - name: get-p-spring-cloud-services-3
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -2257,14 +2274,7 @@ jobs:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
-      on_failure:
-        put: notify
-        params:
-          <<: *slack_failed_param
-      on_success:  
-        put: notify
-        params:
-          <<: *slack_succeeded_param
+
     
   
 - name: configure-pas
