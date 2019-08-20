@@ -1015,9 +1015,9 @@ jobs:
         put: notify
         params:
           text: |
-            	"Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
-              build $BUILD_NAME for team $BUILD_TEAM_NAME at
-              $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
+            "Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+            build $BUILD_NAME for team $BUILD_TEAM_NAME at
+            $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME"
       on_success:  
         put: notify
         params:
