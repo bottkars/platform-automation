@@ -420,21 +420,17 @@ interpolate-product-templates: &interpolate-product-templates
     files: templates
   output_mapping:
     interpolated-files: interpolated-product-templates
-#interpolate-vars: &interpolate-variable
-#  image: platform-automation-image
-#  file: platform-automation-tasks/tasks/credhub-interpolate.yml
-#  params:
-#    <<: *credhub_env
-#    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env
-#    SKIP_MISSING: true
-#  input_mapping:
-#    files: variable
-#  output_mapping:
-#    interpolated-files: interpolated-variable
 
 jobs:
 - name: test-azcli 
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - get: azs-concourse
   - get: platform-automation-image
     params:
@@ -444,7 +440,14 @@ jobs:
     file: azs-concourse/ci/tasks/test-task.yml
 
 - name: run-azcli-get-vms
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -458,7 +461,14 @@ jobs:
     params:
       <<: *azure_env
 - name: deploy-opsman-from-arm
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - in_parallel:
     - get: variable
     - get: azs-concourse
@@ -492,7 +502,14 @@ jobs:
       BOSHSTORAGEACCOUNT: ((boshstorageaccount))
 
 - name: get-opsman-image
-  serial: true
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  serial: true
   serial_groups: [ get-products, upgrade-opsman ]
   plan:
   - in_parallel:
@@ -515,8 +532,6 @@ jobs:
     image: platform-automation-image
     input_mapping:
       image: opsman-product
-#      root_ca: variable
-#      config: configuration
       config: variable
     params:
       <<: *azure_env
@@ -524,29 +539,15 @@ jobs:
       ACCOUNT_KEY: ((storage_account_key))
       DESTINATION_CONTAINER: ((destination_container))
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
-#  - task: check-copy-status-success
-#    image: platform-automation-image
-#    file: azs-concourse/ci/tasks/copy-status-until-success.yml  
-#    input_mapping:
-#      image: opsman-product
-#      root_ca: configuration
-#      config: configuration
-#    params:
-#      PROFILE: ((arm_profile))
-#      CA_CERT: ((foundation))/cert/root.pem
-#      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
-#      VAULT_DNS:  ((vault-dns))
-#      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
-#      AZURE_TENANT_ID: ((tenant_id))
-#      AZURE_CLIENT_ID: ((client_id))
-#      AZURE_CLIENT_SECRET: ((client_secret))
-#      AZURE_SUBSCRIPTION_ID: ((subscription_id))
-#      ACCOUNT_NAME: ((image_account_name))
-#      DESTINATION_CONTAINER: ((destination_container))
-#      DESTINATION_BLOB: ((opsman_image))
-
 - name: delete-opsman-vm
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -563,7 +564,14 @@ jobs:
       VM_NAME: ops_man_vm
       
 - name: delete-orphan-azurevm-images
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -579,7 +587,14 @@ jobs:
       RESOURCE_GROUP: ((resource_group))
 
 - name: delete-unattached-azure-disks
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -595,7 +610,14 @@ jobs:
       RESOURCE_GROUP: ((resource_group))
 
 - name: query-unattached-azure-disks
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -611,7 +633,14 @@ jobs:
       RESOURCE_GROUP: ((resource_group))
 
 - name: query-unattached-azure-nics
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -627,7 +656,14 @@ jobs:
       RESOURCE_GROUP: ((resource_group))
 
 - name: delete-unattached-azure-nics
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -644,7 +680,14 @@ jobs:
 
 
 - name: delete-pcf
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -662,7 +705,14 @@ jobs:
 
 ## opsman starts here
 - name: install-opsman
-  serial: true
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  serial: true
   serial_groups: [ install ]
   plan:
     - get: variable
@@ -803,28 +853,17 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
         AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
-#    - task: configure-director
-#      image: platform-automation-image
-#      file: platform-automation-tasks/tasks/configure-director.yml
-#      input_mapping:
-#        config: interpolated-product-templates
-#        env: interpolated-product-templates
-#        vars: variable
-#      params:
-#        VARS_FILES: vars/((foundation))/vars/director-vars.yml generated.state/director_deployment_vars.yml
-#        ENV_FILE: ((foundation))/env/env.yml
-#        DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
-#    - task: apply-director-changes
-#      image: platform-automation-image
-#      file: platform-automation-tasks/tasks/apply-director-changes.yml
-#      input_mapping:
-#        env: interpolated-product-templates
-#      params:
-#        ENV_FILE: ((foundation))/env/env.yml
 
 
 - name: configure-opsman ## delete
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - in_parallel:
     - get: variable
       passed:
@@ -862,7 +901,14 @@ jobs:
       params:
         <<: *slack_failed_param        
 - name: apply-director 
-  plan:
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  plan:
   - in_parallel:
     - get: variable
     - get: templates
@@ -891,7 +937,14 @@ jobs:
       params:
         <<: *slack_succeeded_param
 - name: get-opsman
-  serial_groups: [ get-products ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param  serial_groups: [ get-products ]
   plan:
   - in_parallel:
     - get: after-midnight
@@ -917,6 +970,14 @@ jobs:
       params:
         file: downloaded-product/*
 - name: testing
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
   - get: opsman-product
   - get: azs-concourse
@@ -931,6 +992,14 @@ jobs:
 
 
 - name: staged-director-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ staged-products ]
 
@@ -941,8 +1010,7 @@ jobs:
         - get: platform-automation-image
           params: {unpack: true}
         - get: variable
-#    - task: interpolate-variable
-#      <<: *interpolate-variable
+
     - task: staged-director-config
       image: platform-automation-image
       file: platform-automation-tasks/tasks/staged-director-config.yml
@@ -953,6 +1021,14 @@ jobs:
       ensure: *make-state-commit
 
 - name: export-installation
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   plan:
     - in_parallel:
@@ -980,14 +1056,6 @@ jobs:
     - put: installation
       params:
         file: installation/installation*.zip
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
 
 - name: upgrade-opsman
   serial: true
@@ -1032,7 +1100,6 @@ jobs:
         <<: *azure_env
         RESOURCE_GROUP: ((resource_group))
         VM_NAME: ops_man_vm
- 
     - task: download-opsman-s3
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
@@ -1056,8 +1123,6 @@ jobs:
         ACCOUNT_NAME: ((image_account_name))
         STATE_FILE: state.yml
       ensure: *make-state-commit
-
-
     - task: import-installation
       image: platform-automation-image
       file: platform-automation-tasks/tasks/import-installation.yml
@@ -1080,6 +1145,14 @@ jobs:
 
 
 - name: get-platform-automation
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -1095,6 +1168,14 @@ jobs:
         file: platform-automation-pivnet/*image*.tgz
 
 - name: test-interpolate
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
   - get: variable
   - get: templates
@@ -1297,6 +1378,14 @@ jobs:
         file: p-spring-cloud-services-3-stemcell/*.tgz
 
 - name: get-pivotal-mysql
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1329,6 +1418,14 @@ jobs:
         file: pivotal-mysql-stemcell/*.tgz
 
 - name: get-p-healthwatch
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1361,6 +1458,14 @@ jobs:
         file: p-healthwatch-stemcell/*.tgz
 
 - name: get-wavefront-nozzle
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1394,6 +1499,14 @@ jobs:
 
 
 - name: get-p-event-alerts
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1428,6 +1541,14 @@ jobs:
 
 
 - name: get-p-compliance-scanner
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1459,6 +1580,14 @@ jobs:
       params:
         file: p-compliance-scanner-stemcell/*.tgz
 - name: get-reliability-view-pas-exporter
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1491,6 +1620,14 @@ jobs:
         file: reliability-view-pas-exporter-stemcell/*.tgz
 
 - name: get-reliability-view-pcf
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1524,6 +1661,14 @@ jobs:
 
 
 - name: get-p-rabbitmq
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1555,6 +1700,14 @@ jobs:
       params:
         file: p-rabbitmq-stemcell/*.tgz
 - name: get-pas-windows
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -1587,6 +1740,14 @@ jobs:
         file: pas-windows-stemcell/*.tgz
 
 - name: upload-and-stage-pas
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - upload-and-stage
   serial: true
@@ -1638,6 +1799,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml
 
 - name: upload-and-stage-srt
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - upload-and-stage
   serial: true
@@ -1688,6 +1857,14 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 - name: upload-and-stage-pas-windows
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -1739,6 +1916,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml      
 
 - name: upload-and-stage-pivotal-mysql
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -1790,6 +1975,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml   
 
 - name: upload-and-stage-p-healthwatch
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -1841,6 +2034,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml        
 
 - name: upload-and-stage-wavefront-nozzle
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -1891,6 +2092,14 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 - name: upload-and-stage-p-event-alerts
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - upload-and-stage
   serial: true
@@ -1943,6 +2152,14 @@ jobs:
 
 
 - name: upload-and-stage-p-compliance-scanner
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -1958,8 +2175,6 @@ jobs:
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads
-#    - task: interpolate-variable
-#      <<: *interpolate-variable
     - task: download-p-compliance-scanner
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
@@ -1996,6 +2211,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml        
 
 - name: upload-and-stage-reliability-view-pcf
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -2011,8 +2234,6 @@ jobs:
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads
-#    - task: interpolate-variable
-#      <<: *interpolate-variable
     - task: download-reliability-view-pcf
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
@@ -2049,6 +2270,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml  
 
 - name: upload-and-stage-reliability-view-pas-exporter
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -2064,8 +2293,7 @@ jobs:
         - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads
-#    - task: interpolate-variable
-#      <<: *interpolate-variable
+
     - task: download-reliability-view-pas-exporter
       image: platform-automation-image
       file: platform-automation-tasks/tasks/download-product-s3.yml
@@ -2101,6 +2329,14 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml  
 - name: upload-and-stage-p-spring-cloud-services
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -2152,6 +2388,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml   
 
 - name: upload-and-stage-p-spring-cloud-services-3
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -2203,6 +2447,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml   
 
 - name: upload-and-stage-p-rabbitmq
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - upload-and-stage
@@ -2253,6 +2505,14 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 - name: apply-product-changes
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial: true
   plan:
     - in_parallel:
@@ -2265,8 +2525,6 @@ jobs:
           passed: ((passed_configs))
           trigger: true
         - get: variable
-#    - task: interpolate-variable
-#      <<: *interpolate-variable
     - task: apply-product-changes
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-changes.yml
@@ -2278,6 +2536,14 @@ jobs:
     
   
 - name: configure-pas
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2309,6 +2575,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml        
 
 - name: configure-pas-windows
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2339,6 +2613,14 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 - name: configure-p-rabbitmq
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2370,6 +2652,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-pivotal-mysql
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2401,6 +2691,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-healthwatch
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2432,6 +2730,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-wavefront-nozzle
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2462,6 +2768,14 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 - name: configure-p-event-alerts
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2494,6 +2808,14 @@ jobs:
 
 
 - name: configure-p-compliance-scanner
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2525,6 +2847,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-reliability-view-pcf
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2556,6 +2886,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-reliability-view-pas-exporter
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2587,6 +2925,14 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-spring-cloud-services
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2617,6 +2963,14 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
 - name: configure-p-spring-cloud-services-3
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2647,6 +3001,14 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
         ENV_FILE: ((foundation))/env/env.yml        
 - name: configure-srt
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - configure-products
   serial: true
@@ -2677,6 +3039,14 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/srt-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
 - name: deploy-asdk
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
   - get: platform-automation-pivnet
   - in_parallel:
@@ -2689,6 +3059,14 @@ jobs:
       params:
         file: platform-automation-pivnet/*image*.tgz   
 - name: staged-pas-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2713,6 +3091,14 @@ jobs:
               repository: variable-commit
               merge: true
 - name: staged-reliability-view-pcf-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2737,6 +3123,14 @@ jobs:
               repository: variable-commit
               merge: true  
 - name: staged-reliability-view-pas-exporter-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2762,6 +3156,14 @@ jobs:
               merge: true              
 
 - name: staged-p-compliance-scanner-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2787,6 +3189,14 @@ jobs:
               merge: true
 
 - name: staged-p-event-alerts-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2813,6 +3223,14 @@ jobs:
 
 
 - name: staged-p-healthwatch-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2837,6 +3255,14 @@ jobs:
               repository: variable-commit
               merge: true
 - name: staged-pas-windows-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2863,6 +3289,14 @@ jobs:
 
 
 - name: staged-pivotal-mysql-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2888,6 +3322,14 @@ jobs:
               merge: true
               
 - name: staged-p-spring-cloud-services-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2912,6 +3354,14 @@ jobs:
               repository: variable-commit
               merge: true
 - name: staged-p-spring-cloud-services-3-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
@@ -2937,6 +3387,14 @@ jobs:
               merge: true
 
 - name: staged-p-rabbitmq-config
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   serial_groups:
   - staged-configs
   plan:
