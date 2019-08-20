@@ -88,8 +88,7 @@ resources:
     stop: 6:00 AM
     interval: 24h
     location: Europe/Berlin 
-# otifications
-resources:
+# notifications
 - name: notify
   type: slack-notification
   source:
