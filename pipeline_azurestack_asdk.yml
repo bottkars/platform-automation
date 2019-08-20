@@ -751,10 +751,10 @@ jobs:
         params:
           <<: *slack_failed_param
       on_success: &make-config-director-commit
-        put: notify
-        params:
-          <<: *slack_succeeded_param
         do:
+          - put: notify
+            params:
+              <<: *slack_succeeded_param
           - task: make-commit
             image: platform-automation-image
             file: platform-automation-tasks/tasks/make-git-commit.yml
