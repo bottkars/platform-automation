@@ -847,7 +847,8 @@ jobs:
       params:
         unpack: true
     - put: notify
-      <<: *slack_start_param    
+      params:
+        <<: *slack_start_param    
   - task: interpolate-product-templates
     <<: *interpolate-product-templates          
   - task: configure-director
