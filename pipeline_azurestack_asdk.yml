@@ -967,7 +967,7 @@ jobs:
           trigger: true
         - put: notify
           params:
-          text: "Job Upgrade Director" 
+            text: "Job Upgrade Director" 
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
     - task: delete-existing-opsman
