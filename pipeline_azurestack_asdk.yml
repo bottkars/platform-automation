@@ -1067,26 +1067,25 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups: [ staged-products ]
-
   plan:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-tasks
-          params: {unpack: true}
-        - get: platform-automation-image
-          params: {unpack: true}
-        - get: variable
+  - in_parallel:
+      - get: platform-automation-tasks
+        params: {unpack: true}
+      - get: platform-automation-image
+        params: {unpack: true}
+      - get: variable
 
-    - task: staged-director-config
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/staged-director-config.yml
-      input_mapping:
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-      ensure: *make-state-commit
+  - task: staged-director-config
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/staged-director-config.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+    ensure: *make-state-commit
 
 - name: export-installation
   on_failure:
@@ -1102,31 +1101,31 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: daily-trigger
-          trigger: true
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed: [ install-opsman, apply-director ]
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-        - get: one-time-trigger
-          passed: [ install-opsman ]
-    - task: export-installation
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/export-installation.yml
-      input_mapping:
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-        INSTALLATION_FILE: installation-$timestamp.zip
-    - put: installation
-      params:
-        file: installation/installation*.zip
+  - in_parallel:
+      - get: daily-trigger
+        trigger: true
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed: [ install-opsman, apply-director ]
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+      - get: one-time-trigger
+        passed: [ install-opsman ]
+  - task: export-installation
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/export-installation.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      INSTALLATION_FILE: installation-$timestamp.zip
+  - put: installation
+    params:
+      file: installation/installation*.zip
 
 - name: upgrade-opsman
   serial: true
@@ -1143,77 +1142,74 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: one-time-trigger
-          passed: [ export-installation, get-opsman-image ]
-        - get: azs-concourse  
-        - get: platform-automation-image
-          params:
-            unpack: true
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: installation
-          passed: [ export-installation ]
-        - get: templates
-        - get: variable
-        - get: opsman-product
-          trigger: true
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads     
-    - task: delete-existing-opsman
-      image: platform-automation-image
-      file: azs-concourse/ci/tasks/delete-vm.yml  
-      input_mapping:
-        config: variable
-      params:
-        <<: *azure_env
-        RESOURCE_GROUP: ((resource_group))
-        VM_NAME: ops_man_vm
-    - task: download-opsman-s3
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: opsman-image
-    - task: create-vm
-      image: platform-automation-image
-      file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
-      input_mapping:
-        config: variable
-        image: opsman-product
-      params:
-        <<: *azure_env
-        TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
-        PARAMETER_FILE: ((foundation))/config/parameters_opsman_update.json
-        RESOURCE_GROUP: ((resource_group))
-        ACCOUNT_NAME: ((image_account_name))
-        STATE_FILE: state.yml
-      ensure: *make-state-commit
-    - task: import-installation
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/import-installation.yml
-      attempts: 10
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-        INSTALLATION_FILE: installation*.zip
-      input_mapping:
-        env: variable
-        installation: installation
-
-    - task: apply-director-changes
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/apply-director-changes.yml
-      input_mapping:
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-
-
+  - in_parallel:
+      - get: one-time-trigger
+        passed: [ export-installation, get-opsman-image ]
+      - get: azs-concourse  
+      - get: platform-automation-image
+        params:
+          unpack: true
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: installation
+        passed: [ export-installation ]
+      - get: templates
+      - get: variable
+      - get: opsman-product
+        trigger: true
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads     
+  - task: delete-existing-opsman
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-vm.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+      VM_NAME: ops_man_vm
+  - task: download-opsman-s3
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: opsman-image
+  - task: create-vm
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
+    input_mapping:
+      config: variable
+      image: opsman-product
+    params:
+      <<: *azure_env
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
+      PARAMETER_FILE: ((foundation))/config/parameters_opsman_update.json
+      RESOURCE_GROUP: ((resource_group))
+      ACCOUNT_NAME: ((image_account_name))
+      STATE_FILE: state.yml
+    ensure: *make-state-commit
+  - task: import-installation
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/import-installation.yml
+    attempts: 10
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      INSTALLATION_FILE: installation*.zip
+    input_mapping:
+      env: variable
+      installation: installation
+  - task: apply-director-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-director-changes.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
 
 - name: get-platform-automation
   on_failure:
@@ -1936,51 +1932,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads
-    - task: download-srt
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: srt-product
-        downloaded-stemcell: srt-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: srt-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-srt-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: srt-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: srt-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml        
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-srt
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: srt-product
+      downloaded-stemcell: srt-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: srt-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-srt-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: srt-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: srt-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml        
 - name: upload-and-stage-pas-windows
   on_failure:
     put: notify
@@ -2059,51 +2055,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads       
-    - task: download-pivotal-mysql
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: pivotal-mysql-product
-        downloaded-stemcell: pivotal-mysql-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: pivotal-mysql-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-pivotal-mysql-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: pivotal-mysql-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: pivotal-mysql-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml   
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads       
+  - task: download-pivotal-mysql
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: pivotal-mysql-product
+      downloaded-stemcell: pivotal-mysql-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: pivotal-mysql-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-pivotal-mysql-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: pivotal-mysql-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: pivotal-mysql-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml   
 
 - name: upload-and-stage-p-healthwatch
   on_failure:
@@ -2121,51 +2117,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads     
-    - task: download-p-healthwatch
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-p-healthwatch.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: p-healthwatch-product
-        downloaded-stemcell: p-healthwatch-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: p-healthwatch-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-p-healthwatch-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: p-healthwatch-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: p-healthwatch-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml        
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads     
+  - task: download-p-healthwatch
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-healthwatch.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: p-healthwatch-product
+      downloaded-stemcell: p-healthwatch-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: p-healthwatch-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-p-healthwatch-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: p-healthwatch-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: p-healthwatch-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml        
 
 - name: upload-and-stage-wavefront-nozzle
   on_failure:
@@ -2183,51 +2179,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads          
-    - task: download-wavefront-nozzle
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: wavefront-nozzle-product
-        downloaded-stemcell: wavefront-nozzle-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: wavefront-nozzle-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-wavefront-nozzle-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: wavefront-nozzle-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: wavefront-nozzle-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml        
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads          
+  - task: download-wavefront-nozzle
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: wavefront-nozzle-product
+      downloaded-stemcell: wavefront-nozzle-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: wavefront-nozzle-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-wavefront-nozzle-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: wavefront-nozzle-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: wavefront-nozzle-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml        
 - name: upload-and-stage-p-event-alerts
   on_failure:
     put: notify
@@ -2244,52 +2240,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads     
-    - task: download-p-event-alerts
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: p-event-alerts-product
-        downloaded-stemcell: p-event-alerts-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: p-event-alerts-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-p-event-alerts-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: p-event-alerts-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: p-event-alerts-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml        
-
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads     
+  - task: download-p-event-alerts
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: p-event-alerts-product
+      downloaded-stemcell: p-event-alerts-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: p-event-alerts-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-p-event-alerts-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: p-event-alerts-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: p-event-alerts-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml        
 
 - name: upload-and-stage-p-compliance-scanner
   on_failure:
@@ -2307,51 +2302,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads
-    - task: download-p-compliance-scanner
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: p-compliance-scanner-product
-        downloaded-stemcell: p-compliance-scanner-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: p-compliance-scanner-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-p-compliance-scanner-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: p-compliance-scanner-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: p-compliance-scanner-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml        
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-compliance-scanner
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: p-compliance-scanner-product
+      downloaded-stemcell: p-compliance-scanner-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: p-compliance-scanner-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-p-compliance-scanner-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: p-compliance-scanner-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: p-compliance-scanner-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml        
 
 - name: upload-and-stage-reliability-view-pcf
   on_failure:
@@ -2369,51 +2364,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads
-    - task: download-reliability-view-pcf
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pcf.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: reliability-view-pcf-product
-        downloaded-stemcell: reliability-view-pcf-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: reliability-view-pcf-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-reliability-view-pcf-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: reliability-view-pcf-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: reliability-view-pcf-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml  
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-reliability-view-pcf
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pcf.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: reliability-view-pcf-product
+      downloaded-stemcell: reliability-view-pcf-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: reliability-view-pcf-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-reliability-view-pcf-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: reliability-view-pcf-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: reliability-view-pcf-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml  
 
 - name: upload-and-stage-reliability-view-pas-exporter
   on_failure:
@@ -2431,52 +2426,52 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-reliability-view-pas-exporter
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pas-exporter.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: reliability-view-pas-exporter-product
+      downloaded-stemcell: reliability-view-pas-exporter-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: reliability-view-pas-exporter-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-reliability-view-pas-exporter-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: reliability-view-pas-exporter-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: reliability-view-pas-exporter-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml  
 
-    - task: download-reliability-view-pas-exporter
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pas-exporter.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: reliability-view-pas-exporter-product
-        downloaded-stemcell: reliability-view-pas-exporter-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: reliability-view-pas-exporter-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-reliability-view-pas-exporter-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: reliability-view-pas-exporter-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: reliability-view-pas-exporter-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml  
 - name: upload-and-stage-p-spring-cloud-services
   on_failure:
     put: notify
@@ -2493,51 +2488,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads       
-    - task: download-p-spring-cloud-services
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: p-spring-cloud-services-product
-        downloaded-stemcell: p-spring-cloud-services-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: p-spring-cloud-services-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-p-spring-cloud-services-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: p-spring-cloud-services-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: p-spring-cloud-services-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml   
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads       
+  - task: download-p-spring-cloud-services
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: p-spring-cloud-services-product
+      downloaded-stemcell: p-spring-cloud-services-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: p-spring-cloud-services-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-p-spring-cloud-services-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: p-spring-cloud-services-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: p-spring-cloud-services-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml   
 
 - name: upload-and-stage-p-spring-cloud-services-3
   on_failure:
@@ -2555,51 +2550,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads     
-    - task: download-p-spring-cloud-services-3
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: p-spring-cloud-services-3-product
-        downloaded-stemcell: p-spring-cloud-services-3-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: p-spring-cloud-services-3-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-p-spring-cloud-services-3-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: p-spring-cloud-services-3-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: p-spring-cloud-services-3-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml   
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads     
+  - task: download-p-spring-cloud-services-3
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: p-spring-cloud-services-3-product
+      downloaded-stemcell: p-spring-cloud-services-3-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: p-spring-cloud-services-3-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-p-spring-cloud-services-3-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: p-spring-cloud-services-3-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: p-spring-cloud-services-3-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml   
 
 - name: upload-and-stage-p-rabbitmq
   on_failure:
@@ -2617,51 +2612,51 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads       
-    - task: download-p-rabbitmq
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-p-rabbitmq.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: p-rabbitmq-product
-        downloaded-stemcell: p-rabbitmq-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: p-rabbitmq-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-p-rabbitmq-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: p-rabbitmq-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: p-rabbitmq-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml        
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads       
+  - task: download-p-rabbitmq
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-rabbitmq.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: p-rabbitmq-product
+      downloaded-stemcell: p-rabbitmq-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: p-rabbitmq-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-p-rabbitmq-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: p-rabbitmq-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: p-rabbitmq-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml        
 - name: apply-product-changes
   on_failure:
     put: notify
@@ -2676,26 +2671,24 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed: ((passed_configs))
-          trigger: true
-        - get: variable
-    - task: apply-product-changes
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/apply-changes.yml
-      input_mapping:
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
+  - in_parallel:
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed: ((passed_configs))
+        trigger: true
+      - get: variable
+  - task: apply-product-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-changes.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
 
-    
-  
 - name: configure-pas
   on_failure:
     put: notify
@@ -2712,31 +2705,31 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-pas
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-pas
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/pas.yml
-        VARS_FILES: vars/((foundation))/vars/pas-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml        
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-pas
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-pas
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/pas.yml
+      VARS_FILES: vars/((foundation))/vars/pas-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml        
 
 - name: configure-pas-windows
   on_failure:
@@ -2754,31 +2747,32 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-pas-windows
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-pas-windows
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/pas-windows.yml
-        VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-pas-windows
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-pas-windows
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/pas-windows.yml
+      VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
+
 - name: configure-p-rabbitmq
   on_failure:
     put: notify
@@ -2795,31 +2789,31 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-p-rabbitmq
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-p-rabbitmq
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/p-rabbitmq.yml
-        VARS_FILES: vars/((foundation))/vars/p-rabbitmq-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-p-rabbitmq
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-p-rabbitmq
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-rabbitmq.yml
+      VARS_FILES: vars/((foundation))/vars/p-rabbitmq-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-pivotal-mysql
   on_failure:
@@ -2837,31 +2831,31 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-pivotal-mysql
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-pivotal-mysql
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/pivotal-mysql.yml
-        VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-pivotal-mysql
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-pivotal-mysql
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/pivotal-mysql.yml
+      VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-healthwatch
   on_failure:
@@ -2879,31 +2873,31 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-p-healthwatch
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-p-healthwatch
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/p-healthwatch.yml
-        VARS_FILES: vars/((foundation))/vars/p-healthwatch-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-p-healthwatch
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-p-healthwatch
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-healthwatch.yml
+      VARS_FILES: vars/((foundation))/vars/p-healthwatch-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-wavefront-nozzle
   on_failure:
@@ -2921,31 +2915,32 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-wavefront-nozzle
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-wavefront-nozzle
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
-        VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-wavefront-nozzle
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-wavefront-nozzle
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
+      VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
+
 - name: configure-p-event-alerts
   on_failure:
     put: notify
@@ -2962,32 +2957,31 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-p-event-alerts
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-p-event-alerts
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
-        VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
-
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-p-event-alerts
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-p-event-alerts
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-compliance-scanner
   on_failure:
@@ -3005,31 +2999,31 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-p-compliance-scanner
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-p-compliance-scanner
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/p-compliance-scanner.yml
-        VARS_FILES: vars/((foundation))/vars/p-compliance-scanner-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-p-compliance-scanner
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-p-compliance-scanner
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-compliance-scanner.yml
+      VARS_FILES: vars/((foundation))/vars/p-compliance-scanner-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-reliability-view-pcf
   on_failure:
@@ -3047,31 +3041,31 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-reliability-view-pcf
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-reliability-view-pcf
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/reliability-view-pcf.yml
-        VARS_FILES: vars/((foundation))/vars/reliability-view-pcf-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-reliability-view-pcf
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-reliability-view-pcf
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/reliability-view-pcf.yml
+      VARS_FILES: vars/((foundation))/vars/reliability-view-pcf-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-reliability-view-pas-exporter
   on_failure:
@@ -3089,31 +3083,31 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-reliability-view-pas-exporter
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-reliability-view-pas-exporter
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/reliability-view-pas-exporter.yml
-        VARS_FILES: vars/((foundation))/vars/reliability-view-pas-exporter-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-reliability-view-pas-exporter
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-reliability-view-pas-exporter
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/reliability-view-pas-exporter.yml
+      VARS_FILES: vars/((foundation))/vars/reliability-view-pas-exporter-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-spring-cloud-services
   on_failure:
@@ -3131,31 +3125,32 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-p-spring-cloud-services
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-p-spring-cloud-services
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services.yml
-        VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-p-spring-cloud-services
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-p-spring-cloud-services
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services.yml
+      VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml
+
 - name: configure-p-spring-cloud-services-3
   on_failure:
     put: notify
@@ -3172,31 +3167,32 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-p-spring-cloud-services-3
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-p-spring-cloud-services
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services-3.yml
-        VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml        
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-p-spring-cloud-services-3
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-p-spring-cloud-services
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services-3.yml
+      VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml        
+
 - name: configure-srt
   on_failure:
     put: notify
@@ -3213,31 +3209,32 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-srt
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-srt
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pas_version))/srt.yml
-        VARS_FILES: vars/((foundation))/vars/srt-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-srt
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-srt
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/srt.yml
+      VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml
+
 - name: deploy-asdk
   on_failure:
     put: notify
@@ -3261,6 +3258,7 @@ jobs:
     - put: platform-automation-image
       params:
         file: platform-automation-pivnet/*image*.tgz   
+
 - name: staged-pas-config
   on_failure:
     put: notify
@@ -3276,26 +3274,27 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: cf
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: cf.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/cf.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: cf
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: cf.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/cf.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
+
 - name: staged-reliability-view-pcf-config
   on_failure:
     put: notify
@@ -3311,26 +3310,27 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: p-reliability-view
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: p-reliability-view.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/p-reliability-view.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true  
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: p-reliability-view
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: p-reliability-view.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/p-reliability-view.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true  
+
 - name: staged-reliability-view-pas-exporter-config
   on_failure:
     put: notify
@@ -3346,26 +3346,26 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: p-reliability-view-pas-exporter
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: p-reliability-view-pas-exporter.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/p-reliability-view-pas-exporter.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true              
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: p-reliability-view-pas-exporter
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: p-reliability-view-pas-exporter.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/p-reliability-view-pas-exporter.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true              
 
 - name: staged-p-compliance-scanner-config
   on_failure:
@@ -3382,26 +3382,26 @@ jobs:
   - put: notify
     params:
     <<: *slack_start_param
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: p-compliance-scanner
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: p-compliance-scanner.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/p-compliance-scanner.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: p-compliance-scanner
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: p-compliance-scanner.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/p-compliance-scanner.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
 
 - name: staged-p-event-alerts-config
   on_failure:
