@@ -804,106 +804,105 @@ jobs:
       config: interpolated-product-downloads
     output_mapping:
       downloaded-product: opsman-image
-
-    - task: copy-opsman-image
-      file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
-      image: platform-automation-image
-      input_mapping:
-        image: opsman-product
-        config: variable
-      params:
-        <<: *azure_env
-        ACCOUNT_NAME: ((image_account_name))
-        ACCOUNT_KEY: ((storage_account_key))
-        DESTINATION_CONTAINER: ((destination_container))
-        OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
-    - task: validate-template
-      image: platform-automation-image
-      file: azs-concourse/ci/tasks/validate-pcf-template.yml  
-      input_mapping:
-        config: variable
-        image: opsman-product
-      params:
-        <<: *azure_env
-        TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
-        PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
-        RESOURCE_GROUP: ((resource_group))
-        BOSHSTORAGEACCOUNT: ((boshstorageaccount))
-    - task: deploy-opsman-template 
-      image: platform-automation-image
-      file: azs-concourse/ci/tasks/deploy-pcf-template.yml  
-      input_mapping:
-        config: variable
-        image: opsman-product
-      params:
-        <<: *azure_env
-        TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
-        PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
-        RESOURCE_GROUP: ((resource_group))
-        BOSHSTORAGEACCOUNT: ((boshstorageaccount))
-        STATE_FILE: director_deployment_vars.yml
-        ACCOUNT_NAME: ((image_account_name))
-        DESTINATION_CONTAINER: ((destination_container))
-        OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
-      on_success: &make-config-director-commit
-        do:
-          - task: make-commit
-            image: platform-automation-image
-            file: platform-automation-tasks/tasks/make-git-commit.yml
-            input_mapping:
-              repository: variable
-              file-source: generated-state
-            output_mapping:
-              repository-commit: variable-commit
-            params:
-              FILE_SOURCE_PATH: director_deployment_vars.yml
-              FILE_DESTINATION_PATH: ((foundation))/vars/director_deployment_vars.yml
-              GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
-              GIT_AUTHOR_NAME: "Platform Automation Bot"
-              COMMIT_MESSAGE: 'Update director state file'
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
-    - task: validate-vm
-      image: platform-automation-image
-      file: azs-concourse/ci/tasks/query-vm.yml  
-      input_mapping:
-        config: variable
-      params:
-        <<: *azure_env
-        VM_NAME: ops_man_vm
-        STATE_FILE: ((foundation))/state/state.yml 
-      ensure: &make-state-commit
-        do:
-          - task: make-commit
-            image: platform-automation-image
-            file: platform-automation-tasks/tasks/make-git-commit.yml
-            input_mapping:
-              repository: variable
-              file-source: generated-state
-            output_mapping:
-              repository-commit: variable-commit
-            params:
-              FILE_SOURCE_PATH: state.yml
-              FILE_DESTINATION_PATH: ((foundation))/state/state.yml
-              GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
-              GIT_AUTHOR_NAME: "Platform Automation Bot"
-              COMMIT_MESSAGE: 'Update state file'
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
-    - task: configure-saml-authentication
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-saml-authentication.yml
-      attempts: 10
-      input_mapping:
-        env: variable
-        config: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-        AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
+  - task: copy-opsman-image
+    file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
+    image: platform-automation-image
+    input_mapping:
+      image: opsman-product
+      config: variable
+    params:
+      <<: *azure_env
+      ACCOUNT_NAME: ((image_account_name))
+      ACCOUNT_KEY: ((storage_account_key))
+      DESTINATION_CONTAINER: ((destination_container))
+      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+  - task: validate-template
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/validate-pcf-template.yml  
+    input_mapping:
+      config: variable
+      image: opsman-product
+    params:
+      <<: *azure_env
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+      PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+      RESOURCE_GROUP: ((resource_group))
+      BOSHSTORAGEACCOUNT: ((boshstorageaccount))
+  - task: deploy-opsman-template 
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/deploy-pcf-template.yml  
+    input_mapping:
+      config: variable
+      image: opsman-product
+    params:
+      <<: *azure_env
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+      PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+      RESOURCE_GROUP: ((resource_group))
+      BOSHSTORAGEACCOUNT: ((boshstorageaccount))
+      STATE_FILE: director_deployment_vars.yml
+      ACCOUNT_NAME: ((image_account_name))
+      DESTINATION_CONTAINER: ((destination_container))
+      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+    on_success: &make-config-director-commit
+      do:
+        - task: make-commit
+          image: platform-automation-image
+          file: platform-automation-tasks/tasks/make-git-commit.yml
+          input_mapping:
+            repository: variable
+            file-source: generated-state
+          output_mapping:
+            repository-commit: variable-commit
+          params:
+            FILE_SOURCE_PATH: director_deployment_vars.yml
+            FILE_DESTINATION_PATH: ((foundation))/vars/director_deployment_vars.yml
+            GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
+            GIT_AUTHOR_NAME: "Platform Automation Bot"
+            COMMIT_MESSAGE: 'Update director state file'
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
+  - task: validate-vm
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/query-vm.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      VM_NAME: ops_man_vm
+      STATE_FILE: ((foundation))/state/state.yml 
+    ensure: &make-state-commit
+      do:
+        - task: make-commit
+          image: platform-automation-image
+          file: platform-automation-tasks/tasks/make-git-commit.yml
+          input_mapping:
+            repository: variable
+            file-source: generated-state
+          output_mapping:
+            repository-commit: variable-commit
+          params:
+            FILE_SOURCE_PATH: state.yml
+            FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+            GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
+            GIT_AUTHOR_NAME: "Platform Automation Bot"
+            COMMIT_MESSAGE: 'Update state file'
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
+  - task: configure-saml-authentication
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-saml-authentication.yml
+    attempts: 10
+    input_mapping:
+      env: variable
+      config: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
 
 
 - name: configure-opsman ## delete
