@@ -430,8 +430,14 @@ jobs:
   on_success:  
     put: notify
     params:
-      <<: *slack_succeeded_param  
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: azs-concourse
   - get: platform-automation-image
     params:
@@ -450,6 +456,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -472,6 +481,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: variable
     - get: azs-concourse
@@ -516,6 +528,9 @@ jobs:
   serial: true
   serial_groups: [ get-products, upgrade-opsman ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: templates
     - get: opsman-product
@@ -553,6 +568,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -578,6 +596,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -602,6 +623,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -626,6 +650,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -650,6 +677,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -674,6 +704,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -699,6 +732,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: azs-concourse
   - get: platform-automation-image
@@ -727,44 +763,47 @@ jobs:
   serial: true
   serial_groups: [ install ]
   plan:
-    - get: variable
-    - get: templates
-    - get: azs-concourse
-    - get: platform-automation-image
+  - put: notify
+    params:
+    <<: *slack_start_param
+  - get: variable
+  - get: templates
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - get: one-time-trigger
+    trigger: true
+  - get: platform-automation-tasks
+    params:
+      unpack: true
+  - put: notify
+    params:
+      <<: *slack_start_param
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates          
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-opsman-pivnet
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    input_mapping:
+      config: interpolated-product-downloads      
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+  - in_parallel:
+    - put: opsman-product
       params:
-        unpack: true
-    - get: one-time-trigger
-      trigger: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - put: notify
-      params:
-        <<: *slack_start_param
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates          
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads
-    - task: download-opsman-pivnet
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product.yml
-      input_mapping:
-        config: interpolated-product-downloads      
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
-    - in_parallel:
-      - put: opsman-product
-        params:
-          file: downloaded-product/*     
-    - task: download-opsman-s3
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: opsman-image
+        file: downloaded-product/*     
+  - task: download-opsman-s3
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: opsman-image
 
     - task: copy-opsman-image
       file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
@@ -877,6 +916,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: variable
       passed:
@@ -923,6 +965,9 @@ jobs:
     params:
       <<: *slack_succeeded_param  
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: variable
     - get: templates
@@ -961,6 +1006,9 @@ jobs:
       <<: *slack_succeeded_param
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -994,6 +1042,9 @@ jobs:
     params:
       <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: opsman-product
   - get: azs-concourse
   - get: platform-automation-image
@@ -1019,6 +1070,9 @@ jobs:
   serial_groups: [ staged-products ]
 
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-tasks
           params: {unpack: true}
@@ -1046,6 +1100,9 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: daily-trigger
           trigger: true
@@ -1084,6 +1141,9 @@ jobs:
     params:
       <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: one-time-trigger
           passed: [ export-installation, get-opsman-image ]
@@ -1101,9 +1161,6 @@ jobs:
         - get: variable
         - get: opsman-product
           trigger: true
-        - put: notify
-          params:
-            <<: *slack_start_param
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads     
     - task: delete-existing-opsman
@@ -1169,6 +1226,9 @@ jobs:
     params:
       <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1192,6 +1252,9 @@ jobs:
     params:
       <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -1212,6 +1275,9 @@ jobs:
       SKIP_MISSING: true    
 - name: test-interpolate-srt
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -1242,6 +1308,9 @@ jobs:
     params:
       <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1284,6 +1353,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1324,6 +1396,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1364,6 +1439,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1404,6 +1482,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1444,6 +1525,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1484,6 +1568,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1525,6 +1612,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1567,6 +1657,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1606,6 +1699,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1646,6 +1742,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1687,6 +1786,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1726,6 +1828,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -1767,6 +1872,9 @@ jobs:
   - upload-and-stage
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -1826,6 +1934,9 @@ jobs:
   - upload-and-stage
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -1884,6 +1995,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -1943,6 +2057,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2002,6 +2119,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2061,6 +2181,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2119,6 +2242,9 @@ jobs:
   - upload-and-stage
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2179,6 +2305,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2238,6 +2367,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2297,6 +2429,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2356,6 +2491,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2415,6 +2553,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2474,6 +2615,9 @@ jobs:
   serial_groups:
   - upload-and-stage
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2530,6 +2674,9 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-tasks
           params:
@@ -2563,6 +2710,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2602,6 +2752,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2640,6 +2793,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2679,6 +2835,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2718,6 +2877,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2757,6 +2919,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2795,6 +2960,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2835,6 +3003,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2874,6 +3045,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2913,6 +3087,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2952,6 +3129,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -2990,6 +3170,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -3028,6 +3211,9 @@ jobs:
   - configure-products
   serial: true
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -3063,6 +3249,9 @@ jobs:
     params:
       <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
   - get: platform-automation-pivnet
   - in_parallel:
     - get: one-time-trigger
@@ -3085,6 +3274,9 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         <<: *stage_steps
     - task: staged-config
@@ -3117,6 +3309,9 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         <<: *stage_steps
     - task: staged-config
@@ -3149,6 +3344,9 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         <<: *stage_steps
     - task: staged-config
@@ -3182,6 +3380,9 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
+  - put: notify
+    params:
+    <<: *slack_start_param
     - in_parallel:
         <<: *stage_steps
     - task: staged-config
@@ -3215,26 +3416,29 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: p-event-alerts
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: p-event-alerts.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/p-event-alerts.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - put: notify
+    params:
+    <<: *slack_start_param
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: p-event-alerts
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: p-event-alerts.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/p-event-alerts.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
 
 
 - name: staged-p-healthwatch-config
@@ -3249,26 +3453,29 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: p-healthwatch
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: p-healthwatch.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/p-healthwatch.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - put: notify
+    params:
+    <<: *slack_start_param
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: p-healthwatch
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: p-healthwatch.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/p-healthwatch.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
 - name: staged-pas-windows-config
   on_failure:
     put: notify
@@ -3281,27 +3488,29 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: pas-windows
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: pas-windows.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/pas-windows.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
-
+  - put: notify
+    params:
+    <<: *slack_start_param
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: pas-windows
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: pas-windows.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/pas-windows.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
 
 - name: staged-pivotal-mysql-config
   on_failure:
@@ -3315,26 +3524,29 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: pivotal-mysql
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: pivotal-mysql.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/pivotal-mysql.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - put: notify
+    params:
+    <<: *slack_start_param
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: pivotal-mysql
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: pivotal-mysql.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/pivotal-mysql.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
               
 - name: staged-p-spring-cloud-services-config
   on_failure:
@@ -3348,26 +3560,29 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: p-spring-cloud-services
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: p-spring-cloud-services.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/p-spring-cloud-services.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - put: notify
+    params:
+    <<: *slack_start_param
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: p-spring-cloud-services
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: p-spring-cloud-services.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/p-spring-cloud-services.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
 - name: staged-p-spring-cloud-services-3-config
   on_failure:
     put: notify
@@ -3380,26 +3595,29 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: p_spring-cloud-services
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: p_spring-cloud-services.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/p_spring-cloud-services.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - put: notify
+    params:
+    <<: *slack_start_param
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: p_spring-cloud-services
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: p_spring-cloud-services.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/p_spring-cloud-services.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
 
 - name: staged-p-rabbitmq-config
   on_failure:
@@ -3413,26 +3631,29 @@ jobs:
   serial_groups:
   - staged-configs
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: p-rabbitmq
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_stage_commit
-            params:
-              FILE_SOURCE_PATH: p-rabbitmq.yml
-              FILE_DESTINATION_PATH: ((foundation))/config/p-rabbitmq.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - put: notify
+    params:
+    <<: *slack_start_param
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: p-rabbitmq
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: p-rabbitmq.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/p-rabbitmq.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
 
 
 groups:
