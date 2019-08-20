@@ -60,7 +60,7 @@ slack_start_param: &slack_start_param
   text: |
     Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
     build $BUILD_NAME for team $BUILD_TEAM_NAME at
-    $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
     see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
     for details
   icon_emoji: ":concourse-started:"
@@ -69,7 +69,7 @@ slack_succeeded_param: &slack_succeeded_param
   text: |
     Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
     build $BUILD_NAME for team $BUILD_TEAM_NAME at
-    $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME    
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME    
     see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
     for details
   icon_emoji: ":concourse-succeeded:"
@@ -78,7 +78,7 @@ slack_failed_param: &slack_failed_param
   text: |
     Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
     build $BUILD_NAME for team $BUILD_TEAM_NAME at
-    $ATC_EXTERNAL_URL" using pipeline  $BUILD_PIPELINE_NAME
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
     see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
     for details
   icon_emoji: ":concourse-failed:"
