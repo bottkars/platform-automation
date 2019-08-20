@@ -1,0 +1,3045 @@
+---
+s3_env: &s3_env
+  access_key_id: ((s3_access_key_id))
+  endpoint:  ((s3_endpoint))
+  region_name: ((s3_region_name))
+  secret_access_key: ((s3_secret_access_key))
+azure_env: &azure_env
+  PROFILE: ((arm_profile))
+  CA_CERT: ((foundation))/cert/root.pem
+  AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
+  ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+  VAULT_DNS:  ((vault-dns))
+  SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+  AZURE_TENANT_ID: ((tenant_id))
+  AZURE_CLIENT_ID: ((client_id))
+  AZURE_CLIENT_SECRET: ((client_secret))
+  AZURE_SUBSCRIPTION_ID: ((subscription_id))
+  LOCATION: ((azurestack_region))
+
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((credhub-client))
+  CREDHUB_SECRET: ((credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+
+stage_steps: &stage_steps
+  steps:
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+    - get: variable
+
+stage_config: &stage_config
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/staged-config.yml
+  input_mapping:
+    env: variable
+
+do_stage_commit: &do_stage_commit
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/make-git-commit.yml
+  input_mapping:
+    repository: variable
+    file-source: generated-config
+  output_mapping:
+    repository-commit: variable-commit
+
+git_commit_env: &git_commit_env
+  GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@ebottnet.de"
+  GIT_AUTHOR_NAME: "Platform Automation Bot"
+  COMMIT_MESSAGE: 'Staged  Config Writer'
+
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource    
+resources:
+# triggers
+- name: daily-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 24h
+
+
+- name: one-time-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+- name: after-midnight
+  type: time
+  source:
+    start: 01:00 AM
+    stop: 6:00 AM
+    interval: 24h
+    location: Europe/Berlin 
+# otifications
+resources:
+- name: notify
+  type: slack-notification
+  source:
+    url: ((slack-webhook))
+- name: installation
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_installation))
+    regexp: ((foundation))/installation-(.*).zip    
+- name: platform-automation-pivnet
+  type: pivnet
+  source:
+    api_token: ((pivnet-token))
+    product_slug: platform-automation
+    product_version: 3\.0\.(.*)
+    sort_by: semver
+
+- name: platform-automation-tasks
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_tasks))
+    regexp: platform-automation-tasks-(.*).zip
+
+- name: platform-automation-image
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+- name: pas-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: pas-product/\[elastic-runtime,(.*)\]cf-.*.pivotal
+
+- name: pas-windows-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: pas-windows-product/\[pas-windows,(.*)\]pas-windows-.*.pivotal
+
+- name: srt-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: srt-product/\[elastic-runtime,(.*)\]srt-.*.pivotal
+
+- name: p-spring-cloud-services-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-spring-cloud-services-product/\[p-spring-cloud-services,(.*)\]p-spring-cloud-services-.*.pivotal
+
+- name: p-spring-cloud-services-3-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-spring-cloud-services-3-product/\[p-spring-cloud-services,(.*)\]p_spring-cloud-services-.*.pivotal
+
+- name: p-rabbitmq-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-rabbitmq-product/\[p-rabbitmq,(.*)\]p-rabbitmq-.*.pivotal
+
+- name: pivotal-mysql-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: pivotal-mysql-product/\[pivotal-mysql,(.*)\]pivotal-mysql-.*.pivotal
+
+- name: p-healthwatch-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]p-healthwatch-.*.pivotal
+
+- name: wavefront-nozzle-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: wavefront-nozzle-product/\[wavefront-nozzle,(.*)\]wavefront-nozzle-.*.pivotal
+
+- name: p-event-alerts-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-event-alerts-product/\[p-event-alerts,(.*)\]p-event-alerts-.*.pivotal
+
+- name: p-compliance-scanner-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-compliance-scanner-product/\[p-compliance-scanner,(.*)\]p-compliance-scanner-.*.pivotal
+
+- name: reliability-view-pcf-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: reliability-view-pcf-product/\[reliability_view_pcf,(.*)\]reliability-view-.*.pivotal
+- name: reliability-view-pas-exporter-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: reliability-view-pas-exporter-product/\[reliability_view_pcf,(.*)\]reliability-view-pas-exporter-.*.pivotal
+
+
+- name: pas-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: pas-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: srt-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: srt-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: p-spring-cloud-services-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-spring-cloud-services-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: p-spring-cloud-services-3-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-spring-cloud-services-3-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: p-rabbitmq-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-rabbitmq-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: pivotal-mysql-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
+
+- name: p-healthwatch-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-healthwatch-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
+
+
+- name: wavefront-nozzle-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: wavefront-nozzle-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
+
+- name: p-event-alerts-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-event-alerts-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: p-compliance-scanner-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: p-compliance-scanner-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+- name: reliability-view-pcf-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: reliability-view-pcf-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: reliability-view-pas-exporter-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: reliability-view-pas-exporter-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+
+- name: pas-windows-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-2019.*-azure.*\.tgz
+
+- name: opsman-product
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: \[ops-manager,(.*)\].*.yml
+
+- name: templates
+  icon: github-circle
+  type: git  
+  source:
+    uri: ((template-repo))
+    private_key: ((template-deploy-key.private_key))
+    branch: master
+
+- name: variable
+  icon: github-circle
+  type: git  
+  source:
+    uri: ((variable-repo))
+    private_key: ((variable-deploy-key.private_key))
+    branch: master
+##
+- name: azs-concourse
+  icon: github-circle
+  type: git  
+  source: 
+    uri: https://github.com/bottkars/azs-concourse
+    branch: master
+ #   private_key: ((azs-resource-key.private_key))
+
+#- name: az-cli-image
+#  icon: azure
+#  type: docker-image
+#  source: 
+#    repository: microsoft/azure-cli
+#    tag: latest
+
+interpolate-product-downloads: &interpolate-product-downloads
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: "download-product-configs/((pas_version))"
+  input_mapping:
+    files: templates
+  output_mapping:
+    interpolated-files: interpolated-product-downloads
+
+interpolate-product-templates: &interpolate-product-templates
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: product-configs/((pas_version))
+    SKIP_MISSING: true
+  input_mapping:
+    files: templates
+  output_mapping:
+    interpolated-files: interpolated-product-templates
+#interpolate-vars: &interpolate-variable
+#  image: platform-automation-image
+#  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+#  params:
+#    <<: *credhub_env
+#    INTERPOLATION_PATHS: ((foundation))/config ((foundation))/env
+#    SKIP_MISSING: true
+#  input_mapping:
+#    files: variable
+#  output_mapping:
+#    interpolated-files: interpolated-variable
+
+jobs:
+- name: test-azcli 
+  plan:
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: test-azcli
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/test-task.yml
+
+- name: run-azcli-get-vms
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: get-vms
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/get-vms.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+- name: deploy-opsman-from-arm
+  plan:
+  - in_parallel:
+    - get: variable
+    - get: azs-concourse
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: opsman-product
+  - task: validate-template
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/validate-template.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+      PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+      RESOURCE_GROUP: ((resource_group))
+      BOSHSTORAGEACCOUNT: ((boshstorageaccount))
+      ADDITIONAL_PARAMETERS: "OpsManImageURI=https://opsmanagerimage.blob.local.azurestack.external/images/((opsman_image))"
+  - task: deploy-opsman-template 
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
+    input_mapping:
+      config: variable
+      image: opsman-product
+    params:
+      <<: *azure_env
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+      PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+      RESOURCE_GROUP: ((resource_group))
+      BOSHSTORAGEACCOUNT: ((boshstorageaccount))
+
+- name: get-opsman-image
+  serial: true
+  serial_groups: [ get-products, upgrade-opsman ]
+  plan:
+  - in_parallel:
+    - get: templates
+    - get: opsman-product
+      passed: 
+      - get-opsman 
+      trigger: true
+    - get: one-time-trigger
+      passed: [ export-installation ]
+    - get: installation
+      passed: [ export-installation ]  
+    - get: azs-concourse
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: variable
+  - task: copy-opsman-image
+    file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
+    image: platform-automation-image
+    input_mapping:
+      image: opsman-product
+#      root_ca: variable
+#      config: configuration
+      config: variable
+    params:
+      <<: *azure_env
+      ACCOUNT_NAME: ((image_account_name))
+      ACCOUNT_KEY: ((storage_account_key))
+      DESTINATION_CONTAINER: ((destination_container))
+      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+#  - task: check-copy-status-success
+#    image: platform-automation-image
+#    file: azs-concourse/ci/tasks/copy-status-until-success.yml  
+#    input_mapping:
+#      image: opsman-product
+#      root_ca: configuration
+#      config: configuration
+#    params:
+#      PROFILE: ((arm_profile))
+#      CA_CERT: ((foundation))/cert/root.pem
+#      ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+#      VAULT_DNS:  ((vault-dns))
+#      SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+#      AZURE_TENANT_ID: ((tenant_id))
+#      AZURE_CLIENT_ID: ((client_id))
+#      AZURE_CLIENT_SECRET: ((client_secret))
+#      AZURE_SUBSCRIPTION_ID: ((subscription_id))
+#      ACCOUNT_NAME: ((image_account_name))
+#      DESTINATION_CONTAINER: ((destination_container))
+#      DESTINATION_BLOB: ((opsman_image))
+
+- name: delete-opsman-vm
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: delete-vm
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-vm.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+      VM_NAME: ops_man_vm
+      
+- name: delete-orphan-azurevm-images
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: delete-images
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-vm-images.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+
+- name: delete-unattached-azure-disks
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: delete-azure-disks
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-unattached-disks.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+
+- name: query-unattached-azure-disks
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: query-azure-disks
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/query-unattached-disks.yml 
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+
+- name: query-unattached-azure-nics
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: query-azure-nics
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/query-unattached-nics.yml 
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+
+- name: delete-unattached-azure-nics
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: delete-azure-nics
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-unattached-nics.yml 
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+
+
+- name: delete-pcf
+  plan:
+  - get: variable
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: delete-rg
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: ((resource_group))
+     
+
+## opsman starts here
+- name: install-opsman
+  serial: true
+  serial_groups: [ install ]
+  plan:
+    - get: variable
+    - get: templates
+    - get: azs-concourse
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: one-time-trigger
+      trigger: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates          
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
+    - task: download-opsman-pivnet
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product.yml
+      input_mapping:
+        config: interpolated-product-downloads      
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+    - in_parallel:
+      - put: opsman-product
+        params:
+          file: downloaded-product/*     
+    - task: download-opsman-s3
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: opsman-image
+
+    - task: copy-opsman-image
+      file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
+      image: platform-automation-image
+      input_mapping:
+        image: opsman-product
+        config: variable
+      params:
+        <<: *azure_env
+        ACCOUNT_NAME: ((image_account_name))
+        ACCOUNT_KEY: ((storage_account_key))
+        DESTINATION_CONTAINER: ((destination_container))
+        OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+    - task: validate-template
+      image: platform-automation-image
+      file: azs-concourse/ci/tasks/validate-pcf-template.yml  
+      input_mapping:
+        config: variable
+        image: opsman-product
+      params:
+        <<: *azure_env
+        TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+        PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+        RESOURCE_GROUP: ((resource_group))
+        BOSHSTORAGEACCOUNT: ((boshstorageaccount))
+    
+    - task: deploy-opsman-template 
+      image: platform-automation-image
+      file: azs-concourse/ci/tasks/deploy-pcf-template.yml  
+      input_mapping:
+        config: variable
+        image: opsman-product
+      params:
+        <<: *azure_env
+        TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+        PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
+        RESOURCE_GROUP: ((resource_group))
+        BOSHSTORAGEACCOUNT: ((boshstorageaccount))
+        STATE_FILE: director_deployment_vars.yml
+        ACCOUNT_NAME: ((image_account_name))
+        DESTINATION_CONTAINER: ((destination_container))
+        OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+      on_success: &make-config-director-commit
+        do:
+          - task: make-commit
+            image: platform-automation-image
+            file: platform-automation-tasks/tasks/make-git-commit.yml
+            input_mapping:
+              repository: variable
+              file-source: generated-state
+            output_mapping:
+              repository-commit: variable-commit
+            params:
+              FILE_SOURCE_PATH: director_deployment_vars.yml
+              FILE_DESTINATION_PATH: ((foundation))/vars/director_deployment_vars.yml
+              GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
+              GIT_AUTHOR_NAME: "Platform Automation Bot"
+              COMMIT_MESSAGE: 'Update director state file'
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+    - task: validate-vm
+      image: platform-automation-image
+      file: azs-concourse/ci/tasks/query-vm.yml  
+      input_mapping:
+        config: variable
+      params:
+        <<: *azure_env
+        VM_NAME: ops_man_vm
+        STATE_FILE: ((foundation))/state/state.yml 
+      ensure: &make-state-commit
+        do:
+          - task: make-commit
+            image: platform-automation-image
+            file: platform-automation-tasks/tasks/make-git-commit.yml
+            input_mapping:
+              repository: variable
+              file-source: generated-state
+            output_mapping:
+              repository-commit: variable-commit
+            params:
+              FILE_SOURCE_PATH: state.yml
+              FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+              GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
+              GIT_AUTHOR_NAME: "Platform Automation Bot"
+              COMMIT_MESSAGE: 'Update state file'
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+    - task: configure-saml-authentication
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-saml-authentication.yml
+      attempts: 10
+      input_mapping:
+        env: variable
+        config: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
+#    - task: configure-director
+#      image: platform-automation-image
+#      file: platform-automation-tasks/tasks/configure-director.yml
+#      input_mapping:
+#        config: interpolated-product-templates
+#        env: interpolated-product-templates
+#        vars: variable
+#      params:
+#        VARS_FILES: vars/((foundation))/vars/director-vars.yml generated.state/director_deployment_vars.yml
+#        ENV_FILE: ((foundation))/env/env.yml
+#        DIRECTOR_CONFIG_FILE: ((foundation))/config/director.yml
+#    - task: apply-director-changes
+#      image: platform-automation-image
+#      file: platform-automation-tasks/tasks/apply-director-changes.yml
+#      input_mapping:
+#        env: interpolated-product-templates
+#      params:
+#        ENV_FILE: ((foundation))/env/env.yml
+
+
+- name: configure-opsman ## delete
+  plan:
+  - in_parallel:
+    - get: variable
+      passed:
+      - install-opsman
+      trigger: true
+    - get: templates
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates          
+  - task: configure-director
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-director.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+      ENV_FILE: ((foundation))/env/env.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director-azurestack.yml
+- name: apply-director 
+  plan:
+  - in_parallel:
+    - get: variable
+    - get: templates
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+      passed:
+       - configure-opsman 
+      # trigger: true
+  - task: apply-director-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-director-changes.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+    on_failure:
+      put: notify
+      params:
+        text: "Job 'apply-director-changes' failed" 
+    on_success:  
+      put: notify
+      params:
+        text: "Job 'apply-director-changes' succeeded" 
+     
+
+- name: get-opsman
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-opsman-pivnet
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    input_mapping:
+      config: interpolated-product-downloads      
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+  - in_parallel:
+    - put: opsman-product
+      params:
+        file: downloaded-product/*
+- name: testing
+  plan:
+  - get: opsman-product
+  - get: azs-concourse
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - task: test-azcli
+    image: platform-automation-image
+    input_mapping:
+      image: opsman-product
+    file: azs-concourse/ci/tasks/task1.yml
+
+
+- name: staged-director-config
+  serial: true
+  serial_groups: [ staged-products ]
+
+  plan:
+    - in_parallel:
+        - get: platform-automation-tasks
+          params: {unpack: true}
+        - get: platform-automation-image
+          params: {unpack: true}
+        - get: variable
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: staged-director-config
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/staged-director-config.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+      ensure: *make-state-commit
+
+- name: export-installation
+  serial: true
+  plan:
+    - in_parallel:
+        - get: daily-trigger
+          trigger: true
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed: [ install-opsman, apply-director ]
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+        - get: one-time-trigger
+          passed: [ install-opsman ]
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: export-installation
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/export-installation.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        INSTALLATION_FILE: installation-$timestamp.zip
+    - put: installation
+      params:
+        file: installation/installation*.zip
+
+- name: upgrade-opsman
+  serial: true
+  serial_groups: [ install, get-products, upgrade-opsman ]
+  plan:
+    - in_parallel:
+        - get: one-time-trigger
+          passed: [ export-installation, get-opsman-image ]
+        - get: azs-concourse  
+        - get: platform-automation-image
+          params:
+            unpack: true
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: installation
+          passed: [ export-installation ]
+        - get: templates
+        - get: variable
+        - get: opsman-product
+          trigger: true
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
+    - task: delete-existing-opsman
+      image: platform-automation-image
+      file: azs-concourse/ci/tasks/delete-vm.yml  
+      input_mapping:
+        config: variable
+      params:
+        <<: *azure_env
+        RESOURCE_GROUP: ((resource_group))
+        VM_NAME: ops_man_vm
+ 
+    - task: download-opsman-s3
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: opsman-image
+    - task: create-vm
+      image: platform-automation-image
+      file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
+      input_mapping:
+        config: variable
+        image: opsman-product
+      params:
+        <<: *azure_env
+        TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
+        PARAMETER_FILE: ((foundation))/config/parameters_opsman_update.json
+        RESOURCE_GROUP: ((resource_group))
+        ACCOUNT_NAME: ((image_account_name))
+        STATE_FILE: state.yml
+      ensure: *make-state-commit
+      on_failure:
+        put: notify
+        params:
+          text: "Job 'create-vm' failed" 
+      on_success:  
+        put: notify
+        params:
+          text: "Job 'create-vm' succeeded" 
+
+    - task: import-installation
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/import-installation.yml
+      attempts: 10
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        INSTALLATION_FILE: installation*.zip
+      input_mapping:
+        env: variable
+        installation: installation
+
+    - task: apply-director-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-director-changes.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+      on_failure:
+        put: notify
+        params:
+          text: "Job 'apply-director-changes' failed" 
+      on_success:  
+        put: notify
+        params:
+          text: "Job 'apply-director-changes' succeeded" 
+
+
+- name: get-platform-automation
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-pivnet
+      trigger: true
+  - in_parallel:
+    - put: platform-automation-tasks
+      params:
+        file: platform-automation-pivnet/*tasks*.zip
+    - put: platform-automation-image
+      params:
+        file: platform-automation-pivnet/*image*.tgz
+
+- name: test-interpolate
+  plan:
+  - get: variable
+  - get: templates
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      unpack: true
+  - task: interpolate
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+      SKIP_MISSING: true    
+- name: test-interpolate-srt
+  plan:
+  - get: variable
+  - get: templates
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      unpack: true
+  - task: interpolate
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/srt.yml
+      VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+      SKIP_MISSING: true  
+
+
+- name: get-pas
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-pas-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pas.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: pas-stemcell}
+  - in_parallel:
+    - put: pas-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: pas-stemcell
+      params:
+        file: pas-stemcell/*.tgz
+
+
+
+- name: get-srt
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-srt-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: srt-stemcell}
+  - in_parallel:
+    - put: srt-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: srt-stemcell
+      params:
+        file: srt-stemcell/*.tgz
+
+- name: get-p-spring-cloud-services
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-spring-cloud-services-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-spring-cloud-services-stemcell}
+  - in_parallel:
+    - put: p-spring-cloud-services-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-spring-cloud-services-stemcell
+      params:
+        file: p-spring-cloud-services-stemcell/*.tgz
+
+- name: get-p-spring-cloud-services-3
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-spring-cloud-services-3-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
+  - in_parallel:
+    - put: p-spring-cloud-services-3-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-spring-cloud-services-3-stemcell
+      params:
+        file: p-spring-cloud-services-3-stemcell/*.tgz
+
+- name: get-pivotal-mysql
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-pivotal-mysql-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: pivotal-mysql-stemcell}
+  - in_parallel:
+    - put: pivotal-mysql-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: pivotal-mysql-stemcell
+      params:
+        file: pivotal-mysql-stemcell/*.tgz
+
+- name: get-p-healthwatch
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-healthwatch-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-healthwatch.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-healthwatch-stemcell}
+  - in_parallel:
+    - put: p-healthwatch-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-healthwatch-stemcell
+      params:
+        file: p-healthwatch-stemcell/*.tgz
+
+- name: get-wavefront-nozzle
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-wavefront-nozzle-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
+  - in_parallel:
+    - put: wavefront-nozzle-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: wavefront-nozzle-stemcell
+      params:
+        file: wavefront-nozzle-stemcell/*.tgz
+
+
+- name: get-p-event-alerts
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-event-alerts-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-event-alerts-stemcell}
+  - in_parallel:
+    - put: p-event-alerts-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-event-alerts-stemcell
+      params:
+        file: p-event-alerts-stemcell/*.tgz
+
+
+
+- name: get-p-compliance-scanner
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-compliance-scanner-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-compliance-scanner-stemcell}
+  - in_parallel:
+    - put: p-compliance-scanner-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-compliance-scanner-stemcell
+      params:
+        file: p-compliance-scanner-stemcell/*.tgz
+- name: get-reliability-view-pas-exporter
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-reliability-view-pas-exporter-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pas-exporter.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: reliability-view-pas-exporter-stemcell}
+  - in_parallel:
+    - put: reliability-view-pas-exporter-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: reliability-view-pas-exporter-stemcell
+      params:
+        file: reliability-view-pas-exporter-stemcell/*.tgz
+
+- name: get-reliability-view-pcf
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-reliability-view-pcf-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pcf.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: reliability-view-pcf-stemcell}
+  - in_parallel:
+    - put: reliability-view-pcf-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: reliability-view-pcf-stemcell
+      params:
+        file: reliability-view-pcf-stemcell/*.tgz
+
+
+- name: get-p-rabbitmq
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-p-rabbitmq-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-rabbitmq.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: p-rabbitmq-stemcell}
+  - in_parallel:
+    - put: p-rabbitmq-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: p-rabbitmq-stemcell
+      params:
+        file: p-rabbitmq-stemcell/*.tgz
+- name: get-pas-windows
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-pas-windows-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: pas-windows-stemcell}
+  - in_parallel:
+    - put: pas-windows-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: pas-windows-stemcell
+      params:
+        file: pas-windows-stemcell/*.tgz
+
+- name: upload-and-stage-pas
+  serial_groups:
+  - upload-and-stage
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
+    - task: download-pas
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-pas.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: pas-product
+        downloaded-stemcell: pas-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: pas-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-pas-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: pas-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: pas-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+
+- name: upload-and-stage-srt
+  serial_groups:
+  - upload-and-stage
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
+    - task: download-srt
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: srt-product
+        downloaded-stemcell: srt-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: srt-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-srt-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: srt-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: srt-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+- name: upload-and-stage-pas-windows
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
+    - task: download-pas-windows
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: pas-windows-product
+        downloaded-stemcell: pas-windows-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: pas-windows-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-pas-windows-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: pas-windows-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: pas-windows-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml      
+
+- name: upload-and-stage-pivotal-mysql
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads       
+    - task: download-pivotal-mysql
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: pivotal-mysql-product
+        downloaded-stemcell: pivotal-mysql-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: pivotal-mysql-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-pivotal-mysql-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: pivotal-mysql-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: pivotal-mysql-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml   
+
+- name: upload-and-stage-p-healthwatch
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
+    - task: download-p-healthwatch
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-p-healthwatch.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: p-healthwatch-product
+        downloaded-stemcell: p-healthwatch-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-healthwatch-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-healthwatch-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: p-healthwatch-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-healthwatch-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+
+- name: upload-and-stage-wavefront-nozzle
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads          
+    - task: download-wavefront-nozzle
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: wavefront-nozzle-product
+        downloaded-stemcell: wavefront-nozzle-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: wavefront-nozzle-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-wavefront-nozzle-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: wavefront-nozzle-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: wavefront-nozzle-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+- name: upload-and-stage-p-event-alerts
+  serial_groups:
+  - upload-and-stage
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
+    - task: download-p-event-alerts
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: p-event-alerts-product
+        downloaded-stemcell: p-event-alerts-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-event-alerts-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-event-alerts-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: p-event-alerts-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-event-alerts-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+
+
+- name: upload-and-stage-p-compliance-scanner
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: download-p-compliance-scanner
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: p-compliance-scanner-product
+        downloaded-stemcell: p-compliance-scanner-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-compliance-scanner-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-compliance-scanner-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: p-compliance-scanner-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-compliance-scanner-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+
+- name: upload-and-stage-reliability-view-pcf
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: download-reliability-view-pcf
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pcf.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: reliability-view-pcf-product
+        downloaded-stemcell: reliability-view-pcf-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: reliability-view-pcf-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-reliability-view-pcf-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: reliability-view-pcf-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: reliability-view-pcf-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml  
+
+- name: upload-and-stage-reliability-view-pas-exporter
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: download-reliability-view-pas-exporter
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pas-exporter.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: reliability-view-pas-exporter-product
+        downloaded-stemcell: reliability-view-pas-exporter-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: reliability-view-pas-exporter-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-reliability-view-pas-exporter-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: reliability-view-pas-exporter-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: reliability-view-pas-exporter-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml  
+- name: upload-and-stage-p-spring-cloud-services
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads       
+    - task: download-p-spring-cloud-services
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: p-spring-cloud-services-product
+        downloaded-stemcell: p-spring-cloud-services-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-spring-cloud-services-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: p-spring-cloud-services-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml   
+
+- name: upload-and-stage-p-spring-cloud-services-3
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
+    - task: download-p-spring-cloud-services-3
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: p-spring-cloud-services-3-product
+        downloaded-stemcell: p-spring-cloud-services-3-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-3-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-spring-cloud-services-3-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: p-spring-cloud-services-3-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-spring-cloud-services-3-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml   
+
+- name: upload-and-stage-p-rabbitmq
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads       
+    - task: download-p-rabbitmq
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-p-rabbitmq.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: p-rabbitmq-product
+        downloaded-stemcell: p-rabbitmq-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-rabbitmq-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-rabbitmq-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: p-rabbitmq-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-rabbitmq-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+- name: apply-product-changes
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed: ((passed_configs))
+          trigger: true
+        - get: variable
+#    - task: interpolate-variable
+#      <<: *interpolate-variable
+    - task: apply-product-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-changes.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+      on_failure:
+        put: notify
+        params:
+          text: "Job 'apply-changes' failed" 
+      on_success:  
+        put: notify
+        params:
+          text: "Job 'apply-changes' succeeded" 
+    
+  
+- name: configure-pas
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-pas
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-pas
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/pas.yml
+        VARS_FILES: vars/((foundation))/vars/pas-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml        
+
+- name: configure-pas-windows
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-pas-windows
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-pas-windows
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/pas-windows.yml
+        VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+- name: configure-p-rabbitmq
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-rabbitmq
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-rabbitmq
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/p-rabbitmq.yml
+        VARS_FILES: vars/((foundation))/vars/p-rabbitmq-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-pivotal-mysql
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-pivotal-mysql
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-pivotal-mysql
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/pivotal-mysql.yml
+        VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-p-healthwatch
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-healthwatch
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-healthwatch
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/p-healthwatch.yml
+        VARS_FILES: vars/((foundation))/vars/p-healthwatch-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-wavefront-nozzle
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-wavefront-nozzle
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-wavefront-nozzle
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
+        VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+- name: configure-p-event-alerts
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-event-alerts
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-event-alerts
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+        VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+
+- name: configure-p-compliance-scanner
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-compliance-scanner
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-compliance-scanner
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/p-compliance-scanner.yml
+        VARS_FILES: vars/((foundation))/vars/p-compliance-scanner-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-reliability-view-pcf
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-reliability-view-pcf
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-reliability-view-pcf
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/reliability-view-pcf.yml
+        VARS_FILES: vars/((foundation))/vars/reliability-view-pcf-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-reliability-view-pas-exporter
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-reliability-view-pas-exporter
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-reliability-view-pas-exporter
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/reliability-view-pas-exporter.yml
+        VARS_FILES: vars/((foundation))/vars/reliability-view-pas-exporter-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-p-spring-cloud-services
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-spring-cloud-services
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-spring-cloud-services
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services.yml
+        VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
+- name: configure-p-spring-cloud-services-3
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-spring-cloud-services-3
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-spring-cloud-services
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services-3.yml
+        VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml        
+- name: configure-srt
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-srt
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-srt
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/srt.yml
+        VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
+- name: deploy-asdk
+  plan:
+  - get: platform-automation-pivnet
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+    - put: platform-automation-tasks
+      params:
+        file: platform-automation-pivnet/*tasks*.zip
+    - put: platform-automation-image
+      params:
+        file: platform-automation-pivnet/*image*.tgz   
+- name: staged-pas-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: cf
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: cf.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/cf.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+- name: staged-reliability-view-pcf-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-reliability-view
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p-reliability-view.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p-reliability-view.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true  
+- name: staged-reliability-view-pas-exporter-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-reliability-view-pas-exporter
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p-reliability-view-pas-exporter.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p-reliability-view-pas-exporter.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true              
+
+- name: staged-p-compliance-scanner-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-compliance-scanner
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p-compliance-scanner.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p-compliance-scanner.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+
+- name: staged-p-event-alerts-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-event-alerts
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p-event-alerts.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p-event-alerts.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+
+
+- name: staged-p-healthwatch-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-healthwatch
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p-healthwatch.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p-healthwatch.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+- name: staged-pas-windows-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: pas-windows
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: pas-windows.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/pas-windows.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+
+
+- name: staged-pivotal-mysql-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: pivotal-mysql
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: pivotal-mysql.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/pivotal-mysql.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+              
+- name: staged-p-spring-cloud-services-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-spring-cloud-services
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p-spring-cloud-services.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p-spring-cloud-services.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+- name: staged-p-spring-cloud-services-3-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p_spring-cloud-services
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p_spring-cloud-services.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p_spring-cloud-services.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+
+- name: staged-p-rabbitmq-config
+  serial_groups:
+  - staged-configs
+  plan:
+    - in_parallel:
+        <<: *stage_steps
+    - task: staged-config
+      <<: *stage_config
+      params:
+        PRODUCT_NAME: p-rabbitmq
+        ENV_FILE: ((foundation))/env/env.yml
+        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+      ensure: #&make-config-commit
+        do:
+          - task: make-commit
+            <<: *do_stage_commit
+            params:
+              FILE_SOURCE_PATH: p-rabbitmq.yml
+              FILE_DESTINATION_PATH: ((foundation))/config/p-rabbitmq.yml
+              <<: *git_commit_env
+          - put: variable
+            params:
+              repository: variable-commit
+              merge: true
+
+
+groups:
+- name: deploy-asdk-1907-plans
+  jobs:  
+  - deploy-asdk
+
+- name: install-pivotal-platform
+  jobs:
+  - get-opsman
+  - upgrade-opsman
+  - export-installation
+  - staged-director-config 
+  - install-opsman 
+  - get-opsman-image
+  - configure-opsman
+  - apply-director
+#
+  - get-platform-automation
+  - get-srt
+  - get-pas-windows
+  - get-p-spring-cloud-services
+  - get-p-spring-cloud-services-3
+  - get-p-rabbitmq
+  - get-pivotal-mysql
+  - get-opsman
+  - get-opsman-image
+  - get-p-healthwatch
+  - get-wavefront-nozzle
+  - get-p-event-alerts
+  - get-p-compliance-scanner
+  - get-reliability-view-pcf
+  - get-reliability-view-pas-exporter
+#
+  - export-installation
+  - upload-and-stage-srt
+  - upload-and-stage-pas-windows  
+  - upload-and-stage-pivotal-mysql
+  - upload-and-stage-p-spring-cloud-services
+  - upload-and-stage-p-spring-cloud-services-3
+  - upload-and-stage-p-rabbitmq
+  - upload-and-stage-p-healthwatch
+  - upload-and-stage-wavefront-nozzle
+  - upload-and-stage-p-event-alerts
+  - upload-and-stage-p-compliance-scanner
+  - upload-and-stage-reliability-view-pcf
+  - upload-and-stage-reliability-view-pas-exporter
+
+#  
+  - configure-srt
+  - configure-pas-windows
+  - configure-p-rabbitmq
+  - configure-pivotal-mysql
+  - configure-p-spring-cloud-services
+  - configure-p-spring-cloud-services-3
+  - configure-p-healthwatch
+  - configure-wavefront-nozzle
+  - configure-p-event-alerts
+  - configure-p-compliance-scanner
+  - configure-reliability-view-pcf
+  - configure-reliability-view-pas-exporter
+  - apply-product-changes
+###
+- name: staged-configs
+  jobs:
+  - staged-pas-config
+  - staged-pivotal-mysql-config
+  - staged-p-spring-cloud-services-config
+  - staged-p-spring-cloud-services-3-config
+  - staged-p-rabbitmq-config
+  - staged-p-compliance-scanner-config
+  - staged-p-healthwatch-config
+  - staged-pas-windows-config
+  - staged-p-event-alerts-config
+  - staged-reliability-view-pcf-config
+  - staged-reliability-view-pas-exporter-config
+
+
+- name: get-products
+  jobs:
+  - get-platform-automation
+  - get-srt
+  - get-pas-windows
+  - get-p-spring-cloud-services
+  - get-p-spring-cloud-services-3
+  - get-p-rabbitmq
+  - get-pivotal-mysql
+  - get-opsman
+  - get-opsman-image
+  - get-p-healthwatch
+  - get-wavefront-nozzle
+  - get-p-event-alerts
+  - get-p-compliance-scanner
+  - get-reliability-view-pcf
+  - get-reliability-view-pas-exporter
+
+- name: upgrade-products
+  jobs:
+  - export-installation
+  - upload-and-stage-srt
+  - upload-and-stage-pas-windows  
+  - upload-and-stage-pivotal-mysql
+  - upload-and-stage-p-spring-cloud-services
+  - upload-and-stage-p-spring-cloud-services-3
+  - upload-and-stage-p-rabbitmq
+  - upload-and-stage-p-healthwatch
+  - upload-and-stage-wavefront-nozzle
+  - upload-and-stage-p-event-alerts
+  - upload-and-stage-p-compliance-scanner
+  - upload-and-stage-reliability-view-pcf
+  - upload-and-stage-reliability-view-pas-exporter
+- name: configure-products
+  jobs:
+  - configure-srt
+  - configure-pas-windows
+  - configure-p-rabbitmq
+  - configure-pivotal-mysql
+  - configure-p-spring-cloud-services
+  - configure-p-spring-cloud-services-3
+  - configure-p-healthwatch
+  - configure-wavefront-nozzle
+  - configure-p-event-alerts
+  - configure-p-compliance-scanner
+  - configure-reliability-view-pcf
+  - configure-reliability-view-pas-exporter
+  - apply-product-changes
+
+- name: service-jobs
+  jobs:
+  - delete-orphan-azurevm-images
+  - query-unattached-azure-disks
+  - query-unattached-azure-nics
+  - delete-unattached-azure-disks
+  - delete-unattached-azure-nics
+  - delete-opsman-vm
+  - delete-pcf
+  - test-azcli
+  - deploy-opsman-from-arm
+  - run-azcli-get-vms
+  - testing
+  - test-interpolate
+  - test-interpolate-srt
+- name: inactive
+  jobs: 
+   - get-pas
+   - upload-and-stage-pas
+   - configure-pas
+
+
