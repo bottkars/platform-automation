@@ -978,7 +978,7 @@ jobs:
         unpack: true
       passed:
        - configure-opsman 
-      # trigger: true
+      trigger: true
   - task: apply-director-changes
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-director-changes.yml
@@ -1115,6 +1115,7 @@ jobs:
       - get: variable
       - get: one-time-trigger
         passed: [ install-opsman ]
+        trigger: true
   - task: export-installation
     image: platform-automation-image
     file: platform-automation-tasks/tasks/export-installation.yml
@@ -3656,7 +3657,7 @@ jobs:
 
 
 groups:
-- name: deploy-asdk-1907-plans
+- name: deploy-asdk-1908-plans
   jobs:  
   - deploy-asdk
 
