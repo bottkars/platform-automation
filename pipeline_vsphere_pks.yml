@@ -642,15 +642,15 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
         AUTH_CONFIG_FILE: ((foundation))/config/auth.yml          
-    - task: update certficates
-      image: platform-automation-image
-      file: additional-tasks/tasks/update-ssl-certificate.yml
-      input_mapping:
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-        CERTIFICATE_PEM: ((fullchain))
-        KEY_PEM: ((key)) 
+   # - task: update certficates
+   #   image: platform-automation-image
+   #   file: additional-tasks/tasks/update-ssl-certificate.yml
+   #   input_mapping:
+   #     env: variable
+   #   params:
+   #     ENV_FILE: ((foundation))/env/env.yml
+   #     CERTIFICATE_PEM: ((fullchain))
+   #     KEY_PEM: ((key)) 
     - task: configure-director
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-director.yml
@@ -661,7 +661,7 @@ jobs:
       params:
         VARS_FILES: vars/((foundation))/vars/director-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/director.yml        
+        DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
     - task: apply-director-changes
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-director-changes.yml
@@ -885,6 +885,52 @@ jobs:
       CONFIG_FILE: product-configs/((pks_version))/harbor-container-registry.yml
       VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
       SKIP_MISSING: true    
+- name: delete-installation
+  serial: true
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: variable
+  - task: delete-installation
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/delete-installation.yml
+    input_mapping:
+      env: variable
+    params:
+    # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
+     ENV_FILE: ((foundation))/env/env.yml
+  - task: delete-vm
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/delete-vm.yml
+    input_mapping:
+      state: variable      
+      config: variable
+      env: variable
+      vars: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      STATE_FILE: ((foundation))/state/state.yml
+    ensure: #&put-state
+        do:
+        - task: make-commit
+          <<: *do_state_commit
+          params:
+            FILE_SOURCE_PATH: state.yml
+            FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true    
+
+
+
 
 groups:
 - name: full
@@ -933,4 +979,7 @@ groups:
     - test-interpolate-harbor-container-registry    
 - name: Upgrade
   jobs:
-  - upgrade-opsman       
+  - upgrade-opsman     
+- name: delete
+  jobs:
+  - delete-installation   
