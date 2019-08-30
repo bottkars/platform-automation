@@ -146,7 +146,8 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_tasks))
-    regexp: additional-tasks-(.*).zip## core resources
+    regexp: additional-tasks-(.*).zip
+## core resources
 - name: templates
   icon: github-circle
   type: git  
@@ -231,8 +232,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    #- get: after-midnight
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -259,8 +260,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    # - get: after-midnight
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -291,7 +292,7 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    #- get: after-midnight
+    # - get: after-midnight
     #  trigger: true
     - get: platform-automation-image
       params:
@@ -320,8 +321,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    #- get: after-midnight
-    #  trigger: true
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -434,14 +435,14 @@ jobs:
         - get: platform-automation-image
           params:
             unpack: true
-#          passed: [ install-opsman, apply-director ]
+          passed: [ install-opsman]
         - get: platform-automation-tasks
           params:
             unpack: true
         - get: templates
         - get: variable
         - get: one-time-trigger
-#          passed: [ install-opsman ]
+          passed: [ install-opsman ]
     - task: export-installation
       image: platform-automation-image
       file: platform-automation-tasks/tasks/export-installation.yml
@@ -466,7 +467,7 @@ jobs:
           params:
             unpack: true
           passed:
-#           - upgrade-opsman
+           - upgrade-opsman
            - get-pivotal-container-service           
           trigger: true  
         - get: platform-automation-tasks
@@ -525,7 +526,7 @@ jobs:
           params:
             unpack: true
           passed:
- #         - upgrade-opsman
+          - upgrade-opsman
           - get-harbor-container-registry
           trigger: true          
         - get: platform-automation-tasks
@@ -595,7 +596,7 @@ jobs:
       input_mapping:
         config: interpolated-product-downloads      
       params:
-        CONFIG_FILE: download-product-configs/((pks_version))/download-opsman.yml
+        CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
     - in_parallel:
       - put: opsman-product
         params:
@@ -674,8 +675,8 @@ jobs:
   serial_groups: [ install ]
   plan:
   - in_parallel:
-#    - get: one-time-trigger
-#      passed: [ install-opsman ]
+    - get: one-time-trigger
+      passed: [ install-opsman ]
     - get: platform-automation-image
       params:
         unpack: true
@@ -699,9 +700,6 @@ jobs:
     input_mapping:
      image: opsman-product
      state: variable
-#        config: interpolated-creds
-#        env: interpolated-creds
-#        vars: variable
      config: variable
      env: variable
      vars: variable
@@ -726,9 +724,10 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
 ## configure products
-- name: configure-pivotal-container-service
+
+- name: configure-pivotal-container-service-cloudprovider
   serial_groups:
-#  - configure-products
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -745,7 +744,7 @@ jobs:
         - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates
-    - task: configure-pivotal-container-service
+    - task: configure-pivotal-container-service-cloud-provider
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-product.yml
       input_mapping:
@@ -753,7 +752,39 @@ jobs:
         env: variable
         vars: variable
       params:
-        CONFIG_FILE: product-configs/((pks_version))/pivotal-container-service.yml
+        CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-flannel.yml
+        VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
+
+- name: configure-pivotal-container-service-product
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+          - upload-and-stage-pivotal-container-service
+          - configure-pivotal-container-service-cloudprovider
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-pivotal-container-service-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service.yml
         VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 
@@ -802,12 +833,11 @@ jobs:
           params:
             unpack: true
           passed: # ((passed_configs))
-            - configure-pivotal-container-service 
+            - configure-pivotal-container-service-cloudprovider
+            - configure-pivotal-container-service-product
             - configure-harbor-container-registry
           trigger: true
         - get: variable
-#    - task: interpolate-variable
-#      <<: *interpolate-variable
     - task: apply-product-changes
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-changes.yml
@@ -869,7 +899,8 @@ groups:
     - get-opsman
     - upload-and-stage-pivotal-container-service 
     - upload-and-stage-harbor-container-registry    
-    - configure-pivotal-container-service 
+    - configure-pivotal-container-service-cloudprovider
+    - configure-pivotal-container-service-product
     - configure-harbor-container-registry
     - apply-product-changes 
 - name: get-products
@@ -885,7 +916,8 @@ groups:
     - upload-and-stage-harbor-container-registry    
 - name: configure-products
   jobs:
-    - configure-pivotal-container-service 
+    - configure-pivotal-container-service-cloudprovider
+    - configure-pivotal-container-service-product
     - configure-harbor-container-registry
     - apply-product-changes
 
