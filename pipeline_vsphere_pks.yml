@@ -914,7 +914,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/harbor-container-registry.yml
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/harbor-container-registry.yml
       VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
       SKIP_MISSING: true    
 - name: delete-installation
