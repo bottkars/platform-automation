@@ -468,7 +468,7 @@ jobs:
             unpack: true
           passed:
            - upgrade-opsman
-           - get-pivotal-container-service           
+         #  - get-pivotal-container-service           
           trigger: true  
         - get: platform-automation-tasks
           params:
@@ -527,7 +527,7 @@ jobs:
             unpack: true
           passed:
           - upgrade-opsman
-          - get-harbor-container-registry
+       #   - get-harbor-container-registry
           trigger: true          
         - get: platform-automation-tasks
           params:
@@ -571,6 +571,48 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml   
 
+
+##
+- name: configure-director
+  serial: true
+  serial_groups: [ install ]
+  plan:
+    - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: one-time-trigger
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: additional-tasks
+        params:
+          unpack: true    
+      - get: templates
+      - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates                
+    - task: configure-director
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-director.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        VARS_FILES: vars/((foundation))/vars/director-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
+        DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
+    - task: apply-director-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-director-changes.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+
+###
 - name: install-opsman
   serial: true
   serial_groups: [ install ]
@@ -725,7 +767,7 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
 ## configure products
 
-- name: configure-pivotal-container-service-cloudprovider
+- name: configure-pivotal-container-service
   serial_groups:
   - configure-products
   serial: true
@@ -753,38 +795,6 @@ jobs:
         vars: variable
       params:
         CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-flannel.yml
-        VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
-
-- name: configure-pivotal-container-service-product
-  serial_groups:
-  - configure-products
-  serial: true
-  plan:
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-          - upload-and-stage-pivotal-container-service
-          - configure-pivotal-container-service-cloudprovider
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-pivotal-container-service-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service.yml
         VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 
@@ -816,7 +826,7 @@ jobs:
         env: variable
         vars: variable
       params:
-        CONFIG_FILE: product-configs/((pks_version))/harbor-container-registry.yml
+        CONFIG_FILE: product-configs/((pks_version))/((iaas))/harbor-container-registry.yml
         VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
         
@@ -833,8 +843,7 @@ jobs:
           params:
             unpack: true
           passed: # ((passed_configs))
-            - configure-pivotal-container-service-cloudprovider
-            - configure-pivotal-container-service-product
+            - configure-pivotal-container-service
             - configure-harbor-container-registry
           trigger: true
         - get: variable
@@ -845,6 +854,29 @@ jobs:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
+
+- name: test-interpolate-director
+  plan:
+  - get: variable
+  - get: templates
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      unpack: true
+  - task: interpolate
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml
+      SKIP_MISSING: true    
+
+        
 - name: test-interpolate-pivotal-container-service
   plan:
   - get: variable
@@ -862,7 +894,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/pivotal-container-service.yml
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-flannel.yml
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       SKIP_MISSING: true    
 - name: test-interpolate-harbor-container-registry
@@ -945,8 +977,7 @@ groups:
     - get-opsman
     - upload-and-stage-pivotal-container-service 
     - upload-and-stage-harbor-container-registry    
-    - configure-pivotal-container-service-cloudprovider
-    - configure-pivotal-container-service-product
+    - configure-pivotal-container-service
     - configure-harbor-container-registry
     - apply-product-changes 
 - name: get-products
@@ -962,8 +993,7 @@ groups:
     - upload-and-stage-harbor-container-registry    
 - name: configure-products
   jobs:
-    - configure-pivotal-container-service-cloudprovider
-    - configure-pivotal-container-service-product
+    - configure-pivotal-container-service
     - configure-harbor-container-registry
     - apply-product-changes
 
@@ -975,8 +1005,10 @@ groups:
     - export-installation
 - name: test-interpolate
   jobs: 
+    - test-interpolate-director
     - test-interpolate-pivotal-container-service
-    - test-interpolate-harbor-container-registry    
+    - test-interpolate-harbor-container-registry  
+    - configure-director  
 - name: Upgrade
   jobs:
   - upgrade-opsman     
