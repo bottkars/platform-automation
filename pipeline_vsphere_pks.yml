@@ -804,31 +804,31 @@ jobs:
   - configure-products
   serial: true
   plan:
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-            - upload-and-stage-harbor-container-registry
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-harbor-container-registry
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
+  - in_parallel:
+    - get: platform-automation-image
       params:
-        CONFIG_FILE: product-configs/((pks_version))/((iaas))/harbor-container-registry.yml
-        VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+        unpack: true
+      passed:
+        - upload-and-stage-harbor-container-registry
+      trigger: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+    - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-harbor-container-registry
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/harbor-container-registry.yml
+      VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
         
 - name: apply-product-changes
   serial_groups:
