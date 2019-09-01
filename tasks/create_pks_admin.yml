@@ -1,0 +1,38 @@
+# code_snippet to create pks admin user
+---
+platform: linux
+
+inputs:
+- name: env # contains the env file with target OpsMan Information
+
+params:
+  ENV_FILE: env.yml
+  
+  # - Required
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+  KEY_FILE: opsman.key
+  # conatins the opsman private key
+  PKS_USERNAME: pksadmin
+  PKS_PASSWORD: Password123!
+  PKS_API_ENDPOINT: 
+
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    cat /var/version && echo ""
+    set -eux
+    eval "$(om --env ./env/"${ENV_FILE} --skip-ssl-validation \
+      bosh-env --ssh-private-key ./env/${KEY_FILE})"
+    PKS_DEPLOYMENT=$(echo $deployments | jp.py "Tables[0].Rows[?contains(name,'pivotal-container-service')].name")
+    PKS_DEPLOYMENT=$(echo "${PKS_DEPLOYMENT//\"}")
+    ADMIN_CLIENT_SECRET=$(credhub get \
+      -n /opsmgr/${PKS_DEPLOYMENT}/pks_uaa_management_admin_client -k=value )
+    uaac target https://${PKS_API_ENDPOINT}:8443 --skip-ssl-validation 
+    uaac token client get admin -s ${ADMIN_CLIENT_SECRET}
+    uaac user add ${PKS_USERNAME} --emails ${PKS_USERNAME}@example.com -p ${PKS_PASSWORD}
+    uaac member add pks.clusters.admin ${PKS_USERNAME}
+

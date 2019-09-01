@@ -111,6 +111,11 @@ resource_types:
   source:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource    
+
 resources:
 # triggers
 - name: daily-trigger
@@ -133,7 +138,10 @@ resources:
     stop: 6:00 AM
     interval: 24h
     location: Europe/Berlin 
-
+- name: notify
+  type: slack-notification
+  source:
+    url: ((slack-webhook))
 - name: installation
   icon: amazon-drive
   type: s3
@@ -520,7 +528,7 @@ jobs:
     params:
      <<: *slack_start_param
   - in_parallel:
-    <<: *stage_steps
+     <<: *stage_steps
   - task: staged-director-config
     image: platform-automation-image
     file: platform-automation-tasks/tasks/staged-director-config.yml
@@ -671,54 +679,54 @@ jobs:
     params:
      <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-        - upgrade-opsman
-      #   - get-harbor-container-registry
-        trigger: true          
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads       
-    - task: download-harbor-container-registry
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
+    - get: platform-automation-image
       params:
-        CONFIG_FILE: download-product-configs/((pks_version))/download-harbor-container-registry.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: harbor-container-registry-product
-        downloaded-stemcell: harbor-container-registry-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: harbor-container-registry-product
-        env: variable
+        unpack: true
+      passed:
+      - upgrade-opsman
+    #   - get-harbor-container-registry
+      trigger: true          
+    - get: platform-automation-tasks
       params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-harbor-container-registry-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: harbor-container-registry-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: harbor-container-registry-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml   
+        unpack: true
+    - get: templates
+    - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads       
+  - task: download-harbor-container-registry
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pks_version))/download-harbor-container-registry.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: harbor-container-registry-product
+      downloaded-stemcell: harbor-container-registry-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: harbor-container-registry-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-harbor-container-registry-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: harbor-container-registry-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: harbor-container-registry-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml   
 
 
 ##
@@ -975,31 +983,31 @@ jobs:
   - put: notify
     params:
      <<: *slack_start_param
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-          - upload-and-stage-pivotal-container-service
-          trigger: true
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates
-    - task: configure-pivotal-container-service-cloud-provider
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-product.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-flannel.yml
-        VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml 
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+        - upload-and-stage-pivotal-container-service
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-pivotal-container-service-cloud-provider
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-flannel.yml
+      VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
 
 
 - name: configure-harbor-container-registry
@@ -1230,7 +1238,32 @@ jobs:
             repository: variable-commit
             merge: true    
 
-
+- name: pks-post-tasks
+  plan:
+    - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: one-time-trigger
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: additional-tasks
+        params:
+          unpack: true  
+    - task: create-pks-admin
+      image: platform-automation-image
+      file: additional-tasks/tasks/create_pks_admin.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        KEY_FILE: ((foundation))/env/opsman.key
+        # conatins the opsman private key
+        PKS_USERNAME: ((pks_username))
+        PKS_PASSWORD: ((pks_password))
+        PKS_API_ENDPOINT: ((pks_admin_endpoint))          
 
 
 groups:
