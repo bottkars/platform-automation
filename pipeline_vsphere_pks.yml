@@ -54,6 +54,34 @@ git_commit_env: &git_commit_env
   GIT_AUTHOR_NAME: "Platform Automation Bot"
   COMMIT_MESSAGE: 'Staged  Config Writer'
 
+
+slack_start_param: &slack_start_param
+  text: |
+    Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-started:"
+
+slack_succeeded_param: &slack_succeeded_param
+  text: |
+    Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME    
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-succeeded:"
+
+slack_failed_param: &slack_failed_param
+  text: |
+    Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-failed:"
+
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -215,7 +243,18 @@ resources:
 
 jobs:
 - name: get-platform-automation
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -230,7 +269,18 @@ jobs:
         file: platform-automation-pivnet/*image*.tgz
 - name: get-opsman
   serial_groups: [ get-products ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -258,7 +308,18 @@ jobs:
 - name: get-pivotal-container-service
   serial: true
   serial_groups: [ get-products ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -290,7 +351,18 @@ jobs:
 - name: get-pivotal-container-service-cli
   serial: true
   serial_groups: [ get-products ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - in_parallel:
     # - get: after-midnight
     #  trigger: true
@@ -319,7 +391,18 @@ jobs:
 - name: get-harbor-container-registry
   serial: true
   serial_groups: [ get-products ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -352,108 +435,152 @@ jobs:
 - name: staged-pivotal-container-service-config
   serial_groups:
   - staged-configs
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: pivotal-container-service
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_config_commit
-            params:
-              FILE_SOURCE_PATH: pivotal-container-service.yml
-              FILE_DESTINATION_PATH: ((foundation))/generated-config/pivotal-container-service.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - put: notify
+    params:
+     <<: *slack_start_param
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: pivotal-container-service
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_config_commit
+          params:
+            FILE_SOURCE_PATH: pivotal-container-service.yml
+            FILE_DESTINATION_PATH: ((foundation))/generated-config/pivotal-container-service.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
 
 - name: staged-harbor-container-registry-config
   serial_groups:
   - staged-configs
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-config
-      <<: *stage_config
-      params:
-        PRODUCT_NAME: harbor-container-registry
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_config_commit
-            params:
-              FILE_SOURCE_PATH: harbor-container-registry.yml
-              FILE_DESTINATION_PATH: ((foundation))/generated-config/harbor-container-registry.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - put: notify
+    params:
+     <<: *slack_start_param
+  - in_parallel:
+     <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: harbor-container-registry
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_config_commit
+          params:
+            FILE_SOURCE_PATH: harbor-container-registry.yml
+            FILE_DESTINATION_PATH: ((foundation))/generated-config/harbor-container-registry.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
 
 - name: staged-director-config
   serial: true
   serial_groups: [ staged-products ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
-    - in_parallel:
-        <<: *stage_steps
-    - task: staged-director-config
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/staged-director-config.yml
-      input_mapping:
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-        SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
-      ensure: #&make-config-commit
-        do:
-          - task: make-commit
-            <<: *do_config_commit
-            params:
-              FILE_SOURCE_PATH: director.yml
-              FILE_DESTINATION_PATH: ((foundation))/generated-config/director.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true
+  - put: notify
+    params:
+     <<: *slack_start_param
+  - in_parallel:
+    <<: *stage_steps
+  - task: staged-director-config
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/staged-director-config.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_config_commit
+          params:
+            FILE_SOURCE_PATH: director.yml
+            FILE_DESTINATION_PATH: ((foundation))/generated-config/director.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
               
 - name: export-installation
   serial: true
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
-    - in_parallel:
-        - get: daily-trigger
-          trigger: true
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed: [ install-opsman]
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-        - get: one-time-trigger
-          passed: [ install-opsman ]
-    - task: export-installation
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/export-installation.yml
-      input_mapping:
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-        INSTALLATION_FILE: installation-$timestamp.zip
-    - put: installation
-      params:
-        file: installation/installation*.zip
+  - put: notify
+    params:
+     <<: *slack_start_param
+  - in_parallel:
+      - get: daily-trigger
+        trigger: true
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed: [ install-opsman]
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+      - get: one-time-trigger
+        passed: [ install-opsman ]
+  - task: export-installation
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/export-installation.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      INSTALLATION_FILE: installation-$timestamp.zip
+  - put: installation
+    params:
+      file: installation/installation*.zip
 ## upload and stage
 
 - name: upload-and-stage-pivotal-container-service
@@ -461,58 +588,69 @@ jobs:
   serial_groups:
   - upload-and-stage
   - install
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-           - upgrade-opsman
-         #  - get-pivotal-container-service           
-          trigger: true  
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
-        - get: pivotal-container-service-product
-          trigger: true
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads       
-    - task: download-pivotal-container-service
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: pivotal-container-service-product
-        downloaded-stemcell: pivotal-container-service-stemcell
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: pivotal-container-service-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: upload-pivotal-container-service-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        env: variable
-        stemcell: pivotal-container-service-stemcell
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-    - task: stage-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/stage-product.yml
-      input_mapping:
-        product: pivotal-container-service-product
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml   
+  - put: notify
+    params:
+     <<: *slack_start_param
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upgrade-opsman
+        #  - get-pivotal-container-service           
+        trigger: true  
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+      - get: pivotal-container-service-product
+        trigger: true
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads       
+  - task: download-pivotal-container-service
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: pivotal-container-service-product
+      downloaded-stemcell: pivotal-container-service-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: pivotal-container-service-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-pivotal-container-service-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: pivotal-container-service-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: pivotal-container-service-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml   
 
 
 - name: upload-and-stage-harbor-container-registry
@@ -520,20 +658,31 @@ jobs:
   serial_groups:
   - upload-and-stage
   - install
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
-    - in_parallel:
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed:
-          - upgrade-opsman
-       #   - get-harbor-container-registry
-          trigger: true          
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: templates
-        - get: variable
+  - put: notify
+    params:
+     <<: *slack_start_param
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+        - upgrade-opsman
+      #   - get-harbor-container-registry
+        trigger: true          
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads       
     - task: download-harbor-container-registry
@@ -576,60 +725,82 @@ jobs:
 - name: configure-director
   serial: true
   serial_groups: [ install ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
-    - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: additional-tasks
-        params:
-          unpack: true    
-      - get: templates
-      - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates                
-    - task: configure-director
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-director.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
+  - put: notify
+    params:
+     <<: *slack_start_param
+  - in_parallel:
+    - get: platform-automation-image
       params:
-        VARS_FILES: vars/((foundation))/vars/director-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
-    - task: apply-director-changes
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/apply-director-changes.yml
-      input_mapping:
-        env: variable
+        unpack: true
+    - get: platform-automation-tasks
       params:
-        ENV_FILE: ((foundation))/env/env.yml
+        unpack: true
+    - get: additional-tasks
+      params:
+        unpack: true    
+    - get: templates
+    - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates                
+  - task: configure-director
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-director.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
+  - task: apply-director-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-director-changes.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
 
 ###
 - name: install-opsman
   serial: true
   serial_groups: [ install ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
-    - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: one-time-trigger
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: additional-tasks
-        params:
-          unpack: true    
-      - get: templates
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads
+  - put: notify
+    params:
+     <<: *slack_start_param
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: one-time-trigger
+      trigger: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: additional-tasks
+      params:
+        unpack: true    
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
 # pivnet
 #    - task: download-opsman-s3
 #      image: platform-automation-image
@@ -643,89 +814,100 @@ jobs:
 #        params:
 #          file: downloaded-product/*
 # s3 version
-    - task: download-opsman-s3
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product-s3.yml
-      params:
-        CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
-      input_mapping:
-        config: interpolated-product-downloads
-      output_mapping:
-        downloaded-product: opsman-product
+  - task: download-opsman-s3
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: opsman-product
 ##
-    - get: variable
-    - task: interpolate-product-templates
-      <<: *interpolate-product-templates          
-    - task: interpolate-product-downloads
-      <<: *interpolate-product-downloads        
-    - task: create-vm
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/create-vm.yml
-      input_mapping:
-        image: opsman-product
-        state: variable      
-        config: variable
-        env: variable
-        vars: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-        OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
-        STATE_FILE: ((foundation))/state/state.yml
-      ensure: #&make-config-commit
-          do:
-          - task: make-commit
-            <<: *do_state_commit
-            params:
-              FILE_SOURCE_PATH: state.yml
-              FILE_DESTINATION_PATH: ((foundation))/state/state.yml
-              <<: *git_commit_env
-          - put: variable
-            params:
-              repository: variable-commit
-              merge: true          
+  - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates          
+#    - task: interpolate-product-downloads
+#      <<: *interpolate-product-downloads        
+  - task: create-vm
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/create-vm.yml
+    input_mapping:
+      image: opsman-product
+      state: variable      
+      config: variable
+      env: variable
+      vars: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      STATE_FILE: ((foundation))/state/state.yml
+    ensure: #&make-config-commit
+        do:
+        - task: make-commit
+          <<: *do_state_commit
+          params:
+            FILE_SOURCE_PATH: state.yml
+            FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true          
 
-    - task: configure-authentication
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-saml-authentication.yml
-      attempts: 10
-      input_mapping:
-        env: variable
-        config: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
-        AUTH_CONFIG_FILE: ((foundation))/config/auth.yml          
-   # - task: update certficates
-   #   image: platform-automation-image
-   #   file: additional-tasks/tasks/update-ssl-certificate.yml
-   #   input_mapping:
-   #     env: variable
-   #   params:
-   #     ENV_FILE: ((foundation))/env/env.yml
-   #     CERTIFICATE_PEM: ((fullchain))
-   #     KEY_PEM: ((key)) 
-    - task: configure-director
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-director.yml
-      input_mapping:
-        config: interpolated-product-templates
-        env: variable
-        vars: variable
-      params:
-        VARS_FILES: vars/((foundation))/vars/director-vars.yml
-        ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
-    - task: apply-director-changes
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/apply-director-changes.yml
-      input_mapping:
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
+  - task: configure-authentication
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-saml-authentication.yml
+    attempts: 10
+    input_mapping:
+      env: variable
+      config: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      AUTH_CONFIG_FILE: ((foundation))/config/auth.yml          
+  # - task: update certficates
+  #   image: platform-automation-image
+  #   file: additional-tasks/tasks/update-ssl-certificate.yml
+  #   input_mapping:
+  #     env: variable
+  #   params:
+  #     ENV_FILE: ((foundation))/env/env.yml
+  #     CERTIFICATE_PEM: ((fullchain))
+  #     KEY_PEM: ((key)) 
+  - task: configure-director
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-director.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
+  - task: apply-director-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-director-changes.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
 ### upgraders
 - name: upgrade-opsman
   serial: true
   serial_groups: [ install ]
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - in_parallel:
     - get: one-time-trigger
       passed: [ install-opsman ]
@@ -781,7 +963,18 @@ jobs:
   serial_groups:
   - configure-products
   serial: true
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
     - in_parallel:
         - get: platform-automation-image
           params:
@@ -813,7 +1006,18 @@ jobs:
   serial_groups:
   - configure-products
   serial: true
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       params:
@@ -844,29 +1048,51 @@ jobs:
   serial_groups:
   - install
   serial: true
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
-    - in_parallel:
-        - get: platform-automation-tasks
-          params:
-            unpack: true
-        - get: platform-automation-image
-          params:
-            unpack: true
-          passed: # ((passed_configs))
-            - configure-pivotal-container-service
-            - configure-harbor-container-registry
-          trigger: true
-        - get: variable
-    - task: apply-product-changes
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/apply-changes.yml
-      input_mapping:
-        env: variable
-      params:
-        ENV_FILE: ((foundation))/env/env.yml
+  - put: notify
+    params:
+     <<: *slack_start_param
+  - in_parallel:
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed: # ((passed_configs))
+          - configure-pivotal-container-service
+          - configure-harbor-container-registry
+        trigger: true
+      - get: variable
+  - task: apply-product-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-changes.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
 
 - name: test-interpolate-director
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -888,7 +1114,18 @@ jobs:
 
         
 - name: test-interpolate-pivotal-container-service
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -908,7 +1145,18 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       SKIP_MISSING: true    
 - name: test-interpolate-harbor-container-registry
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -929,7 +1177,18 @@ jobs:
       SKIP_MISSING: true    
 - name: delete-installation
   serial: true
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
   plan:
+  - put: notify
+    params:
+     <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       params:
