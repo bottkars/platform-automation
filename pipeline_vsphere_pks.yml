@@ -1244,7 +1244,9 @@ jobs:
       - get: platform-automation-image
         params:
           unpack: true
-        trigger: true  
+        trigger: true
+        passed: 
+        - apply-product-changes           
       - get: one-time-trigger
         trigger: true
       - get: platform-automation-tasks
@@ -1252,9 +1254,7 @@ jobs:
           unpack: true
       - get: additional-tasks
         params:
-          unpack: true  
-        passed: 
-        - apply-product-changes       
+          unpack: true        
     - task: create-pks-admin
       image: platform-automation-image
       file: additional-tasks/tasks/create_pks_admin.yml
