@@ -1252,6 +1252,8 @@ jobs:
       - get: additional-tasks
         params:
           unpack: true  
+        passed: 
+        - apply-product-changes       
     - task: create-pks-admin
       image: platform-automation-image
       file: additional-tasks/tasks/create_pks_admin.yml
@@ -1282,6 +1284,7 @@ groups:
     - configure-pivotal-container-service
     - configure-harbor-container-registry
     - apply-product-changes 
+    - pks-post-tasks
 - name: get-products
   jobs:
     - get-pivotal-container-service
