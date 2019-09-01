@@ -632,17 +632,29 @@ jobs:
       - get: templates
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads
-    - task: download-opsman-pivnet
+# pivnet
+#    - task: download-opsman-s3
+#      image: platform-automation-image
+#      file: platform-automation-tasks/tasks/download-product.yml
+#      input_mapping:
+#        config: interpolated-product-downloads      
+#      params:
+#        CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
+#    - in_parallel:
+#      - put: opsman-product
+#        params:
+#          file: downloaded-product/*
+# s3 version
+    - task: download-opsman-s3
       image: platform-automation-image
-      file: platform-automation-tasks/tasks/download-product.yml
-      input_mapping:
-        config: interpolated-product-downloads      
+      file: platform-automation-tasks/tasks/download-product-s3.yml
       params:
         CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
-    - in_parallel:
-      - put: opsman-product
-        params:
-          file: downloaded-product/*
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: opsman-product
+##
     - get: variable
     - task: interpolate-product-templates
       <<: *interpolate-product-templates          
