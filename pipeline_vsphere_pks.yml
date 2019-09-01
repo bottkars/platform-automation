@@ -1266,7 +1266,7 @@ jobs:
         # conatins the opsman private key
         PKS_USERNAME: ((pks_username))
         PKS_PASSWORD: ((pks_password))
-        PKS_API_ENDPOINT: ((pks_admin_endpoint))          
+        PKS_API_ENDPOINT: ((pks_api_endpoint))          
 
 
 groups:
