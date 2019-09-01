@@ -1249,6 +1249,7 @@ jobs:
         - apply-product-changes           
       - get: one-time-trigger
         trigger: true
+      - get: variable  
       - get: platform-automation-tasks
         params:
           unpack: true
