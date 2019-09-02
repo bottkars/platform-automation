@@ -1270,6 +1270,38 @@ jobs:
         PKS_API_ENDPOINT: ((pks_api_endpoint))
         PKS_USER_EMAIL: ((pks_user_email))          
 
+- name: create-pks-cluster
+  plan:
+    - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        trigger: true
+        passed: 
+        - apply-product-changes           
+      - get: one-time-trigger
+        trigger: true
+      - get: variable  
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: additional-tasks
+        params:
+          unpack: true        
+    - task: create-pks-cluster
+      image: platform-automation-image
+      file: additional-tasks/tasks/create_pks_cluster.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        KEY_FILE: ((foundation))/env/opsman.key
+        # conatins the opsman private key
+        PKS_API_ENDPOINT: ((pks_api_endpoint))
+        PKS_CLUSTERNAME: ((pks_clustername))
+        PKS_MASTER_FQDN: ((pks_master_fqdn))
+        WORKER_INSTANCES: ((worker_instances))
+        PKS_PLAN_NAME: ((pks_plan_name))
 
 groups:
 - name: full
@@ -1288,6 +1320,7 @@ groups:
     - configure-harbor-container-registry
     - apply-product-changes 
     - add-pks-admin-user
+    - create-pks-cluster
 - name: get-products
   jobs:
     - get-pivotal-container-service

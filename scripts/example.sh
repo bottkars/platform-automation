@@ -7,7 +7,7 @@ cat /var/version && echo ""
     PKS_DEPLOYMENT=$(echo $deployments | \
         jp.py "Tables[0].Rows[?contains(name,'pivotal-container-service')].name |[0]")
     PKS_DEPLOYMENT=$(echo "${PKS_DEPLOYMENT//\"}")
-    ADMIN_CLIENT_SECRET=$(credhub get -n /opsmgr/${PKS_DEPLOYMENT}/pks_uaa_management_admin_client -k=value )
+    ADMIN_CLIENT_SECRET=$(credhub get -n /opsmgr/${PKS_DEPLOYMENT}/pks_api_uaa_client -k=value )
     TOKEN=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/oauth/token" -i -X POST \
     -H "Accept: application/json" \
     -H "Content-Type: application/x-www-form-urlencoded" \
