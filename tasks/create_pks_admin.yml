@@ -82,7 +82,8 @@ run:
         "value" : "${USER_ID}"
     }
     EOF
-    )      
+    )
+    echo      
     echo "-->adding ${PKS_USERNAME} to ${GROUP_ID} (pks.clusters.admin)"
 
     curl -k  "https://${PKS_API_ENDPOINT}:8443/Groups/${GROUP_ID}/members" -i -X POST \
