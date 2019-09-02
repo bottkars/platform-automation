@@ -1296,7 +1296,6 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
         KEY_FILE: ((foundation))/env/opsman.key
-        # conatins the opsman private key
         PKS_API_ENDPOINT: ((pks_api_endpoint))
         PKS_CLUSTERNAME: ((pks_clustername))
         PKS_MASTER_FQDN: ((pks_master_fqdn))
@@ -1321,6 +1320,7 @@ groups:
     - apply-product-changes 
     - add-pks-admin-user
     - create-pks-cluster
+    - export-installation
 - name: get-products
   jobs:
     - get-pivotal-container-service
