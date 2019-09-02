@@ -1238,7 +1238,7 @@ jobs:
             repository: variable-commit
             merge: true    
 
-- name: pks-post-tasks
+- name: add-pks-admin-user
   plan:
     - in_parallel:
       - get: platform-automation-image
@@ -1267,7 +1267,8 @@ jobs:
         # conatins the opsman private key
         PKS_USERNAME: ((pks_username))
         PKS_PASSWORD: ((pks_password))
-        PKS_API_ENDPOINT: ((pks_api_endpoint))          
+        PKS_API_ENDPOINT: ((pks_api_endpoint))
+        PKS_USER_EMAIL: ((pks_user_email))          
 
 
 groups:
@@ -1286,7 +1287,7 @@ groups:
     - configure-pivotal-container-service
     - configure-harbor-container-registry
     - apply-product-changes 
-    - pks-post-tasks
+    - add-pks-admin-user
 - name: get-products
   jobs:
     - get-pivotal-container-service

@@ -1,31 +1,6 @@
-# code_snippet to create pks admin user
-# 02.09.2019 @azurestack_guy
----
-platform: linux
-
-inputs:
-- name: env # contains the env file with target OpsMan Information
-
-params:
-  ENV_FILE: env.yml
-  # - Required
-  # - Filepath of the env config YAML
-  # - The path is relative to root of the `env` input
-  KEY_FILE: opsman.key
-  # conatins the opsman private key
-  PKS_USERNAME: 
-  PKS_PASSWORD: 
-  PKS_API_ENDPOINT:
-  PKS_USER_EMAIL: email@example.com
-
-
-run:
-  path: bash
-  args:
-  - "-c"
-  - |
-    cat /var/version && echo ""
-    set -eu
+#!/bin/bash
+cat /var/version && echo ""
+    set -eux
     eval "$(om --env ./env/${ENV_FILE} \
         --skip-ssl-validation bosh-env --ssh-private-key ./env/${KEY_FILE})"
     deployments=$(bosh deployments --column=Name --json)
@@ -33,14 +8,11 @@ run:
         jp.py "Tables[0].Rows[?contains(name,'pivotal-container-service')].name |[0]")
     PKS_DEPLOYMENT=$(echo "${PKS_DEPLOYMENT//\"}")
     ADMIN_CLIENT_SECRET=$(credhub get -n /opsmgr/${PKS_DEPLOYMENT}/pks_uaa_management_admin_client -k=value )
-    echo "-->getting UAA Token"
     TOKEN=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/oauth/token" -i -X POST \
     -H "Accept: application/json" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "client_id=admin&client_secret=${ADMIN_CLIENT_SECRET}&grant_type=client_credentials&token_format=opaque" \
      | awk -F\" '/access_token/{printf $4}')
-
-    echo "-->Creating user ${PKS_USERNAME}"
 
     DATA=$(cat <<EOF
     {
@@ -50,12 +22,12 @@ run:
             "givenName" : "ADMIN"
         },
         "emails" : [ {
-            "value" : "${PKS_USER_EMAIL}",
+            "value" : "${PKS_USERNAME}@test.org",
             "primary" : true
         } ],
         "password" : "${PKS_PASSWORD}"
     }
-    EOF
+EOF
     )
     curl -k -s "https://${PKS_API_ENDPOINT}:8443/Users" -i -X POST \
     -H "Accept: application/json" \
@@ -63,11 +35,10 @@ run:
     -H "Content-Type: application/json" \
     -d "${DATA}"
 
-    USER_ID=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/Users?attributes=id%2CuserName&filter=userName+eq+%${PKS_USERNAME}" -i -X GET  \
+    USER_ID=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/Users?attributes=id&filter=username+eq+%${PKS_USERNAME}%22&count=1" -i -X GET \
     -H "Accept: application/json" \
-    -H "Authorization: Bearer ${TOKEN}" | tail -n +13 | jp.py "resources[?userName=='$PKS_USERNAME'].id | [0]")
-    
-    USER_ID=$(echo "${USER_ID//\"}")
+    -H "Authorization: Bearer ${TOKEN}" | awk -F\" '/id/{printf $6}')
+
 
     GROUP_ID=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/Groups?scheme=openid&filter=displayName+eq+%pks.clusters.admin" -i -X GET \
     -H "Accept: application/json" \
@@ -81,10 +52,9 @@ run:
         "type" : "USER",
         "value" : "${USER_ID}"
     }
-    EOF
+EOF
     )      
-    echo "-->adding ${PKS_USERNAME} to ${GROUP_ID} (pks.clusters.admin)"
-
+    
     curl -k  "https://${PKS_API_ENDPOINT}:8443/Groups/${GROUP_ID}/members" -i -X POST \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${TOKEN}" \
