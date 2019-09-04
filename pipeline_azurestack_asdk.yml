@@ -2284,6 +2284,68 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml        
 
+- name: upload-and-stage-p-event-alerts
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
+  serial_groups:
+  - upload-and-stage
+  serial: true
+  plan:
+  - put: notify
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads     
+  - task: download-p-event-alerts
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: p-event-alerts-product
+      downloaded-stemcell: p-event-alerts-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: p-event-alerts-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-p-event-alerts-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: p-event-alerts-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: p-event-alerts-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml        
+
 - name: upload-and-stage-apm
   on_failure:
     put: notify
@@ -3001,6 +3063,47 @@ jobs:
     params:
       CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
       VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
+- name: configure-p-event-alerts
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+  - put: notify
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-p-event-alerts
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
+  - task: configure-p-event-alerts
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-apm
