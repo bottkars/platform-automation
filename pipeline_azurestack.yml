@@ -208,6 +208,15 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: p-event-alerts-product/\[p-event-alerts,(.*)\]p-event-alerts-.*.pivotal
 
+- name: apm-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: apm-product/\[apm,(.*)\]apm-.*.pivotal
+
+
 - name: p-compliance-scanner-product
   icon: amazon-drive
   type: s3
@@ -223,6 +232,7 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: reliability-view-pcf-product/\[reliability_view_pcf,(.*)\]reliability-view-.*.pivotal
+
 - name: reliability-view-pas-exporter-product
   icon: amazon-drive
   type: s3
@@ -296,6 +306,14 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: wavefront-nozzle-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*.tgz
+
+- name: apm-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: apm-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
 
 - name: p-event-alerts-stemcell
   icon: amazon-drive
@@ -1341,6 +1359,37 @@ jobs:
       params:
         file: p-event-alerts-stemcell/*.tgz
 
+- name: apm
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-apm-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-apm.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: apm-stemcell}
+  - in_parallel:
+    - put: apm-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: apm-stemcell
+      params:
+        file: apm-stemcell/*.tgz
 
 
 - name: get-p-compliance-scanner
@@ -1807,6 +1856,56 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml        
 - name: upload-and-stage-p-event-alerts
+  serial_groups:
+  - upload-and-stage
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-downloads
+      <<: *interpolate-product-downloads     
+    - task: download-p-event-alerts
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product-s3.yml
+      params:
+        CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping:
+        downloaded-product: p-event-alerts-product
+        downloaded-stemcell: p-event-alerts-stemcell
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: p-event-alerts-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: upload-p-event-alerts-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        env: variable
+        stemcell: p-event-alerts-stemcell
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+    - task: stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/stage-product.yml
+      input_mapping:
+        product: p-event-alerts-product
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml        
+- name: apm
   serial_groups:
   - upload-and-stage
   serial: true
@@ -2374,6 +2473,7 @@ jobs:
         CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
         VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
+
 - name: configure-p-event-alerts
   serial_groups:
   - configure-products
@@ -2405,6 +2505,36 @@ jobs:
         VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
         ENV_FILE: ((foundation))/env/env.yml 
 
+- name: configure-p-event-alerts
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+    - in_parallel:
+        - get: platform-automation-image
+          params:
+            unpack: true
+          passed:
+            - upload-and-stage-p-event-alerts
+          trigger: true
+        - get: platform-automation-tasks
+          params:
+            unpack: true
+        - get: templates
+        - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates
+    - task: configure-p-event-alerts
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-product.yml
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+        VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+        ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-compliance-scanner
   serial_groups:
