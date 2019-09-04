@@ -446,6 +446,7 @@ jobs:
 - name: upload-and-stage-srt
   serial_groups:
   - upload-and-stage
+  - install
   serial: true
   plan:
     - in_parallel:
@@ -499,6 +500,7 @@ jobs:
 - name: upload-and-stage-p-event-alerts
   serial_groups:
   - upload-and-stage
+  - install
   serial: true
   plan:
   - in_parallel:
@@ -552,6 +554,7 @@ jobs:
 - name: upload-and-stage-p-healthwatch
   serial_groups:
   - upload-and-stage
+  - install
   serial: true
   plan:
   - in_parallel:
@@ -606,6 +609,7 @@ jobs:
   serial: true
   serial_groups:
   - upload-and-stage
+  - install
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -658,6 +662,7 @@ jobs:
   serial: true
   serial_groups:
   - upload-and-stage
+  - install
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -752,6 +757,13 @@ jobs:
             FILE_SOURCE_PATH: state.yml
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
+  - task: apply-director-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-director-changes.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
 ## get products
 - name: get-srt
   serial: true

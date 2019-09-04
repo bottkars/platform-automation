@@ -140,7 +140,13 @@ resources:
 
 
 
-## core resources
+- name: additional-tasks
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_tasks))
+    regexp: additional-tasks-(.*).zip## core resources
 - name: templates
   icon: github-circle
   type: git  
@@ -300,7 +306,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service.yml
+      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service-cli.yml
     input_mapping:
       config: interpolated-product-downloads
   - in_parallel:
@@ -453,6 +459,7 @@ jobs:
   serial: true
   serial_groups:
   - upload-and-stage
+  - install
   plan:
     - in_parallel:
         - get: platform-automation-image
@@ -460,12 +467,15 @@ jobs:
             unpack: true
           passed:
            - upgrade-opsman
+           - get-pivotal-container-service           
           trigger: true  
         - get: platform-automation-tasks
           params:
             unpack: true
         - get: templates
         - get: variable
+        - get: pivotal-container-service-product
+          trigger: true
     - task: interpolate-product-downloads
       <<: *interpolate-product-downloads       
     - task: download-pivotal-container-service
@@ -508,11 +518,16 @@ jobs:
   serial: true
   serial_groups:
   - upload-and-stage
+  - install
   plan:
     - in_parallel:
         - get: platform-automation-image
           params:
             unpack: true
+          passed:
+          - upgrade-opsman
+          - get-harbor-container-registry
+          trigger: true          
         - get: platform-automation-tasks
           params:
             unpack: true
@@ -669,6 +684,7 @@ jobs:
       params:
         unpack: true
     - get: opsman-product
+      trigger: true
     - get: installation
       passed: [ export-installation ]
     - get: templates
@@ -702,10 +718,17 @@ jobs:
             FILE_SOURCE_PATH: state.yml
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
+  - task: apply-director-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-director-changes.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
 ## configure products
 - name: configure-pivotal-container-service
   serial_groups:
-  - configure-products
+#  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -713,7 +736,7 @@ jobs:
           params:
             unpack: true
           passed:
-            - upload-and-stage-pivotal-container-service
+          - upload-and-stage-pivotal-container-service
           trigger: true
         - get: platform-automation-tasks
           params:
@@ -767,6 +790,8 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml 
         
 - name: apply-product-changes
+  serial_groups:
+  - install
   serial: true
   plan:
     - in_parallel:
@@ -832,12 +857,28 @@ jobs:
       SKIP_MISSING: true    
 
 groups:
+- name: full
+  jobs:
+    - install-opsman
+    - upgrade-opsman
+    - upload-and-stage-pivotal-container-service 
+    - upload-and-stage-harbor-container-registry   
+    - get-pivotal-container-service
+    - get-harbor-container-registry
+    - get-platform-automation
+    - get-opsman
+    - upload-and-stage-pivotal-container-service 
+    - upload-and-stage-harbor-container-registry    
+    - configure-pivotal-container-service 
+    - configure-harbor-container-registry
+    - apply-product-changes 
 - name: get-products
   jobs:
     - get-pivotal-container-service
     - get-harbor-container-registry
     - get-platform-automation
     - get-opsman
+    - get-pivotal-container-service-cli
 - name: upload-and-stage-products
   jobs:
     - upload-and-stage-pivotal-container-service 
