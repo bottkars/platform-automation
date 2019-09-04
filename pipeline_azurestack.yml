@@ -1359,7 +1359,7 @@ jobs:
       params:
         file: p-event-alerts-stemcell/*.tgz
 
-- name: apm
+- name: get-apm
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -3033,6 +3033,7 @@ groups:
   - get-p-healthwatch
   - get-wavefront-nozzle
   - get-p-event-alerts
+  - get-apm  
   - get-p-compliance-scanner
   - get-reliability-view-pcf
   - get-reliability-view-pas-exporter
@@ -3047,6 +3048,7 @@ groups:
   - upload-and-stage-p-healthwatch
   - upload-and-stage-wavefront-nozzle
   - upload-and-stage-p-event-alerts
+  - upload-and-stage-apm
   - upload-and-stage-p-compliance-scanner
   - upload-and-stage-reliability-view-pcf
   - upload-and-stage-reliability-view-pas-exporter
@@ -3061,6 +3063,7 @@ groups:
   - configure-p-healthwatch
   - configure-wavefront-nozzle
   - configure-p-event-alerts
+  - configure-apm
   - configure-p-compliance-scanner
   - configure-reliability-view-pcf
   - configure-reliability-view-pas-exporter
@@ -3095,6 +3098,7 @@ groups:
   - get-p-healthwatch
   - get-wavefront-nozzle
   - get-p-event-alerts
+  - get-apm
   - get-p-compliance-scanner
   - get-reliability-view-pcf
   - get-reliability-view-pas-exporter
@@ -3111,6 +3115,7 @@ groups:
   - upload-and-stage-p-healthwatch
   - upload-and-stage-wavefront-nozzle
   - upload-and-stage-p-event-alerts
+  - upload-and-stage-apm
   - upload-and-stage-p-compliance-scanner
   - upload-and-stage-reliability-view-pcf
   - upload-and-stage-reliability-view-pas-exporter
@@ -3125,6 +3130,7 @@ groups:
   - configure-p-healthwatch
   - configure-wavefront-nozzle
   - configure-p-event-alerts
+  - configure-apm
   - configure-p-compliance-scanner
   - configure-reliability-view-pcf
   - configure-reliability-view-pas-exporter
