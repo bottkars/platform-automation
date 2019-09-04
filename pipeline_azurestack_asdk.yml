@@ -223,6 +223,14 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: wavefront-nozzle-product/\[wavefront-nozzle,(.*)\]wavefront-nozzle-.*.pivotal
 
+- name: apm-product
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: apm-product/\[apm,(.*)\]apm-.*.pivotal
+
 - name: p-event-alerts-product
   icon: amazon-drive
   type: s3
@@ -230,7 +238,6 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: p-event-alerts-product/\[p-event-alerts,(.*)\]p-event-alerts-.*.pivotal
-
 - name: p-compliance-scanner-product
   icon: amazon-drive
   type: s3
@@ -327,6 +334,15 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: p-event-alerts-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
+- name: apm-stemcell
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: apm-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
+
 
 - name: p-compliance-scanner-stemcell
   icon: amazon-drive
@@ -1638,6 +1654,49 @@ jobs:
       params:
         file: p-event-alerts-stemcell/*.tgz
 
+- name: get-apm
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - put: notify
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: templates
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-apm-product-and-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-apm.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: apm-stemcell}
+  - in_parallel:
+    - put: apm-product
+      params:
+        file: downloaded-product/*.pivotal
+    - put: apm-stemcell
+      params:
+        file: apm-stemcell/*.tgz
+
 
 
 - name: get-p-compliance-scanner
@@ -2224,7 +2283,8 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml        
-- name: upload-and-stage-p-event-alerts
+
+- name: upload-and-stage-apm
   on_failure:
     put: notify
     params:
@@ -2251,40 +2311,42 @@ jobs:
       - get: variable
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads     
-  - task: download-p-event-alerts
+  - task: download-apm
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-apm.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: p-event-alerts-product
-      downloaded-stemcell: p-event-alerts-stemcell
+      downloaded-product: apm-product
+      downloaded-stemcell: apm-stemcell
   - task: upload-product
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: p-event-alerts-product
+      product: apm-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-p-event-alerts-stemcell
+  - task: upload-apm-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: p-event-alerts-stemcell
+      stemcell: apm-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: p-event-alerts-product
+      product: apm-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml        
+
+
 
 - name: upload-and-stage-p-compliance-scanner
   on_failure:
@@ -2941,7 +3003,7 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
-- name: configure-p-event-alerts
+- name: configure-apm
   on_failure:
     put: notify
     params:
@@ -2962,7 +3024,7 @@ jobs:
         params:
           unpack: true
         passed:
-          - upload-and-stage-p-event-alerts
+          - upload-and-stage-apm
         trigger: true
       - get: platform-automation-tasks
         params:
@@ -2971,7 +3033,7 @@ jobs:
       - get: variable
   - task: interpolate-product-templates
     <<: *interpolate-product-templates
-  - task: configure-p-event-alerts
+  - task: configure-apm
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
@@ -2979,8 +3041,8 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
-      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+      CONFIG_FILE: product-configs/((pas_version))/apm.yml
+      VARS_FILES: vars/((foundation))/vars/apm-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 - name: configure-p-compliance-scanner
@@ -3683,6 +3745,7 @@ groups:
   - get-p-healthwatch
   - get-wavefront-nozzle
   - get-p-event-alerts
+  - get-apm
   - get-p-compliance-scanner
   - get-reliability-view-pcf
   - get-reliability-view-pas-exporter
@@ -3697,6 +3760,7 @@ groups:
   - upload-and-stage-p-healthwatch
   - upload-and-stage-wavefront-nozzle
   - upload-and-stage-p-event-alerts
+  - upload-and-stage-apm
   - upload-and-stage-p-compliance-scanner
   - upload-and-stage-reliability-view-pcf
   - upload-and-stage-reliability-view-pas-exporter
@@ -3711,6 +3775,7 @@ groups:
   - configure-p-healthwatch
   - configure-wavefront-nozzle
   - configure-p-event-alerts
+  - configure-apm
   - configure-p-compliance-scanner
   - configure-reliability-view-pcf
   - configure-reliability-view-pas-exporter
