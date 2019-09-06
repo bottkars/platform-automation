@@ -877,7 +877,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pcf.yml
+      CONFIG_FILE: download-product-configs/((pks_version))/download-reliability-view-pcf.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:

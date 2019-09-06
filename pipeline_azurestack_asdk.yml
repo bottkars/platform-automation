@@ -532,7 +532,7 @@ jobs:
       RESOURCE_GROUP: ((resource_group))
       BOSHSTORAGEACCOUNT: ((boshstorageaccount))
 
-- name: get-opsman-image
+- name: get-opsman-image-azure
   on_failure:
     put: notify
     params:
@@ -542,7 +542,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial: true
-  serial_groups: [ get-products, upgrade-opsman ]
+  serial_groups: [ get-products, upgrade-opsman, opsman ]
   plan:
   - put: notify
     params:
@@ -551,10 +551,11 @@ jobs:
     - get: templates
     - get: opsman-product
       passed: 
-      - get-opsman 
+      - get-opsman-pivnet 
       trigger: true
     - get: one-time-trigger
       passed: [ export-installation ]
+      trigger: true
     - get: installation
       passed: [ export-installation ]  
     - get: azs-concourse
@@ -996,7 +997,7 @@ jobs:
         unpack: true
       passed:
        - configure-opsman 
-      # trigger: true
+      trigger: true
   - task: apply-director-changes
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-director-changes.yml
@@ -1012,7 +1013,7 @@ jobs:
       put: notify
       params:
         <<: *slack_succeeded_param
-- name: get-opsman
+- name: get-opsman-pivnet
   on_failure:
     put: notify
     params:
@@ -1133,6 +1134,7 @@ jobs:
       - get: variable
       - get: one-time-trigger
         passed: [ install-opsman ]
+        trigger: true
   - task: export-installation
     image: platform-automation-image
     file: platform-automation-tasks/tasks/export-installation.yml
@@ -1147,7 +1149,11 @@ jobs:
 
 - name: upgrade-opsman
   serial: true
+<<<<<<< HEAD
+  serial_groups: [ install, get-products, upgrade-opsman, opsman ]
+=======
   serial_groups: [ install, get-products, upgrade-opsman, apply ]
+>>>>>>> dd3211e8e9492f61dc1cc05791718c8ed3e5b054
   on_failure:
     put: notify
     params:
@@ -1162,17 +1168,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
       - get: one-time-trigger
-        passed: [ export-installation, get-opsman-image ]
+        passed: [ export-installation, get-opsman-image-azure ]
+        trigger: true
       - get: azs-concourse  
       - get: platform-automation-image
         params:
           unpack: true
-        trigger: true
       - get: platform-automation-tasks
         params:
           unpack: true
       - get: installation
         passed: [ export-installation ]
+        trigger: true
       - get: templates
       - get: variable
       - get: opsman-product
@@ -3824,18 +3831,18 @@ jobs:
 
 
 groups:
-- name: deploy-asdk-1907-plans
+- name: deploy-asdk-1908-plans
   jobs:  
   - deploy-asdk
 
 - name: install-pivotal-platform
   jobs:
-  - get-opsman
+  - get-opsman-pivnet
   - upgrade-opsman
   - export-installation
   - staged-director-config 
   - install-opsman 
-  - get-opsman-image
+  - get-opsman-image-azure
   - configure-opsman
   - apply-director
 #
@@ -3846,8 +3853,8 @@ groups:
   - get-p-spring-cloud-services-3
   - get-p-rabbitmq
   - get-pivotal-mysql
-  - get-opsman
-  - get-opsman-image
+  - get-opsman-pivnet
+  - get-opsman-image-azure
   - get-p-healthwatch
   - get-wavefront-nozzle
   - get-p-event-alerts
@@ -3911,8 +3918,8 @@ groups:
   - get-p-spring-cloud-services-3
   - get-p-rabbitmq
   - get-pivotal-mysql
-  - get-opsman
-  - get-opsman-image
+  - get-opsman-pivnet
+  - get-opsman-image-azure
   - get-p-healthwatch
   - get-wavefront-nozzle
   - get-p-event-alerts
