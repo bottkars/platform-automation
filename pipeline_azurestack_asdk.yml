@@ -971,6 +971,8 @@ jobs:
       params:
         <<: *slack_failed_param        
 - name: apply-director 
+  serial_groups:
+  - apply
   on_failure:
     put: notify
     params:
@@ -1145,7 +1147,7 @@ jobs:
 
 - name: upgrade-opsman
   serial: true
-  serial_groups: [ install, get-products, upgrade-opsman ]
+  serial_groups: [ install, get-products, upgrade-opsman, apply ]
   on_failure:
     put: notify
     params:
@@ -1174,7 +1176,6 @@ jobs:
       - get: templates
       - get: variable
       - get: opsman-product
-        trigger: true
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads     
   - task: delete-existing-opsman
@@ -2782,6 +2783,8 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml        
 - name: apply-product-changes
+  serial_groups: 
+    - apply
   on_failure:
     put: notify
     params:
