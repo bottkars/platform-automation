@@ -1506,6 +1506,8 @@ groups:
     - get-platform-automation
     - get-opsman
     - get-pivotal-container-service-cli
+    - get-reliability-view-pcf
+    - get-reliability-view-pks-exporter
 - name: upload-and-stage-products
   jobs:
     - upload-and-stage-pivotal-container-service 
