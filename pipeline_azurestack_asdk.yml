@@ -972,6 +972,8 @@ jobs:
       params:
         <<: *slack_failed_param        
 - name: apply-director 
+  serial_groups:
+  - apply
   on_failure:
     put: notify
     params:
@@ -1147,7 +1149,11 @@ jobs:
 
 - name: upgrade-opsman
   serial: true
+<<<<<<< HEAD
   serial_groups: [ install, get-products, upgrade-opsman, opsman ]
+=======
+  serial_groups: [ install, get-products, upgrade-opsman, apply ]
+>>>>>>> dd3211e8e9492f61dc1cc05791718c8ed3e5b054
   on_failure:
     put: notify
     params:
@@ -2784,6 +2790,8 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml        
 - name: apply-product-changes
+  serial_groups: 
+    - apply
   on_failure:
     put: notify
     params:
