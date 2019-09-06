@@ -907,6 +907,69 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml  
+
+- name: upload-and-stage-reliability-view-pks-exporter
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
+  serial: true
+  serial_groups:
+  - upload-and-stage
+  plan:
+  - put: notify
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-downloads
+    <<: *interpolate-product-downloads
+  - task: download-reliability-view-pks-exporter
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pks_version))/download-reliability-view-pks-exporter.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: reliability-view-pks-exporter-product
+      downloaded-stemcell: reliability-view-pks-exporter-stemcell
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: reliability-view-pks-exporter-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-reliability-view-pks-exporter-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: reliability-view-pks-exporter-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: reliability-view-pks-exporter-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml  
+
 ##
 - name: configure-director
   serial: true
@@ -1490,9 +1553,13 @@ groups:
     - get-pivotal-container-service
     - get-harbor-container-registry
     - get-platform-automation
+    - get-reliability-view-pcf
+    - get-reliability-view-pks-exporter  
     - get-opsman
     - upload-and-stage-pivotal-container-service 
-    - upload-and-stage-harbor-container-registry    
+    - upload-and-stage-harbor-container-registry  
+    - upload-and-stage-reliability-view-pcf
+    - upload-and-stage-reliability-view-pks-exporter  
     - configure-pivotal-container-service
     - configure-harbor-container-registry
     - apply-product-changes 
@@ -1512,7 +1579,8 @@ groups:
   jobs:
     - upload-and-stage-pivotal-container-service 
     - upload-and-stage-harbor-container-registry 
-    - upload-and-stage-reliability-view-pcf  
+    - upload-and-stage-reliability-view-pcf
+    - upload-and-stage-reliability-view-pks-exporter  
 - name: configure-products
   jobs:
     - configure-pivotal-container-service
