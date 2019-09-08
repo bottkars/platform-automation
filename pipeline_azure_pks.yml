@@ -146,7 +146,8 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_tasks))
-    regexp: additional-tasks-(.*).zip## core resources
+    regexp: additional-tasks-(.*).zip
+## core resources
 - name: templates
   icon: github-circle
   type: git  
@@ -648,8 +649,8 @@ jobs:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
-        CERTIFICATE_PEM: ((fullchain))
-        KEY_PEM: ((key)) 
+        CERTIFICATE_PEM: ((pks_fullchain_cert.certificate))
+        KEY_PEM: ((pks_fullchain_cert.private_key)) 
     - task: configure-director
       image: platform-automation-image
       file: platform-automation-tasks/tasks/configure-director.yml
@@ -815,6 +816,26 @@ jobs:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
+- name: test-interpolate-director
+  plan:
+  - get: variable
+  - get: templates
+  - get: platform-automation-image
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      unpack: true
+  - task: interpolate
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml
+      SKIP_MISSING: true         
 - name: test-interpolate-pivotal-container-service
   plan:
   - get: variable
@@ -855,6 +876,115 @@ jobs:
       CONFIG_FILE: product-configs/((pks_version))/harbor-container-registry.yml
       VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
       SKIP_MISSING: true    
+
+- name: delete-installation
+  serial: true
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: variable
+  - task: delete-installation
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/delete-installation.yml
+    input_mapping:
+      env: variable
+    params:
+    # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
+     ENV_FILE: ((foundation))/env/env.yml
+  - task: delete-vm
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/delete-vm.yml
+    input_mapping:
+      state: variable      
+      config: variable
+      env: variable
+      vars: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      STATE_FILE: ((foundation))/state/state.yml
+    ensure: #&put-state
+        do:
+        - task: make-commit
+          <<: *do_state_commit
+          params:
+            FILE_SOURCE_PATH: state.yml
+            FILE_DESTINATION_PATH: ((foundation))/state/state.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true    
+
+- name: add-pks-admin-user
+  plan:
+    - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        trigger: true
+        passed: 
+        - apply-product-changes           
+      - get: one-time-trigger
+        trigger: true
+      - get: variable  
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: additional-tasks
+        params:
+          unpack: true        
+    - task: create-pks-admin
+      image: platform-automation-image
+      file: additional-tasks/tasks/create_pks_admin.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        KEY_FILE: ((foundation))/env/opsman.key
+        # conatins the opsman private key
+        PKS_USERNAME: ((pks_username))
+        PKS_PASSWORD: ((pks_password))
+        PKS_API_ENDPOINT: ((pks_api_endpoint))
+        PKS_USER_EMAIL: ((pks_user_email))          
+
+- name: create-pks-cluster
+  plan:
+    - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        trigger: true
+        passed: 
+        - apply-product-changes           
+      - get: one-time-trigger
+        trigger: true
+      - get: variable  
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: additional-tasks
+        params:
+          unpack: true        
+    - task: create-pks-cluster
+      image: platform-automation-image
+      file: additional-tasks/tasks/create_pks_cluster.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        KEY_FILE: ((foundation))/env/opsman.key
+        PKS_API_ENDPOINT: ((pks_api_endpoint))
+        PKS_CLUSTERNAME: ((pks_clustername))
+        PKS_MASTER_FQDN: ((pks_master_fqdn))
+        WORKER_INSTANCES: ((worker_instances))
+        PKS_PLAN_NAME: ((pks_plan_name))
+
 
 groups:
 - name: full
@@ -898,7 +1028,15 @@ groups:
 - name: test-interpolate
   jobs: 
     - test-interpolate-pivotal-container-service
-    - test-interpolate-harbor-container-registry    
+    - test-interpolate-harbor-container-registry
+    - test-interpolate-director    
 - name: Upgrade
   jobs:
-  - upgrade-opsman       
+  - upgrade-opsman     
+- name: ZZZ_delete
+  jobs:
+  - delete-installation
+- name: Additional
+  jobs: 
+  - create-pks-cluster
+  - add-pks-admin-user
