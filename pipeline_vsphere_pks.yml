@@ -1484,12 +1484,7 @@ jobs:
     - in_parallel:
       - get: platform-automation-image
         params:
-          unpack: true
-        trigger: true
-        passed: 
-        - apply-product-changes           
-      - get: one-time-trigger
-        trigger: true
+          unpack: tru        
       - get: variable  
       - get: platform-automation-tasks
         params:

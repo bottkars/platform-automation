@@ -1,4 +1,4 @@
- code_snippet to create pks admin user
+# code_snippet to create pks admin user
 # 02.09.2019 @azurestack_guy
 ---
 platform: linux
@@ -6,7 +6,6 @@ platform: linux
 #inputs:
 # - name: env # contains the env file with target OpsMan Information
 
-params:
 
 run:
   path: bash
