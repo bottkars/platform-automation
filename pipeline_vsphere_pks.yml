@@ -1511,6 +1511,30 @@ jobs:
         PKS_API_ENDPOINT: ((pks_api_endpoint))
         PKS_USER_EMAIL: ((pks_user_email))          
 
+
+- name: envtest
+  plan:
+    - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        trigger: true
+        passed: 
+        - apply-product-changes           
+      - get: one-time-trigger
+        trigger: true
+      - get: variable  
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: additional-tasks
+        params:
+          unpack: true        
+    - task: create-pks-admin
+      image: platform-automation-image
+      file: additional-tasks/tasks/envtest.yml
+          
+
 - name: create-pks-cluster
   plan:
     - in_parallel:
@@ -1605,3 +1629,6 @@ groups:
 - name: delete
   jobs:
   - delete-installation   
+- name: ZZZ
+  jobs:
+  - envtest    

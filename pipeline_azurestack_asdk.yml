@@ -1050,6 +1050,7 @@ jobs:
     - put: opsman-product
       params:
         file: downloaded-product/*
+        
 - name: testing
   on_failure:
     put: notify
