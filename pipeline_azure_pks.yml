@@ -435,14 +435,14 @@ jobs:
         - get: platform-automation-image
           params:
             unpack: true
-#          passed: [ install-opsman, apply-director ]
+          passed: [ install-opsman]
         - get: platform-automation-tasks
           params:
             unpack: true
         - get: templates
         - get: variable
         - get: one-time-trigger
-#          passed: [ install-opsman ]
+          passed: [ install-opsman ]
     - task: export-installation
       image: platform-automation-image
       file: platform-automation-tasks/tasks/export-installation.yml

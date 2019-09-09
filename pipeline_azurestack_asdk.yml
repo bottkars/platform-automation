@@ -1149,11 +1149,7 @@ jobs:
 
 - name: upgrade-opsman
   serial: true
-<<<<<<< HEAD
-  serial_groups: [ install, get-products, upgrade-opsman, opsman ]
-=======
-  serial_groups: [ install, get-products, upgrade-opsman, apply ]
->>>>>>> dd3211e8e9492f61dc1cc05791718c8ed3e5b054
+  serial_groups: [ install, get-products, upgrade-opsman, opsman, apply ]
   on_failure:
     put: notify
     params:
