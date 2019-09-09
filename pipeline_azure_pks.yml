@@ -675,8 +675,8 @@ jobs:
   serial_groups: [ install ]
   plan:
   - in_parallel:
-#    - get: one-time-trigger
-#      passed: [ install-opsman ]
+    - get: one-time-trigger
+      passed: [ install-opsman ]
     - get: platform-automation-image
       params:
         unpack: true
@@ -700,14 +700,10 @@ jobs:
     input_mapping:
      image: opsman-product
      state: variable
-#        config: interpolated-creds
-#        env: interpolated-creds
-#        vars: variable
      config: variable
      env: variable
      vars: variable
     params:
-     # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
      ENV_FILE: ((foundation))/env/env.yml
      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
      STATE_FILE: ((foundation))/state/state.yml
@@ -729,7 +725,7 @@ jobs:
 ## configure products
 - name: configure-pivotal-container-service
   serial_groups:
-#  - configure-products
+  - configure-products
   serial: true
   plan:
     - in_parallel:
@@ -807,8 +803,6 @@ jobs:
             - configure-harbor-container-registry
           trigger: true
         - get: variable
-#    - task: interpolate-variable
-#      <<: *interpolate-variable
     - task: apply-product-changes
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-changes.yml
@@ -894,7 +888,6 @@ jobs:
     input_mapping:
       env: variable
     params:
-    # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
      ENV_FILE: ((foundation))/env/env.yml
   - task: delete-vm
     image: platform-automation-image
@@ -947,7 +940,6 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
         KEY_FILE: ((foundation))/env/opsman.key
-        # conatins the opsman private key
         PKS_USERNAME: ((pks_username))
         PKS_PASSWORD: ((pks_password))
         PKS_API_ENDPOINT: ((pks_api_endpoint))
@@ -990,6 +982,7 @@ groups:
 - name: full
   jobs:
     - install-opsman
+    - export-installation
     - upgrade-opsman
     - upload-and-stage-pivotal-container-service 
     - upload-and-stage-harbor-container-registry   
