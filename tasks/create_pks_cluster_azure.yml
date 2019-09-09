@@ -1,0 +1,61 @@
+# code_snippet to create pks cluster on azure.
+# also creates loadbalancer as clustername_lb
+# 02.09.2019 @azurestack_guy
+---
+platform: linux
+
+inputs:
+- name: env # contains the env file with target OpsMan Information
+
+params:
+  ENV_FILE: env.yml
+  # - Required
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+  KEY_FILE: opsman.key
+  # conatins the opsman private key
+  PKS_CLUSTERNAME:
+  PKS_MASTER_FQDN: 
+  PKS_API_ENDPOINT:
+  WORKER_INSTANCES:
+  PKS_PLAN_NAME:
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    cat /var/version && echo ""
+    set -eu
+    eval "$(om --env ./env/${ENV_FILE} \
+        --skip-ssl-validation bosh-env --ssh-private-key ./env/${KEY_FILE})"
+    deployments=$(bosh deployments --column=Name --json)
+    PKS_DEPLOYMENT=$(echo $deployments | \
+        jp.py "Tables[0].Rows[?contains(name,'pivotal-container-service')].name |[0]")
+    PKS_DEPLOYMENT=$(echo "${PKS_DEPLOYMENT//\"}")
+    ADMIN_CLIENT_SECRET=$(credhub get -n /opsmgr/${PKS_DEPLOYMENT}/pks_uaa_management_admin_client -k=value )
+    echo "-->getting UAA Token"
+    TOKEN=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/oauth/token" -i -X POST \
+    -H "Accept: application/json" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "client_id=admin&client_secret=${ADMIN_CLIENT_SECRET}&grant_type=client_credentials&token_format=opaque" \
+     | awk -F\" '/access_token/{printf $4}')
+    DATA=$(cat << EOF
+    {
+        "name": "${PKS_CLUSTERNAME}",
+        "parameters": {
+            "kubernetes_master_host": "${PKS_MASTER_FQDN}",
+            "kubernetes_worker_instances": ${WORKER_INSTANCES}
+            },
+        "plan_name": "${PKS_PLAN_NAME}"
+    }
+    EOF
+    )
+    echo "Creating cluster ${PKS_CLUSTERNAME}"
+    curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters" -i -X POST \
+        -H "Accept: application/json" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $TOKEN" \
+        -d "${DATA}"
+
+

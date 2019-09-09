@@ -110,7 +110,7 @@ resources:
   source:
     api_token: ((pivnet-token))
     product_slug: platform-automation
-    product_version: 3\.0\.(.*)
+    product_version: 4\.0\.(.*)
     sort_by: semver
 
 - name: platform-automation-tasks
