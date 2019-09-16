@@ -1,0 +1,95 @@
+# code_snippet to create pks admin user
+# 02.09.2019 @azurestack_guy
+---
+platform: linux
+
+inputs:
+- name: additional-tasks
+- name: vars # variable files to be made available
+  optional: true
+params:
+  VARS_FILES: director-vars.yml
+  # - Optional
+  # - Filepath to the Ops Manager vars yaml file
+  # - The path is relative to root of the task build,
+  #   so `vars` and `secrets` can be used.
+
+  OPSMAN_CONFIG_FILE: opsman.yml
+  PKS_CLUSTERNAME:
+  # Name of the K8S Cluster, this will add a dns recor to the LB
+  DNS_DOMAIN:
+  # Name of the Domain the LB will be part of. also used for Cluster FQDN
+  # in the format pks_subdomain.pks_domain
+
+
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    DIRECTOR_CONFIG_FILE=./vars/${VARS_FILES}
+    OPSMAN_CONFIG=./vars/${OPSMAN_CONFIG_FILE}
+    AZURE_TENANT_ID=$(grep -A0 'tenant_id:' ${OPSMAN_CONFIG} | tail -n2 | awk '{ print $2}')
+    AZURE_SUBSCRIPTION_ID=$(grep -A0 'subscription_id:' ${OPSMAN_CONFIG} | tail -n2 | awk '{ print $2}')
+    AZURE_CLIENT_ID=$(grep -A0 'client_id:' ${OPSMAN_CONFIG} | tail -n2 | awk '{ print $2}')
+    AZURE_CLIENT_SECRET=$(grep -A0 'client_secret:' ${OPSMAN_CONFIG} | tail -n2 | awk '{ print $2}')
+    ENV_NAME=$(grep -A0 'resource_group_name:' ${DIRECTOR_CONFIG_FILE} | tail -n2 | awk '{ print $2}')
+
+    az login --service-principal \
+      --username ${AZURE_CLIENT_ID} \
+      --password ${AZURE_CLIENT_SECRET} \
+      --tenant ${AZURE_TENANT_ID}
+
+    az tag create --name K8SCLUSTER
+
+    az network public-ip create \
+        --resource-group ${ENV_NAME} \
+        --name ${PKS_CLUSTERNAME}-public-ip \
+        --sku standard \
+        --tags K8SCLUSTER=${PKS_CLUSTERNAME} \
+        --allocation-method static
+
+    az network lb create \
+        --resource-group ${ENV_NAME} \
+        --name ${PKS_CLUSTERNAME}-lb \
+        --sku standard \
+        --tags K8SCLUSTER=${PKS_CLUSTERNAME} \
+        --public-ip-address ${PKS_CLUSTERNAME}-public-ip \
+        --frontend-ip-name ${PKS_CLUSTERNAME}-fe \
+        --backend-pool-name ${PKS_CLUSTERNAME}-be
+
+    az network lb probe create \
+        --resource-group ${ENV_NAME} \
+        --lb-name ${PKS_CLUSTERNAME}-lb \
+        --name ${PKS_CLUSTERNAME}-probe-8443 \
+        --protocol tcp \
+        --port 8443
+
+    az network lb rule create \
+        --resource-group ${ENV_NAME} \
+        --lb-name ${PKS_CLUSTERNAME}-lb \
+        --name rule_8443 \
+        --protocol tcp \
+        --frontend-port 8443 \
+        --backend-port 8443 \
+        --frontend-ip-name ${PKS_CLUSTERNAME}-fe \
+        --backend-pool-name ${PKS_CLUSTERNAME}-be \
+        --probe-name ${PKS_CLUSTERNAME}-probe-8443
+
+    AZURE_LB_PUBLIC_IP=$(az network public-ip show \
+        --resource-group ${ENV_NAME} \
+        --name ${PKS_CLUSTERNAME}-public-ip \
+        --query "{address: ipAddress}" \
+        --output tsv)
+
+    az network dns record-set a create \
+        --resource-group ${ENV_NAME} \
+        --zone-name ${DNS_DOMAIN} \
+        --name ${PKS_CLUSTERNAME} --ttl 60
+
+    az network dns record-set a add-record \
+        --resource-group ${ENV_NAME} \
+        --zone-name ${DNS_DOMAIN} \
+        --record-set-name ${PKS_CLUSTERNAME} \
+        --ipv4-address ${AZURE_LB_PUBLIC_IP}

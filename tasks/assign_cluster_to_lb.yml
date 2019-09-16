@@ -1,0 +1,111 @@
+# code_snippet to create pks cluster on azure.
+# also creates loadbalancer as clustername_lb
+# 02.09.2019 @azurestack_guy
+---
+platform: linux
+
+
+
+inputs:
+- name: additional-tasks
+- name: vars # variable files to be made available
+  optional: true
+- name: env # contains the env file with target OpsMan Information
+
+params:
+  VARS_FILES: director-vars.yml
+  # - Optional
+  # - Filepath to the Ops Manager vars yaml file
+  # - The path is relative to root of the task build,
+  #   so `vars` and `secrets` can be used.
+
+  OPSMAN_CONFIG_FILE: opsman.yml
+  # Name of the K8S Cluster, this will add a dns recor to the LB
+  DNS_DOMAIN:
+  # Name of the Domain the LB will be part of. also used for Cluster FQDN
+  # in the format pks_subdomain.pks_domain
+
+  ENV_FILE: env.yml
+  # - Required
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+  KEY_FILE: opsman.key
+  # conatins the opsman private key
+  PKS_CLUSTERNAME:
+  PKS_MASTER_FQDN:   
+  PKS_API_ENDPOINT:
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    cat /var/version && echo ""
+    set -eu
+    eval "$(om --env ./env/${ENV_FILE} \
+        --skip-ssl-validation bosh-env --ssh-private-key ./env/${KEY_FILE})"
+    deployments=$(bosh deployments --column=Name --json)
+    PKS_DEPLOYMENT=$(echo $deployments | \
+        jp.py "Tables[0].Rows[?contains(name,'pivotal-container-service')].name |[0]")
+    PKS_DEPLOYMENT=$(echo "${PKS_DEPLOYMENT//\"}")
+    ADMIN_CLIENT_SECRET=$(credhub get -n /opsmgr/${PKS_DEPLOYMENT}/pks_uaa_management_admin_client -k=value )
+    echo "-->getting UAA Token"
+    TOKEN=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/oauth/token" -i -X POST \
+    -H "Accept: application/json" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "client_id=admin&client_secret=${ADMIN_CLIENT_SECRET}&grant_type=client_credentials&token_format=opaque" \
+     | awk -F\" '/access_token/{printf $4}')
+
+    PKS_UUID=$(curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters/${PKS_CLUSTERNAME}" -i -X GET \
+        -H "Accept: application/json" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $TOKEN" | tail -n  +13 | jp.py "uuid" | tr -d '"')
+
+    DIRECTOR_CONFIG_FILE=./vars/${VARS_FILES}
+    OPSMAN_CONFIG=./vars/${OPSMAN_CONFIG_FILE}
+    AZURE_TENANT_ID=$(grep -A0 'tenant_id:' ${OPSMAN_CONFIG} | tail -n2 | awk '{ print $2}')
+    AZURE_SUBSCRIPTION_ID=$(grep -A0 'subscription_id:' ${OPSMAN_CONFIG} | tail -n2 | awk '{ print $2}')
+    AZURE_CLIENT_ID=$(grep -A0 'client_id:' ${OPSMAN_CONFIG} | tail -n2 | awk '{ print $2}')
+    AZURE_CLIENT_SECRET=$(grep -A0 'client_secret:' ${OPSMAN_CONFIG} | tail -n2 | awk '{ print $2}')
+    ENV_NAME=$(grep -A0 'resource_group_name:' ${DIRECTOR_CONFIG_FILE} | tail -n2 | awk '{ print $2}')
+
+    az login --service-principal \
+    --username ${AZURE_CLIENT_ID} \
+    --password ${AZURE_CLIENT_SECRET} \
+    --tenant ${AZURE_TENANT_ID}
+
+
+    MASTER_VM_IDS=$(az vm list \
+    --resource-group $ENV_NAME \
+    --query "[?tags.job == 'master' && tags.deployment == 'service-instance_${PKS_UUID}'].id" --output tsv)
+
+    WORKER_VM_IDS=$(az vm list \
+    --resource-group $ENV_NAME \
+    --query "[?tags.job == 'worker' && tags.deployment == 'service-instance_${PKS_UUID}'].id" --output tsv )
+
+
+
+    echo "Assigning pks-worker role to Workers"
+    az vm identity assign \
+    --identities pks-worker \
+    --ids ${WORKER_VM_IDS}
+    echo "Assigning pks-master role to Master(s)"
+    az vm identity assign \
+    --identities pks-master \
+    --ids ${MASTER_VM_IDS}
+
+    MASTER_NIC_IDS=$(az vm show -d \
+    --ids ${MASTER_VM_IDS} \
+    --query "name || [].name" \
+    --output tsv | xargs -n1 \
+    az vm nic list --resource-group $ENV_NAME \
+    --query "[].id" --output tsv \
+    --vm-name )
+
+
+    MASTER_NIC_IP_CONFIG_IDS=$(az network nic show \
+    --ids $MASTER_NIC_IDS \
+    --query "ipConfigurations[].id || [].ipConfigurations[].id" --out tsv)
+
+    az network nic ip-config update --ids ${MASTER_NIC_IP_CONFIG_IDS} \
+    --lb-address-pools ${PKS_CLUSTERNAME}-be --lb-name ${PKS_CLUSTERNAME}-lb    

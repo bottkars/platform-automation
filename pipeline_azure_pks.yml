@@ -99,6 +99,7 @@ resources:
     interval: 999999h
 
 - name: after-midnight
+  icon: calendar-clock
   type: time
   source:
     start: 01:00 AM
@@ -114,6 +115,7 @@ resources:
     bucket: ((buckets_installation))
     regexp: ((foundation))/installation-(.*).zip    
 - name: platform-automation-pivnet
+  icon: concourse
   type: pivnet
   source:
     api_token: ((pivnet-token))
@@ -217,8 +219,10 @@ jobs:
 - name: get-platform-automation
   plan:
   - in_parallel:
-    #- get: after-midnight
-      # trigger: true
+    - get: one-time-trigger
+      trigger: true
+#    - get: after-midnight
+#      trigger: false
     - get: platform-automation-pivnet
       trigger: true
   - in_parallel:
@@ -313,7 +317,7 @@ jobs:
   - in_parallel:
     - put: pivotal-container-service-cli
       params:
-        file: downloaded-product/pks-linux-amd64*
+        file: downloaded-product/*pks-linux-amd64*
 
 
 - name: get-harbor-container-registry
@@ -468,7 +472,7 @@ jobs:
             unpack: true
           passed:
            - upgrade-opsman
-           - get-pivotal-container-service           
+#           - get-pivotal-container-service           
           trigger: true  
         - get: platform-automation-tasks
           params:
@@ -527,7 +531,7 @@ jobs:
             unpack: true
           passed:
           - upgrade-opsman
-          - get-harbor-container-registry
+#          - get-harbor-container-registry
           trigger: true          
         - get: platform-automation-tasks
           params:
@@ -581,6 +585,7 @@ jobs:
           unpack: true
       - get: one-time-trigger
         trigger: true
+        passed: [ get-platform-automation ]
       - get: platform-automation-tasks
         params:
           unpack: true
@@ -680,7 +685,7 @@ jobs:
     - get: platform-automation-image
       params:
         unpack: true
-        trigger: true
+      trigger: true
     - get: platform-automation-tasks
       params:
         unpack: true
@@ -953,7 +958,8 @@ jobs:
           unpack: true
         trigger: true
         passed: 
-        - apply-product-changes           
+        - apply-product-changes
+        - create-azure-lb           
       - get: one-time-trigger
         trigger: true
       - get: variable  
@@ -965,7 +971,7 @@ jobs:
           unpack: true        
     - task: create-pks-cluster
       image: platform-automation-image
-      file: additional-tasks/tasks/create_pks_cluster.yml
+      file: additional-tasks/tasks/create_pks_cluster_azure.yml
       input_mapping:
         env: variable
       params:
@@ -976,6 +982,83 @@ jobs:
         PKS_MASTER_FQDN: ((pks_master_fqdn))
         WORKER_INSTANCES: ((worker_instances))
         PKS_PLAN_NAME: ((pks_plan_name))
+
+
+- name: create-azure-lb
+  serial: true
+  serial_groups: [ install ]
+  plan:
+    - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        trigger: true  
+        passed: 
+        - apply-product-changes    
+      - get: one-time-trigger
+        trigger: true
+      - get: additional-tasks
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true    
+      - get: templates
+    - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates       
+    - task: create_azure_lb
+      image: platform-automation-image
+      file: additional-tasks/tasks/create_lb_azure.yml
+      input_mapping:
+        vars: variable
+      params:
+        OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+        VARS_FILES: ((foundation))/vars/director-vars.yml
+        DNS_DOMAIN: ((dns_domain))
+        ENV_FILE: ((foundation))/env/env.yml
+        KEY_FILE: ((foundation))/env/opsman.key
+        PKS_API_ENDPOINT: ((pks_api_endpoint))
+        PKS_CLUSTERNAME: ((pks_clustername))
+
+
+
+
+- name: assign_lb
+  serial: true
+  serial_groups: [ install ]
+  plan:
+    - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: one-time-trigger
+        trigger: true
+        passed:
+        - create-pks-cluster
+      - get: additional-tasks
+        params:
+          unpack: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true    
+      - get: templates
+      - get: variable
+    - task: interpolate-product-templates
+      <<: *interpolate-product-templates       
+    - task: assign_lb_and_identities
+      image: platform-automation-image
+      file: additional-tasks/tasks/assign_cluster_to_lb.yml
+      input_mapping:
+        vars: variable
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        KEY_FILE: ((foundation))/env/opsman.key      
+        OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+        VARS_FILES: ((foundation))/vars/director-vars.yml
+        PKS_API_ENDPOINT: ((pks_api_endpoint))
+        PKS_CLUSTERNAME: ((pks_clustername))
 
 
 groups:
@@ -995,6 +1078,11 @@ groups:
     - configure-pivotal-container-service 
     - configure-harbor-container-registry
     - apply-product-changes 
+    - create-pks-cluster
+    - add-pks-admin-user
+    - create-azure-lb
+    - assign_lb
+
 - name: get-products
   jobs:
     - get-pivotal-container-service
@@ -1033,3 +1121,5 @@ groups:
   jobs: 
   - create-pks-cluster
   - add-pks-admin-user
+  - create-azure-lb
+  - assign_lb

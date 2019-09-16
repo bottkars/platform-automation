@@ -57,5 +57,30 @@ run:
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $TOKEN" \
         -d "${DATA}"
+    echo checking cluster result
+    until [[  "$(curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters/${PKS_CLUSTERNAME}" -i -X GET \
+        -H "Accept: application/json" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $TOKEN" | tail -n  +13 | jp.py "last_action_state" | tr -d '"' )" != "in progress" ]]; do
+        echo waiting for ${PKS_CLUSTERNAME} do be deployed
+        sleep 5
+    done
+    RESULT=$(curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters/${PKS_CLUSTERNAME}" -i -X GET \
+        -H "Accept: application/json" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $TOKEN" | tail -n  +13 | jp.py "last_action_state"  | tr -d '"' )
+
+    case $RESULT in
+
+    "succeeded")
+        echo deployment successfull
+        ;;
+
+    *)
+        echo deployment failed with $RESULT
+        exit 1
+        ;;
+    esac
+
 
 
