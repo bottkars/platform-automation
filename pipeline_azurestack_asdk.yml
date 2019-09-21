@@ -1182,15 +1182,15 @@ jobs:
       - get: opsman-product
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads     
-  - task: delete-existing-opsman
-    image: platform-automation-image
-    file: azs-concourse/ci/tasks/delete-vm.yml  
-    input_mapping:
-      config: variable
-    params:
-      <<: *azure_env
-      RESOURCE_GROUP: ((resource_group))
-      VM_NAME: ops_man_vm
+  #- task: delete-existing-opsman
+  #  image: platform-automation-image
+  #  file: azs-concourse/ci/tasks/delete-vm.yml  
+  #  input_mapping:
+  #    config: variable
+  #  params:
+  #    <<: *azure_env
+  #    RESOURCE_GROUP: ((resource_group))
+  #    VM_NAME: ops_man_vm
   - task: download-opsman-s3
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
@@ -1200,9 +1200,9 @@ jobs:
       config: interpolated-product-downloads
     output_mapping:
       downloaded-product: opsman-image
-  - task: create-vm
+  - task: upgrade-opsman-vm
     image: platform-automation-image
-    file: azs-concourse/ci/tasks/deploy-opsman-template.yml  
+    file: azs-concourse/ci/tasks/upgrade-opsman-template.yml  
     input_mapping:
       config: variable
       image: opsman-product
@@ -1213,6 +1213,7 @@ jobs:
       RESOURCE_GROUP: ((resource_group))
       ACCOUNT_NAME: ((image_account_name))
       STATE_FILE: state.yml
+      OPSMAN_URL: ((opsman-url))
     ensure: *make-state-commit
   - task: import-installation
     image: platform-automation-image
