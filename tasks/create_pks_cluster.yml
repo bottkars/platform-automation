@@ -34,7 +34,7 @@ run:
     PKS_DEPLOYMENT=$(echo "${PKS_DEPLOYMENT//\"}")
     ADMIN_CLIENT_SECRET=$(credhub get -n /opsmgr/${PKS_DEPLOYMENT}/pks_uaa_management_admin_client -k=value )
     echo "-->getting UAA Token"
-    TOKEN=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/oauth/token" -i -X POST \
+    TOKEN=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/oauth/token" -X POST \
     -H "Accept: application/json" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "client_id=admin&client_secret=${ADMIN_CLIENT_SECRET}&grant_type=client_credentials&token_format=opaque" \
@@ -51,7 +51,7 @@ run:
     EOF
     )
     echo "Creating cluster ${PKS_CLUSTERNAME}"
-    curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters" -i -X POST \
+    curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters" -X POST \
         -H "Accept: application/json" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $TOKEN" \

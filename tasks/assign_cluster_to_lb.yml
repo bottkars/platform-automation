@@ -50,16 +50,16 @@ run:
     PKS_DEPLOYMENT=$(echo "${PKS_DEPLOYMENT//\"}")
     ADMIN_CLIENT_SECRET=$(credhub get -n /opsmgr/${PKS_DEPLOYMENT}/pks_uaa_management_admin_client -k=value )
     echo "-->getting UAA Token"
-    TOKEN=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/oauth/token" -i -X POST \
+    TOKEN=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/oauth/token" -X POST \
     -H "Accept: application/json" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "client_id=admin&client_secret=${ADMIN_CLIENT_SECRET}&grant_type=client_credentials&token_format=opaque" \
      | awk -F\" '/access_token/{printf $4}')
 
-    PKS_UUID=$(curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters/${PKS_CLUSTERNAME}" -i -X GET \
+    PKS_UUID=$(curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters/${PKS_CLUSTERNAME}" -X GET \
         -H "Accept: application/json" \
         -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $TOKEN" | tail -n  +13 | jp.py "uuid" | tr -d '"')
+        -H "Authorization: Bearer $TOKEN" | jp.py "uuid" | tr -d '"')
 
     DIRECTOR_CONFIG_FILE=./vars/${VARS_FILES}
     OPSMAN_CONFIG=./vars/${OPSMAN_CONFIG_FILE}

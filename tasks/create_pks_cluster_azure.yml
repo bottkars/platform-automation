@@ -58,17 +58,17 @@ run:
         -H "Authorization: Bearer $TOKEN" \
         -d "${DATA}"
     echo checking cluster result
-    until [[  "$(curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters/${PKS_CLUSTERNAME}" -i -X GET \
+    until [[  "$(curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters/${PKS_CLUSTERNAME}" -X GET \
         -H "Accept: application/json" \
         -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $TOKEN" | tail -n  +13 | jp.py "last_action_state" | tr -d '"' )" != "in progress" ]]; do
+        -H "Authorization: Bearer $TOKEN" | jp.py "last_action_state" | tr -d '"' )" != "in progress" ]]; do
         echo waiting for ${PKS_CLUSTERNAME} do be deployed
         sleep 5
     done
-    RESULT=$(curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters/${PKS_CLUSTERNAME}" -i -X GET \
+    RESULT=$(curl -k -s "https://${PKS_API_ENDPOINT}:9021/v1/clusters/${PKS_CLUSTERNAME}" -X GET \
         -H "Accept: application/json" \
         -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $TOKEN" | tail -n  +13 | jp.py "last_action_state"  | tr -d '"' )
+        -H "Authorization: Bearer $TOKEN" | jp.py "last_action_state"  | tr -d '"' )
 
     case $RESULT in
 
