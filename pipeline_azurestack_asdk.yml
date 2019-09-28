@@ -3471,7 +3471,7 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/srt-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
 
-- name: configure-pas-certificate
+- name: update-pas-certificates
   on_failure:
     put: notify
     params:
@@ -4085,7 +4085,7 @@ jobs:
 
 #### maint  tasks
 
-- name: update-certificates
+- name: update-om-certificates
   serial: true
   serial_groups: [ install ]
   plan:
@@ -4248,7 +4248,8 @@ groups:
 
 - name: service-jobs
   jobs:
-  - update-certificates
+  - update-pas-certificates
+  - update-om-certificates
   - delete-orphan-azurevm-images
   - query-unattached-azure-disks
   - query-unattached-azure-nics
