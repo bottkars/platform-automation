@@ -1202,6 +1202,9 @@ jobs:
       - get: templates
       - get: variable
       - get: opsman-product
+      - get: additional-tasks
+        params:
+          unpack: true
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads     
   #- task: delete-existing-opsman
@@ -1237,6 +1240,15 @@ jobs:
       STATE_FILE: state.yml
       OPSMAN_URL: ((opsman-url))
     ensure: *make-state-commit
+  - task: update om certficates
+    image: platform-automation-image
+    file: additional-tasks/tasks/update-ssl-certificate.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      CERTIFICATE_PEM: ((pcf_domain_cert.certificate))
+      KEY_PEM: ((pcf_domain_cert.private_key))    
   - task: import-installation
     image: platform-automation-image
     file: platform-automation-tasks/tasks/import-installation.yml
