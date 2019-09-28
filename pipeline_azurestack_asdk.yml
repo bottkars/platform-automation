@@ -3503,7 +3503,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
-      config: interpolated-product-templates
+#      config: interpolated-product-templates
       env: variable
       vars: variable
     params:
