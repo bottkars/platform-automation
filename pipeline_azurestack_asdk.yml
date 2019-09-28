@@ -3499,16 +3499,18 @@ jobs:
           unpack: true
       - get: templates
       - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates      
   - task: configure-pas-certicicates
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
-#      config: interpolated-product-templates
+      config: interpolated-product-templates
       env: variable
       vars: variable
     params:
       CONFIG_FILE: product-configs/((pas_version))/pas_certs.yml
-  #   VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+#      VARS_FILES: vars/((foundation))/vars/pas_certs-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
 
 
