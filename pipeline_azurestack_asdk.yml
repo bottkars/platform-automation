@@ -3471,6 +3471,48 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/srt-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
 
+- name: configure-pas-certificate
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+  - put: notify
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-srt
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: configure-pas-certicicates
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/pas_certs.yml
+  #   VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml
+
+
+
 - name: deploy-asdk
   on_failure:
     put: notify
