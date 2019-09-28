@@ -136,6 +136,14 @@ resources:
     product_version: 4\.0\.(.*)
     sort_by: semver
 
+- name: additional-tasks
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_tasks))
+    regexp: additional-tasks-(.*).zip
+
 - name: platform-automation-tasks
   icon: amazon-drive
   type: s3
@@ -3974,8 +3982,38 @@ jobs:
       product: azure-service-broker-product
       env: variable
     params:
-      ENV_FILE: ((foundation))/env/env.yml        
+      ENV_FILE: ((foundation))/env/env.yml   
 
+- name: configure-azure-service-broker
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    params:
+      <<: *slack_succeeded_param
+  serial_groups:
+  - configure-products
+  serial: true
+  plan:
+  - put: notify
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+        passed:
+          - upload-and-stage-azure-service-broker
+        trigger: true
+      - get: platform-automation-tasks
+        params:
+          unpack: true
+      - get: templates
+      - get: variable
+  - task: interpolate-product-templates
+    <<: *interpolate-product-templates
   - task: configure-azure-service-broker
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -3990,6 +4028,35 @@ jobs:
 
 
 ### end MASB
+
+#### maint  tasks
+
+- name: update-certificates
+  serial: true
+  serial_groups: [ install ]
+  plan:
+    - in_parallel:
+      - get: platform-automation-image
+        params:
+          unpack: true
+      - get: one-time-trigger
+        trigger: true
+      - get: additional-tasks
+        params:
+          unpack: true    
+      - get: templates
+      - get: variable
+    - task: update om certficates
+      image: platform-automation-image
+      file: additional-tasks/tasks/update-ssl-certificate.yml
+      input_mapping:
+        env: variable
+      params:
+        ENV_FILE: ((foundation))/env/env.yml
+        CERTIFICATE_PEM: /concourse/main/((foundation))/((pcf_domain_cert.private_key))
+        KEY_PEM: /concourse/main/((foundation))/((pcf_domain_cert.certificate))
+
+####
 groups:
 - name: deploy-asdk-1908-plans
   jobs:  
@@ -4022,6 +4089,7 @@ groups:
   - get-p-compliance-scanner
   - get-reliability-view-pcf
   - get-reliability-view-pas-exporter
+  - get-azure-service-broker
 #
   - export-installation
   - upload-and-stage-srt
@@ -4037,6 +4105,7 @@ groups:
   - upload-and-stage-p-compliance-scanner
   - upload-and-stage-reliability-view-pcf
   - upload-and-stage-reliability-view-pas-exporter
+  - upload-and-stage-azure-service-broker
 
 #  
   - configure-srt
@@ -4052,7 +4121,9 @@ groups:
   - configure-p-compliance-scanner
   - configure-reliability-view-pcf
   - configure-reliability-view-pas-exporter
+  - configure-azure-service-broker
   - apply-product-changes
+
 ###
 - name: staged-configs
   jobs:
@@ -4086,6 +4157,7 @@ groups:
   - get-p-compliance-scanner
   - get-reliability-view-pcf
   - get-reliability-view-pas-exporter
+  - get-azure-service-broker
 
 - name: upgrade-products
   jobs:
@@ -4102,6 +4174,7 @@ groups:
   - upload-and-stage-p-compliance-scanner
   - upload-and-stage-reliability-view-pcf
   - upload-and-stage-reliability-view-pas-exporter
+  - upload-and-stage-azure-service-broker
 - name: configure-products
   jobs:
   - configure-srt
@@ -4116,10 +4189,12 @@ groups:
   - configure-p-compliance-scanner
   - configure-reliability-view-pcf
   - configure-reliability-view-pas-exporter
+  - configure-azure-service-broker
   - apply-product-changes
 
 - name: service-jobs
   jobs:
+  - update-certificates
   - delete-orphan-azurevm-images
   - query-unattached-azure-disks
   - query-unattached-azure-nics
