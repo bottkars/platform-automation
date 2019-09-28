@@ -4040,7 +4040,7 @@ jobs:
         params:
           unpack: true
       - get: one-time-trigger
-        trigger: true
+        trigger: false
       - get: additional-tasks
         params:
           unpack: true    
@@ -4053,8 +4053,8 @@ jobs:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
-        CERTIFICATE_PEM: /concourse/main/((foundation))/((pcf_domain_cert.private_key))
-        KEY_PEM: /concourse/main/((foundation))/((pcf_domain_cert.certificate))
+        CERTIFICATE_PEM: ((pcf_domain_cert.certificate))
+        KEY_PEM: ((pcf_domain_cert.private_key))
 
 ####
 groups:
