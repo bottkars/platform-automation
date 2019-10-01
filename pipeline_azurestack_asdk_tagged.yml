@@ -2381,6 +2381,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+#    - get: pas-product
+#      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2459,6 +2461,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: srt-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -2536,6 +2540,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+#    - get: pas-windows-product
+#      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2614,6 +2620,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: pivotal-mysql-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads       
@@ -2692,6 +2700,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: p-healthwatch-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2770,6 +2780,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: wavefront-nozzle-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads          
@@ -2848,6 +2860,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: p-event-alerts-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2926,6 +2940,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: apm-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -3006,6 +3022,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: p-compliance-scanner-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -3084,6 +3102,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: reliability-view-pcf-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -3162,6 +3182,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: reliability-view-pas-exporter-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -3240,6 +3262,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+#    - get: p-spring-cloud-services-product
+#      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads       
@@ -3318,6 +3342,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: p-spring-cloud-services-3-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -3396,6 +3422,8 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+    - get: p-rabbitmq-product
+      tags: ((tags))      
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads       
