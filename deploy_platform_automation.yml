@@ -1,0 +1,127 @@
+---
+s3_env: &s3_env
+  access_key_id: ((s3_access_key_id))
+  endpoint:  ((s3_endpoint))
+  region_name: ((s3_region_name))
+  secret_access_key: ((s3_secret_access_key))
+slack_start_param: &slack_start_param
+  text: |
+    ((foundation)) Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-started:"
+
+slack_succeeded_param: &slack_succeeded_param
+  text: |
+    ((foundation)) Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME    
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-succeeded:"
+
+slack_failed_param: &slack_failed_param
+  text: |
+    ((foundation)) Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-failed:"
+
+resource_types:
+- name: pivnet
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+- name: slack-notification
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource    
+resources:
+# triggers
+
+
+
+- name: one-time-trigger
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+
+# notifications
+- name: notify
+  tags: ((tags))
+  icon: bell
+  type: slack-notification
+  source:
+    url: ((slack-webhook))
+ 
+- name: platform-automation-pivnet
+  tags: ((tags))
+  icon: cloudfoundry
+  type: pivnet
+  source:
+    api_token: ((pivnet-token))
+    product_slug: platform-automation
+    product_version: 4\.0\.(.*)
+    sort_by: semver
+
+
+- name: platform-automation-tasks
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_tasks))
+    regexp: platform-automation-tasks-(.*).zip
+
+- name: platform-automation-image
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+jobs:
+- name: deploy-asdk
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - get: platform-automation-pivnet
+    tags: ((tags))
+
+  - in_parallel:
+    - get: one-time-trigger
+      tags: ((tags))
+      trigger: true
+    - put: platform-automation-tasks
+      tags: ((tags))
+      params:
+        file: platform-automation-pivnet/*tasks*.zip
+    - put: platform-automation-image
+      tags: ((tags))
+      params:
+        file: platform-automation-pivnet/*image*.tgz   

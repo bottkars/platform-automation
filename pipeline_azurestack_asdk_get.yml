@@ -28,13 +28,17 @@ credhub_env: &credhub_env
 stage_steps: &stage_steps
   steps:
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
     - get: variable
+      tags: ((tags))
 
 stage_config: &stage_config
   image: platform-automation-image
@@ -524,7 +528,9 @@ jobs:
     params:
      <<: *slack_start_param
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: test-azcli
@@ -546,8 +552,11 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: get-vms
@@ -573,11 +582,15 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: variable
+      tags: ((tags))
     - get: azs-concourse
+      tags: ((tags))
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: opsman-product
+      tags: ((tags))
   - task: validate-template
     tags: ((tags))
     image: platform-automation-image
@@ -624,20 +637,27 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: templates
+      tags: ((tags))
     - get: opsman-product
+      tags: ((tags))
       passed: 
       - get-opsman-pivnet 
       trigger: true
     - get: one-time-trigger
+      tags: ((tags))
       passed: [ export-installation ]
       trigger: true
     - get: installation
+      tags: ((tags))
       passed: [ export-installation ]  
     - get: azs-concourse
+      tags: ((tags))
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: variable
+      tags: ((tags))
   - task: copy-opsman-image
     tags: ((tags))
     file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
@@ -665,8 +685,11 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: delete-vm
@@ -694,8 +717,11 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: delete-images
@@ -722,8 +748,11 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: delete-azure-disks
@@ -750,8 +779,11 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: query-azure-disks
@@ -778,8 +810,11 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: query-azure-nics
@@ -806,8 +841,11 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: delete-azure-nics
@@ -835,8 +873,11 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: delete-rg
@@ -867,14 +908,20 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: templates
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - get: one-time-trigger
+    tags: ((tags))
     trigger: true
   - get: platform-automation-tasks
+    tags: ((tags))
     params:
       unpack: true
   - put: notify
@@ -1031,14 +1078,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: variable
+      tags: ((tags))
       passed:
       - install-opsman
       trigger: true
     - get: templates
+      tags: ((tags))
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - put: notify
@@ -1084,11 +1135,15 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: variable
+      tags: ((tags))
     - get: templates
+      tags: ((tags))
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
       passed:
@@ -1126,14 +1181,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1164,8 +1223,11 @@ jobs:
     params:
       <<: *slack_start_param
   - get: opsman-product
+    tags: ((tags))
   - get: azs-concourse
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - task: test-azcli
@@ -1192,11 +1254,14 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-tasks
-        params: {unpack: true}
-      - get: platform-automation-image
-        params: {unpack: true}
-      - get: variable
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params: {unpack: true}
+    - get: platform-automation-image
+      tags: ((tags))
+      params: {unpack: true}
+    - get: variable
+      tags: ((tags))
 
   - task: staged-director-config
     tags: ((tags))
@@ -1224,20 +1289,26 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: daily-trigger
-        trigger: true
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed: [ install-opsman, apply-director ]
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
-      - get: one-time-trigger
-        passed: [ install-opsman ]
-        trigger: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed: [ install-opsman, apply-director ]
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
+    - get: one-time-trigger
+      tags: ((tags))
+      passed: [ install-opsman ]
+      trigger: true
   - task: export-installation
     tags: ((tags))
     image: platform-automation-image
@@ -1267,25 +1338,34 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: one-time-trigger
-        passed: [ export-installation, get-opsman-image-azure ]
-        trigger: true
-      - get: azs-concourse  
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: installation
-        passed: [ export-installation ]
-        trigger: true
-      - get: templates
-      - get: variable
-      - get: opsman-product
-      - get: additional-tasks
-        params:
-          unpack: true
+    - get: one-time-trigger
+      tags: ((tags))
+      passed: [ export-installation, get-opsman-image-azure ]
+      trigger: true
+    - get: azs-concourse  
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: installation
+      tags: ((tags))
+      passed: [ export-installation ]
+      trigger: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
+    - get: opsman-product
+      tags: ((tags))
+    - get: additional-tasks
+      tags: ((tags))
+      params:
+        unpack: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -1369,8 +1449,10 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-pivnet
+      tags: ((tags))
       trigger: true
   - in_parallel:
     - put: platform-automation-tasks
@@ -1394,11 +1476,15 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: templates
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - get: platform-automation-tasks
+    tags: ((tags))
     params:
       unpack: true
   - task: interpolate
@@ -1418,11 +1504,15 @@ jobs:
     params:
       <<: *slack_start_param
   - get: variable
+    tags: ((tags))
   - get: templates
+    tags: ((tags))
   - get: platform-automation-image
+    tags: ((tags))
     params:
       unpack: true
   - get: platform-automation-tasks
+    tags: ((tags))
     params:
       unpack: true
   - task: interpolate
@@ -1453,14 +1543,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1500,14 +1594,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1545,14 +1643,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1590,14 +1692,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1635,14 +1741,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1680,14 +1790,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1725,14 +1839,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1771,14 +1889,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1816,14 +1938,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1863,14 +1989,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1907,30 +2037,34 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
-  - task: interpolate-product-downloads
-    tags: ((tags))
-    <<: *interpolate-product-downloads
-  - task: download-reliability-view-pas-exporter-product-and-stemcell
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product.yml
-    params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pas-exporter.yml
-    input_mapping:
-      config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: reliability-view-pas-exporter-stemcell}
-  - in_parallel:
-    - put: reliability-view-pas-exporter-product
+      tags: ((tags))
+    - task: interpolate-product-downloads
+      tags: ((tags))
+      <<: *interpolate-product-downloads
+    - task: download-reliability-view-pas-exporter-product-and-stemcell
+      tags: ((tags))
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/download-product.yml
       params:
-        file: downloaded-product/*.pivotal
+        CONFIG_FILE: download-product-configs/((pas_version))/download-reliability-view-pas-exporter.yml
+      input_mapping:
+        config: interpolated-product-downloads
+      output_mapping: {downloaded-stemcell: reliability-view-pas-exporter-stemcell}
+    - in_parallel:
+      - put: reliability-view-pas-exporter-product
+        params:
+          file: downloaded-product/*.pivotal
     - put: reliability-view-pas-exporter-stemcell
       params:
         file: reliability-view-pas-exporter-stemcell/*.tgz
@@ -1952,14 +2086,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -1998,14 +2136,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -2042,14 +2184,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -2089,14 +2235,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      ags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2158,14 +2308,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -2226,14 +2380,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2296,13 +2454,17 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
     - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads       
@@ -2364,14 +2526,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2434,13 +2600,17 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
+        tags: ((tags))
         params:
           unpack: true
       - get: platform-automation-tasks
+        tags: ((tags))
         params:
           unpack: true
       - get: templates
+        tags: ((tags))
       - get: variable
+        tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads          
@@ -2502,14 +2672,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2571,14 +2745,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2642,14 +2820,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -2711,14 +2893,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -2780,14 +2966,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -2849,14 +3039,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads       
@@ -2918,14 +3112,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2987,14 +3185,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads       
@@ -3053,15 +3255,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed: ((passed_configs))
-        trigger: true
-      - get: variable
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed: ((passed_configs))
+      trigger: true
+    - get: variable
+      tags: ((tags))
   - task: apply-product-changes
     tags: ((tags))
     image: platform-automation-image
@@ -3088,17 +3293,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-pas
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-pas
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3132,17 +3341,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-pas-windows
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-pas-windows
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3178,16 +3391,20 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
+        tags: ((tags))
         params:
           unpack: true
         passed:
           - upload-and-stage-p-rabbitmq
         trigger: true
       - get: platform-automation-tasks
+        tags: ((tags))
         params:
           unpack: true
       - get: templates
+        tags: ((tags))
       - get: variable
+        tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3221,17 +3438,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-pivotal-mysql
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-pivotal-mysql
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3265,17 +3486,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-p-healthwatch
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-p-healthwatch
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3309,17 +3534,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-wavefront-nozzle
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-wavefront-nozzle
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3352,17 +3581,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-p-event-alerts
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-p-event-alerts
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3396,17 +3629,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-apm
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-apm
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3441,16 +3678,20 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
+        tags: ((tags))
         params:
           unpack: true
         passed:
           - upload-and-stage-p-compliance-scanner
         trigger: true
       - get: platform-automation-tasks
+        tags: ((tags))
         params:
           unpack: true
       - get: templates
+        tags: ((tags))
       - get: variable
+        tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3484,17 +3725,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-reliability-view-pcf
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-reliability-view-pcf
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3528,17 +3773,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-reliability-view-pas-exporter
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-reliability-view-pas-exporter
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3572,17 +3821,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-p-spring-cloud-services
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-p-spring-cloud-services
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3616,17 +3869,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-p-spring-cloud-services-3
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-p-spring-cloud-services-3
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3660,17 +3917,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-srt
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-srt
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -3704,17 +3965,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-srt
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-srt
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates      
@@ -3747,8 +4012,10 @@ jobs:
     params:
       <<: *slack_start_param
   - get: platform-automation-pivnet
+    tags: ((tags))
   - in_parallel:
     - get: one-time-trigger
+      tags: ((tags))
       trigger: true
     - put: platform-automation-tasks
       params:
@@ -4191,14 +4458,18 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
+      tags: ((tags))
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -4237,14 +4508,18 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -4304,17 +4579,21 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-        passed:
-          - upload-and-stage-azure-service-broker
-        trigger: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-azure-service-broker
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -4342,15 +4621,20 @@ jobs:
   plan:
   - in_parallel:
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: one-time-trigger
+      tags: ((tags))
       trigger: false
     - get: additional-tasks
+      tags: ((tags))
       params:
         unpack: true    
     - get: templates
+      tags: ((tags))
     - get: variable
+      tags: ((tags))
   - task: update om certficates
     tags: ((tags))
     image: platform-automation-image
