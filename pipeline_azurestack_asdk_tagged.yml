@@ -2449,6 +2449,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-srt    
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2524,6 +2526,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-pas-windows
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2600,6 +2604,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-pivotal-mysql
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2676,6 +2682,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-p-healthwatch
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2746,20 +2754,22 @@ jobs:
   - put: notify
     tags: ((tags))
     params:
-      <<: *slack_start_param
+     <<: *slack_start_param
   - in_parallel:
-      - get: platform-automation-image
-        tags: ((tags))
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        tags: ((tags))
-        params:
-          unpack: true
-      - get: templates
-        tags: ((tags))
-      - get: variable
-        tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+      - get-wavefront-nozzle         
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads          
@@ -2828,6 +2838,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-p-event-alerts      
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2904,6 +2916,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-apm
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2982,6 +2996,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-p-compliance-scanner
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3058,6 +3074,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-reliability-view-pcf
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3134,6 +3152,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-reliability-view-pas-exporter
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3210,6 +3230,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-p-spring-cloud-services
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3286,6 +3308,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-p-spring-cloud-services-3
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3362,6 +3386,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-p-rabbitmq
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -4794,6 +4820,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - get-azure-service-broker     
     - get: templates
       tags: ((tags))
     - get: variable
