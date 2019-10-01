@@ -732,7 +732,7 @@ jobs:
           unpack: true
         passed:
           - upgrade-opsman
-        #  - get-pivotal-container-service           
+          - get-pivotal-container-service           
         trigger: true  
       - get: platform-automation-tasks
         params:
@@ -802,11 +802,12 @@ jobs:
         unpack: true
       passed:
       - upgrade-opsman
-    #   - get-harbor-container-registry
+      - get-harbor-container-registry
       trigger: true          
     - get: platform-automation-tasks
       params:
         unpack: true
+    - get: harbor-container-registry-product
     - get: templates
     - get: variable
   - task: interpolate-product-downloads
@@ -1277,6 +1278,7 @@ jobs:
     - get: platform-automation-tasks
       params:
         unpack: true
+    - get: harbor-container-registry-product    
     - get: templates
     - get: variable
   - task: interpolate-product-templates
