@@ -61,6 +61,7 @@ git_commit_env: &git_commit_env
   COMMIT_MESSAGE: 'Staged  Config Writer'
 
 slack_start_param: &slack_start_param
+  channel: ((slack.channel))
   text: |
     ((foundation)) Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
     build $BUILD_NAME for team $BUILD_TEAM_NAME at
@@ -70,6 +71,7 @@ slack_start_param: &slack_start_param
   icon_emoji: ":concourse-started:"
 
 slack_succeeded_param: &slack_succeeded_param
+  channel: ((slack.channel))
   text: |
     ((foundation)) Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
     build $BUILD_NAME for team $BUILD_TEAM_NAME at
@@ -79,6 +81,7 @@ slack_succeeded_param: &slack_succeeded_param
   icon_emoji: ":concourse-succeeded:"
 
 slack_failed_param: &slack_failed_param
+  channel: ((slack.channel))
   text: |
     ((foundation)) Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
     build $BUILD_NAME for team $BUILD_TEAM_NAME at
@@ -132,7 +135,7 @@ resources:
   icon: bell
   type: slack-notification
   source:
-    url: ((slack-webhook))
+    url: ((slack.webhook))
 - name: installation
   tags: ((tags))
   icon: amazon-drive
@@ -1453,17 +1456,6 @@ jobs:
       STATE_FILE: state.yml
       OPSMAN_URL: ((opsman-url))
     ensure: *make-state-commit
-  - task: update om certficates
-    tags: ((tags))
-    image: platform-automation-image
-    file: additional-tasks/tasks/update-ssl-certificate.yml
-    attempts: 10
-    input_mapping:
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((pcf_domain_cert.certificate))
-      KEY_PEM: ((pcf_domain_cert.private_key))    
   - task: import-installation
     tags: ((tags))
     image: platform-automation-image
@@ -1475,6 +1467,18 @@ jobs:
     input_mapping:
       env: variable
       installation: installation
+  - task: update om certficates
+    tags: ((tags))
+    image: platform-automation-image
+    file: additional-tasks/tasks/update-ssl-certificate.yml
+    attempts: 10
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      CERTIFICATE_PEM: ((pcf_domain_cert.certificate))
+      KEY_PEM: ((pcf_domain_cert.private_key))    
+    
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
@@ -2357,6 +2361,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -2382,7 +2387,9 @@ jobs:
     - get: variable
       tags: ((tags))
 #    - get: pas-product
-#      tags: ((tags))      
+#      tags: ((tags)) 
+#    - get: pas-stemcell
+#      tags: ((tags))       
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2437,6 +2444,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -2462,7 +2470,11 @@ jobs:
     - get: variable
       tags: ((tags))
     - get: srt-product
-      tags: ((tags))      
+      tags: ((tags)) 
+      trigger: true
+    - get: srt-stemcell
+      tags: ((tags)) 
+      trigger: true             
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -2517,6 +2529,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -2541,7 +2554,11 @@ jobs:
     - get: variable
       tags: ((tags))
 #    - get: pas-windows-product
-#      tags: ((tags))      
+#      tags: ((tags))
+#      trigger: true     
+#    - get: pas-windows-stemcell
+#      tags: ((tags))
+#      trigger: true    
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2597,6 +2614,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -2622,6 +2640,10 @@ jobs:
       tags: ((tags))
     - get: pivotal-mysql-product
       tags: ((tags))      
+      trigger: true     
+    - get: pivotal-mysql-stemcell
+      tags: ((tags))      
+      trigger: true  
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads       
@@ -2677,6 +2699,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -2702,6 +2725,10 @@ jobs:
       tags: ((tags))
     - get: p-healthwatch-product
       tags: ((tags))      
+      trigger: true     
+    - get: p-healthwatch-stemcell
+      tags: ((tags))      
+      trigger: true     
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2757,6 +2784,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -2782,6 +2810,10 @@ jobs:
       tags: ((tags))
     - get: wavefront-nozzle-product
       tags: ((tags))      
+      trigger: true     
+    - get: wavefront-nozzle-stemcell
+      tags: ((tags))      
+      trigger: true     
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads          
@@ -2836,6 +2868,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -2862,6 +2895,10 @@ jobs:
       tags: ((tags))
     - get: p-event-alerts-product
       tags: ((tags))      
+      trigger: true     
+    - get: p-event-alerts-stemcell
+      tags: ((tags))      
+      trigger: true     
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2916,6 +2953,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -2942,6 +2980,10 @@ jobs:
       tags: ((tags))
     - get: apm-product
       tags: ((tags))      
+      trigger: true     
+    - get: apm-stemcell
+      tags: ((tags))      
+      trigger: true   
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -2999,6 +3041,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -3024,6 +3067,10 @@ jobs:
       tags: ((tags))
     - get: p-compliance-scanner-product
       tags: ((tags))      
+      trigger: true     
+    - get: p-compliance-scanner-stemcell
+      tags: ((tags))      
+      trigger: true     
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -3079,6 +3126,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -3104,6 +3152,10 @@ jobs:
       tags: ((tags))
     - get: reliability-view-pcf-product
       tags: ((tags))      
+      trigger: true     
+    - get: reliability-view-pcf-stemcell
+      tags: ((tags))      
+      trigger: true     
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -3159,6 +3211,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -3184,6 +3237,10 @@ jobs:
       tags: ((tags))
     - get: reliability-view-pas-exporter-product
       tags: ((tags))      
+      trigger: true     
+    - get: reliability-view-pas-exporter-stemcell
+      tags: ((tags))      
+      trigger: true     
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
@@ -3239,6 +3296,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -3264,6 +3322,10 @@ jobs:
       tags: ((tags))
 #    - get: p-spring-cloud-services-product
 #      tags: ((tags))      
+#      trigger: true     
+#    - get: p-spring-cloud-services-stemcell
+#      tags: ((tags))      
+#      trigger: true     
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads       
@@ -3319,6 +3381,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -3344,6 +3407,10 @@ jobs:
       tags: ((tags))
     - get: p-spring-cloud-services-3-product
       tags: ((tags))      
+      trigger: true     
+    - get: p-spring-cloud-services-3-stemcell
+      tags: ((tags))      
+      trigger: true     
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -3399,6 +3466,7 @@ jobs:
       <<: *slack_succeeded_param
   serial: true
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -3424,6 +3492,10 @@ jobs:
       tags: ((tags))
     - get: p-rabbitmq-product
       tags: ((tags))      
+      trigger: true     
+    - get: p-rabbitmq-stemcell
+      tags: ((tags))      
+      trigger: true     
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads       
@@ -3518,6 +3590,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -3569,6 +3642,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -3620,6 +3694,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   - get-products
   serial: true
@@ -3672,6 +3747,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -3723,6 +3799,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -3774,6 +3851,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -3824,6 +3902,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -3875,6 +3954,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -3926,6 +4006,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -3977,6 +4058,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -4028,6 +4110,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -4079,6 +4162,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -4130,6 +4214,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -4181,6 +4266,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -4232,6 +4318,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
@@ -4830,6 +4917,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - upload-and-stage
   - configure-products
   - get-products
@@ -4908,6 +4996,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial_groups:
+  - apply
   - configure-products
   serial: true
   plan:
