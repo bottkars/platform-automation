@@ -1552,22 +1552,16 @@ jobs:
   plan:
   - in_parallel:
     - get: platform-automation-image
-      tags: ((tags))
       params:
         unpack: true
     - get: one-time-trigger
-      tags: ((tags))
       trigger: false
     - get: additional-tasks
-      tags: ((tags))
       params:
         unpack: true    
     - get: templates
-      tags: ((tags))
     - get: variable
-      tags: ((tags))
   - task: update om certficates
-    tags: ((tags))
     image: platform-automation-image
     file: additional-tasks/tasks/update-ssl-certificate.yml
     input_mapping:
