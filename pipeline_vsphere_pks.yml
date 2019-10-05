@@ -1545,7 +1545,37 @@ jobs:
         PKS_MASTER_FQDN: ((pks_master_fqdn))
         WORKER_INSTANCES: ((worker_instances))
         PKS_PLAN_NAME: ((pks_plan_name))
-
+## service
+- name: update-om-certificates
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: one-time-trigger
+      tags: ((tags))
+      trigger: false
+    - get: additional-tasks
+      tags: ((tags))
+      params:
+        unpack: true    
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
+  - task: update om certficates
+    tags: ((tags))
+    image: platform-automation-image
+    file: additional-tasks/tasks/update-ssl-certificate.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      CERTIFICATE_PEM: ((pks_domain_cert.certificate))
+      KEY_PEM: ((pks_domain_cert.private_key))
 groups:
 - name: full
   jobs:
@@ -1604,7 +1634,9 @@ groups:
     - configure-director  
 - name: Upgrade
   jobs:
-  - upgrade-opsman     
+  - upgrade-opsman 
+  - update-om-certificates
+      
 - name: delete
   jobs:
   - delete-installation   

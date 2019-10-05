@@ -2460,7 +2460,8 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-srt    
+      - get-srt
+      - install-opsman    
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -5040,7 +5041,25 @@ jobs:
 ### end MASB
 
 #### maint  tasks
-
+- name: delete-installation
+  serial: true
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: variable
+  - task: delete-installation
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/delete-installation.yml
+    input_mapping:
+      env: variable
+    params:
+    # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
+     ENV_FILE: ((foundation))/env/env.yml
 - name: update-om-certificates
   serial: true
   serial_groups: [ install ]
@@ -5212,6 +5231,7 @@ groups:
 
 - name: service-jobs
   jobs:
+  - delete-installation
   - update-pas-certificates
   - update-om-certificates
   - delete-orphan-azurevm-images
