@@ -1124,6 +1124,17 @@ jobs:
   #     ENV_FILE: ((foundation))/env/env.yml
   #     CERTIFICATE_PEM: ((fullchain))
   #     KEY_PEM: ((key)) 
+  - task: update om certficates
+    image: platform-automation-image
+    file: additional-tasks/tasks/update-ssl-certificate.yml
+    attempts: 10
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      CERTIFICATE_PEM: ((pks_domain_cert.certificate))
+      KEY_PEM: ((pks_domain_cert.private_key))    
+
   - task: configure-director
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
