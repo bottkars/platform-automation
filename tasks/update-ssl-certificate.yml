@@ -28,3 +28,4 @@ run:
     om --env env/"${ENV_FILE}" update-ssl-certificate \
        --certificate-pem "${CERTIFICATE_PEM}" \
        --private-key-pem "${KEY_PEM}"
+    sleep 60   
