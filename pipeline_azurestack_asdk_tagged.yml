@@ -311,7 +311,17 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: reliability-view-pas-exporter-product/\[reliability_view_pcf,(.*)\]reliability-view-pas-exporter-.*.pivotal
 
+- name: container-services-manager-product
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: container-services-manager-product/\[container-services-manager,(.*)\]ksm-.*.pivotal
 
+
+# container-services-manager
 - name: pas-stemcell
   tags: ((tags))
   icon: amazon-drive
@@ -2133,6 +2143,57 @@ jobs:
       tags: ((tags))
       params:
         file: p-compliance-scanner-stemcell/*.tgz
+- name: get-container-services-manager
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+    - get: after-midnight
+      tags: ((tags))
+      trigger: true
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+  - task: interpolate-product-downloads
+    tags: ((tags))
+    <<: *interpolate-product-downloads
+  - task: download-container-services-manager-product
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-container-services-manager.yml
+    input_mapping:
+      config: interpolated-product-downloads
+  - in_parallel:
+    - put: container-services-manager-product
+      tags: ((tags))
+      params:
+        file: downloaded-product/*.pivotal
+
+
+
 - name: get-reliability-view-pas-exporter
   on_failure:
     put: notify
@@ -5193,6 +5254,7 @@ groups:
   - get-reliability-view-pcf
   - get-reliability-view-pas-exporter
   - get-azure-service-broker
+  - get-container-services-manager
 
 - name: upgrade-products
   jobs:

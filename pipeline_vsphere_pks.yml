@@ -247,39 +247,6 @@ resources:
     bucket: ((buckets_pivnet_products))
     regexp: harbor-container-registry-product/\[harbor-container-registry,(.*)\]harbor-container-registry-.*.pivotal
 
-- name: reliability-view-pcf-product
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets_pivnet_products))
-    regexp: reliability-view-pcf-product/\[reliability_view_pcf,(.*)\]reliability-view-.*.pivotal
-
-- name: reliability-view-pcf-stemcell
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets_pivnet_products))
-    regexp: reliability-view-pcf-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
-
-- name: reliability-view-pks-exporter-product
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets_pivnet_products))
-    regexp: reliability-view-pks-exporter-product/\[reliability_view_pcf,(.*)\]reliability-view-pks-exporter-.*.pivotal
-
-- name: reliability-view-pks-exporter-stemcell
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets_pivnet_products))
-    regexp: reliability-view-pks-exporter-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
-
-
 jobs:
 - name: get-platform-automation
   on_failure:
@@ -470,94 +437,7 @@ jobs:
       params:
         file: harbor-container-registry-stemcell/*.tgz
 
-- name: get-reliability-view-pks-exporter
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
-  serial: true
-  serial_groups: [ get-products ]
-  plan:
-  - put: notify
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-    - get: after-midnight
-      trigger: true
-    - get: platform-automation-image
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: templates
-  - task: interpolate-product-downloads
-    <<: *interpolate-product-downloads
-  - task: download-reliability-view-pks-exporter-product-and-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product.yml
-    params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-reliability-view-pks-exporter.yml
-    input_mapping:
-      config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: reliability-view-pks-exporter-stemcell}
-  - in_parallel:
-    - put: reliability-view-pks-exporter-product
-      params:
-        file: downloaded-product/*.pivotal
-    - put: reliability-view-pks-exporter-stemcell
-      params:
-        file: reliability-view-pks-exporter-stemcell/*.tgz
-
-- name: get-reliability-view-pcf
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
-  serial: true
-  serial_groups: [ get-products ]
-  plan:
-  - put: notify
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-    - get: after-midnight
-      trigger: true
-    - get: platform-automation-image
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: templates
-  - task: interpolate-product-downloads
-    <<: *interpolate-product-downloads
-  - task: download-reliability-view-pcf-product-and-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product.yml
-    params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-reliability-view-pcf.yml
-    input_mapping:
-      config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: reliability-view-pcf-stemcell}
-  - in_parallel:
-    - put: reliability-view-pcf-product
-      params:
-        file: downloaded-product/*.pivotal
-    - put: reliability-view-pcf-stemcell
-      params:
-        file: reliability-view-pcf-stemcell/*.tgz
-
-
-#### get staged configs
+### get staged configs
 - name: staged-pivotal-container-service-config
   serial_groups:
   - staged-configs
@@ -732,7 +612,7 @@ jobs:
           unpack: true
         passed:
           - upgrade-opsman
-          - get-pivotal-container-service           
+#          - get-pivotal-container-service           
         trigger: true  
       - get: platform-automation-tasks
         params:
@@ -802,7 +682,7 @@ jobs:
         unpack: true
       passed:
       - upgrade-opsman
-      - get-harbor-container-registry
+#      - get-harbor-container-registry
       trigger: true          
     - get: platform-automation-tasks
       params:
@@ -847,131 +727,6 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml   
 
-- name: upload-and-stage-reliability-view-pcf
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
-  serial: true
-  serial_groups:
-  - upload-and-stage
-  plan:
-  - put: notify
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
-  - task: interpolate-product-downloads
-    <<: *interpolate-product-downloads
-  - task: download-reliability-view-pcf
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
-    params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-reliability-view-pcf.yml
-    input_mapping:
-      config: interpolated-product-downloads
-    output_mapping:
-      downloaded-product: reliability-view-pcf-product
-      downloaded-stemcell: reliability-view-pcf-stemcell
-  - task: upload-product
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-product.yml
-    input_mapping:
-      product: reliability-view-pcf-product
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-reliability-view-pcf-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      env: variable
-      stemcell: reliability-view-pcf-stemcell
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: stage-product
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/stage-product.yml
-    input_mapping:
-      product: reliability-view-pcf-product
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml  
-
-- name: upload-and-stage-reliability-view-pks-exporter
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
-  serial: true
-  serial_groups:
-  - upload-and-stage
-  plan:
-  - put: notify
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-      - get: platform-automation-image
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        params:
-          unpack: true
-      - get: templates
-      - get: variable
-  - task: interpolate-product-downloads
-    <<: *interpolate-product-downloads
-  - task: download-reliability-view-pks-exporter
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
-    params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-reliability-view-pks-exporter.yml
-    input_mapping:
-      config: interpolated-product-downloads
-    output_mapping:
-      downloaded-product: reliability-view-pks-exporter-product
-      downloaded-stemcell: reliability-view-pks-exporter-stemcell
-  - task: upload-product
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-product.yml
-    input_mapping:
-      product: reliability-view-pks-exporter-product
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-reliability-view-pks-exporter-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      env: variable
-      stemcell: reliability-view-pks-exporter-stemcell
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: stage-product
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/stage-product.yml
-    input_mapping:
-      product: reliability-view-pks-exporter-product
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml  
-
-##
 - name: configure-director
   serial: true
   serial_groups: [ install ]
@@ -1591,13 +1346,9 @@ groups:
     - get-pivotal-container-service
     - get-harbor-container-registry
     - get-platform-automation
-    - get-reliability-view-pcf
-    - get-reliability-view-pks-exporter  
     - get-opsman
     - upload-and-stage-pivotal-container-service 
     - upload-and-stage-harbor-container-registry  
-    - upload-and-stage-reliability-view-pcf
-    - upload-and-stage-reliability-view-pks-exporter  
     - configure-pivotal-container-service
     - configure-harbor-container-registry
     - apply-product-changes 
@@ -1611,14 +1362,10 @@ groups:
     - get-platform-automation
     - get-opsman
     - get-pivotal-container-service-cli
-    - get-reliability-view-pcf
-    - get-reliability-view-pks-exporter
 - name: upload-and-stage-products
   jobs:
     - upload-and-stage-pivotal-container-service 
     - upload-and-stage-harbor-container-registry 
-    - upload-and-stage-reliability-view-pcf
-    - upload-and-stage-reliability-view-pks-exporter  
 - name: configure-products
   jobs:
     - configure-pivotal-container-service

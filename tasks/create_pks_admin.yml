@@ -63,7 +63,7 @@ run:
     -H "Content-Type: application/json" \
     -d "${DATA}"
 
-    USER_ID=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/Users?attributes=id%2CuserName&filter=userName+eq+%${PKS_USERNAME}" -i -X GET  \
+    USER_ID=$(curl -k -s "https://${PKS_API_ENDPOINT}:8443/Users?attributes=id%2CuserName&filter=userName+eq+%${PKS_USERNAME}" -X GET  \
     -H "Accept: application/json" \
     -H "Authorization: Bearer ${TOKEN}" | jp.py "resources[?userName=='$PKS_USERNAME'].id | [0]")
     
