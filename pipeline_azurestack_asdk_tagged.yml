@@ -3598,7 +3598,82 @@ jobs:
       product: p-rabbitmq-product
       env: variable
     params:
+      ENV_FILE: ((foundation))/env/env.yml
+
+- name: upload-and-stage-container-services-manager
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param
+  serial: true
+  serial_groups:
+  - apply
+  - upload-and-stage
+  - configure-products
+  - get-products
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+      - get-container-services-manager
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
+    - get: container-services-manager-product
+      tags: ((tags))      
+      trigger: true    
+  - task: interpolate-product-downloads
+    tags: ((tags))
+    <<: *interpolate-product-downloads       
+  - task: download-container-services-manager
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product-s3.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-container-services-manager.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: container-services-manager-product
+  - task: upload-product
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: container-services-manager-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: container-services-manager-product
+      env: variable
+    params:
       ENV_FILE: ((foundation))/env/env.yml        
+
+
+
 - name: apply-product-changes
   serial_groups: 
     - apply
@@ -4314,6 +4389,58 @@ jobs:
     params:
       CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services-3.yml
       VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml        
+
+- name: configure-container-services-manager
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param
+  serial_groups:
+  - apply
+  - configure-products
+  serial: true
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-container-services-manager
+      trigger: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
+  - task: interpolate-product-templates
+    tags: ((tags))
+    <<: *interpolate-product-templates
+  - task: configure-container-services-manager
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/container-services-manager.yml
+      VARS_FILES: vars/((foundation))/vars/container-services-manager-vars.yml
       ENV_FILE: ((foundation))/env/env.yml        
 
 - name: configure-srt
@@ -5186,6 +5313,8 @@ groups:
   - get-reliability-view-pcf
   - get-reliability-view-pas-exporter
   - get-azure-service-broker
+  - get-container-services-manager
+
 #
   - export-installation
   - upload-and-stage-srt
@@ -5273,6 +5402,8 @@ groups:
   - upload-and-stage-reliability-view-pcf
   - upload-and-stage-reliability-view-pas-exporter
   - upload-and-stage-azure-service-broker
+  - upload-and-stage-container-services-manager
+
 - name: configure-products
   jobs:
   - configure-srt
@@ -5289,6 +5420,7 @@ groups:
   - configure-reliability-view-pcf
   - configure-reliability-view-pas-exporter
   - configure-azure-service-broker
+  - configure-container-services-manager
   - apply-product-changes
 
 - name: service-jobs
