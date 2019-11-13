@@ -154,7 +154,7 @@ resources:
   source:
     api_token: ((pivnet-token))
     product_slug: platform-automation
-    product_version: 4\.0\.(.*)
+    product_version: 4\.*\.(.*)
     sort_by: semver
 
 - name: platform-automation-tasks
@@ -214,6 +214,15 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: pivotal-container-service-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
+
+- name: pivotal-container-service-stemcell-windows
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: "windows-stemcell"
+    # regexp: pivotal-container-service-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
+    regexp: stemcell/bosh-stemcell-((pks_windows_stemcell_ver))-vsphere-esxi-(.*)-go_agent.tgz
 
 - name: pivotal-container-service-product
   icon: amazon-drive
@@ -621,6 +630,7 @@ jobs:
       - get: variable
       - get: pivotal-container-service-product
         trigger: true
+  - get: pivotal-container-service-stemcell-windows  
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads       
   - task: download-pivotal-container-service
@@ -641,6 +651,14 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
+  - task: upload-pivotal-container-service-stemcell-windows
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: pivotal-container-service-stemcell-windows
+    params:
+      ENV_FILE: ((foundation))/env/env.yml      
   - task: upload-pivotal-container-service-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
@@ -1016,7 +1034,17 @@ jobs:
       CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-flannel.yml
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
-
+  # om --env ./env/env.yml assign-multi-stemcell -p pivotal-container-service --stemcell windows2019:latest --stemcell xenial:latest
+  - task: assign-multi-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/assign-multi-stemcell.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-multi-stemcell.yml
 
 - name: configure-harbor-container-registry
   serial_groups:
