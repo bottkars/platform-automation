@@ -222,7 +222,7 @@ resources:
     <<: *s3_env
     bucket: "windows-stemcell"
     # regexp: pivotal-container-service-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
-    regexp: stemcell/bosh-stemcell-((pks_windows_stemcell_ver))-vsphere-esxi-(.*)-go_agent.tgz
+    regexp: stemcell/bosh-stemcell-(.*).7-vsphere-esxi-(.*)-go_agent.tgz
 
 - name: pivotal-container-service-product
   icon: amazon-drive

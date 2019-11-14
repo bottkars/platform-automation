@@ -151,7 +151,7 @@ resources:
   source:
     api_token: ((pivnet-token))
     product_slug: platform-automation
-    product_version: 4\.0\.(.*)
+    product_version: 4\.1\.(.*)
     sort_by: semver
 
 - name: additional-tasks
@@ -2434,7 +2434,7 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
-      ags: ((tags))
+      tags: ((tags))
       params:
         unpack: true
       passed:
@@ -2493,6 +2493,7 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
 
+
 - name: upload-and-stage-srt
   on_failure:
     put: notify
@@ -2521,8 +2522,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-srt
-      - install-opsman    
+      - get-srt  
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2533,13 +2533,11 @@ jobs:
       tags: ((tags))
     - get: srt-product
       tags: ((tags)) 
-      trigger: true
     - get: srt-stemcell
-      tags: ((tags)) 
-      trigger: true             
+      tags: ((tags))       
   - task: interpolate-product-downloads
     tags: ((tags))
-    <<: *interpolate-product-downloads
+    <<: *interpolate-product-downloads     
   - task: download-srt
     tags: ((tags))
     image: platform-automation-image
@@ -2577,7 +2575,9 @@ jobs:
       product: srt-product
       env: variable
     params:
-      ENV_FILE: ((foundation))/env/env.yml        
+      ENV_FILE: ((foundation))/env/env.yml
+
+
 - name: upload-and-stage-pas-windows
   on_failure:
     put: notify
@@ -4470,7 +4470,7 @@ jobs:
         unpack: true
       passed:
         - upload-and-stage-srt
-      trigger: true
+#      trigger: true
     - get: platform-automation-tasks
       tags: ((tags))
       params:
