@@ -1011,7 +1011,7 @@ jobs:
         params:
           unpack: true
         passed:
-        - upload-and-stage-pivotal-container-service
+         - upload-and-stage-pivotal-container-service
         trigger: true
       - get: platform-automation-tasks
         params:
