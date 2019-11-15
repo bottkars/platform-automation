@@ -173,9 +173,6 @@ resources:
     bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 
-
-
-
 - name: additional-tasks
   icon: amazon-drive
   type: s3
@@ -1034,7 +1031,6 @@ jobs:
       CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-flannel.yml
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
-  # om --env ./env/env.yml assign-multi-stemcell -p pivotal-container-service --stemcell windows2019:latest --stemcell xenial:latest
   - task: assign-multi-stemcell
     image: platform-automation-image
     file: platform-automation-tasks/tasks/assign-multi-stemcell.yml
