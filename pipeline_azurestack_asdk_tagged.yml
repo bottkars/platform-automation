@@ -4873,6 +4873,47 @@ jobs:
           params:
             repository: variable-commit
             merge: true
+- name: staged-container-services-manager-config
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param
+  serial_groups:
+  - staged-configs
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    tags: ((tags))
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: container-services-manager
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          tags: ((tags))
+          <<: *do_stage_commit
+          params:
+            FILE_SOURCE_PATH: container-services-manager.yml
+            FILE_DESTINATION_PATH: ((foundation))/config/container-services-manager.yml
+            <<: *git_commit_env
+        - put: variable
+          tags: ((tags))
+          params:
+            repository: variable-commit
+            merge: true
 
 - name: staged-pivotal-mysql-config
   on_failure:
