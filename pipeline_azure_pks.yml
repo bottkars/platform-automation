@@ -120,7 +120,7 @@ resources:
   source:
     api_token: ((pivnet-token))
     product_slug: platform-automation
-    product_version: 4\.0\.(.*)
+    product_version: 4\.(.*)
     sort_by: semver
 
 - name: platform-automation-tasks
@@ -264,8 +264,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    - get: after-midnight
-      trigger: true
+#    - get: after-midnight
+#      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -325,8 +325,8 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - in_parallel:
-    - get: after-midnight
-      trigger: true
+#    - get: after-midnight
+#      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -472,7 +472,7 @@ jobs:
             unpack: true
           passed:
            - upgrade-opsman
-#           - get-pivotal-container-service           
+           - get-pivotal-container-service           
           trigger: true  
         - get: platform-automation-tasks
           params:
@@ -531,7 +531,7 @@ jobs:
             unpack: true
           passed:
           - upgrade-opsman
-#          - get-harbor-container-registry
+          - get-harbor-container-registry
           trigger: true          
         - get: platform-automation-tasks
           params:

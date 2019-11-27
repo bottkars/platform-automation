@@ -4,10 +4,10 @@
 
 
 # retrieving uaa password
+ENV=${HOME}/workspace/pcfsc2_azurestack_config/pcfsc2/env/env.yml
 
-
-UAA_ADMIN_CREDENTIALS=$(om --env ./env/env.yml credentials -p cf -c .uaa.admin_client_credentials -f password)
-uaac target https://uaa.sys.pcfdemo.local.azurestack.external
+UAA_ADMIN_CREDENTIALS=$(om --env ${ENV} credentials -p cf -c .uaa.admin_client_credentials -f password)
+uaac target https://uaa.sys.pcfsc2.sc2.azurestack-rd.cf-app.com
 uaac token client get admin -s ${UAA_ADMIN_CREDENTIALS}
 
 

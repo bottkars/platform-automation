@@ -14,13 +14,18 @@ credhub_env: &credhub_env
 stage_steps: &stage_steps
   steps:
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
     - get: variable
+      tags: ((tags))
+
 
 stage_config: &stage_config
   image: platform-automation-image
@@ -83,6 +88,7 @@ slack_failed_param: &slack_failed_param
   icon_emoji: ":concourse-failed:"
 
 interpolate-product-downloads: &interpolate-product-downloads
+  tags: ((tags))      
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
@@ -94,6 +100,7 @@ interpolate-product-downloads: &interpolate-product-downloads
     interpolated-files: interpolated-product-downloads
 
 interpolate-product-templates: &interpolate-product-templates
+  tags: ((tags))      
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
@@ -572,17 +579,23 @@ jobs:
       - get: daily-trigger
         trigger: true
       - get: platform-automation-image
+        tags: ((tags))      
         params:
           unpack: true
         passed: [ install-opsman]
       - get: platform-automation-tasks
+        tags: ((tags))      
         params:
           unpack: true
       - get: templates
+        tags: ((tags))      
       - get: variable
+        tags: ((tags))      
       - get: one-time-trigger
+        tags: ((tags))      
         passed: [ install-opsman ]
   - task: export-installation
+    tags: ((tags))      
     image: platform-automation-image
     file: platform-automation-tasks/tasks/export-installation.yml
     input_mapping:
@@ -591,6 +604,7 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
       INSTALLATION_FILE: installation-$timestamp.zip
   - put: installation
+    tags: ((tags))      
     params:
       file: installation/installation*.zip
 ## upload and stage
@@ -614,6 +628,7 @@ jobs:
      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
+        tags: ((tags))
         params:
           unpack: true
         passed:
@@ -621,16 +636,22 @@ jobs:
 #          - get-pivotal-container-service           
         trigger: true  
       - get: platform-automation-tasks
+        tags: ((tags))
         params:
           unpack: true
       - get: templates
+        tags: ((tags))
       - get: variable
+        tags: ((tags))
       - get: pivotal-container-service-product
+        tags: ((tags))
         trigger: true
   - get: pivotal-container-service-stemcell-windows  
+    tags: ((tags))
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads       
   - task: download-pivotal-container-service
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
@@ -641,6 +662,7 @@ jobs:
       downloaded-product: pivotal-container-service-product
       downloaded-stemcell: pivotal-container-service-stemcell
   - task: upload-product
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
@@ -649,6 +671,7 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: upload-pivotal-container-service-stemcell-windows
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
@@ -657,6 +680,7 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml      
   - task: upload-pivotal-container-service-stemcell
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
@@ -665,6 +689,7 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
@@ -689,10 +714,12 @@ jobs:
       <<: *slack_succeeded_param
   plan:
   - put: notify
+    tags: ((tags))
     params:
      <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
       passed:
@@ -700,14 +727,19 @@ jobs:
 #      - get-harbor-container-registry
       trigger: true          
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: harbor-container-registry-product
+      tags: ((tags))
     - get: templates
+      tags: ((tags))
     - get: variable
+      tags: ((tags))
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads       
   - task: download-harbor-container-registry
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
@@ -718,6 +750,7 @@ jobs:
       downloaded-product: harbor-container-registry-product
       downloaded-stemcell: harbor-container-registry-stemcell
   - task: upload-product
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
@@ -726,6 +759,7 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: upload-harbor-container-registry-stemcell
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
@@ -734,6 +768,7 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
@@ -759,9 +794,11 @@ jobs:
      <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: additional-tasks
@@ -783,6 +820,7 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
       DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
   - task: apply-director-changes
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-director-changes.yml
     input_mapping:
@@ -808,33 +846,26 @@ jobs:
      <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: one-time-trigger
+      tags: ((tags))
       trigger: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: additional-tasks
+      tags: ((tags))
       params:
         unpack: true    
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
-# pivnet
-#    - task: download-opsman-s3
-#      image: platform-automation-image
-#      file: platform-automation-tasks/tasks/download-product.yml
-#      input_mapping:
-#        config: interpolated-product-downloads      
-#      params:
-#        CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
-#    - in_parallel:
-#      - put: opsman-product
-#        params:
-#          file: downloaded-product/*
-# s3 version
   - task: download-opsman-s3
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
@@ -843,13 +874,13 @@ jobs:
       config: interpolated-product-downloads
     output_mapping:
       downloaded-product: opsman-product
-##
   - get: variable
+    tags: ((tags))
   - task: interpolate-product-templates
+    tags: ((tags))
     <<: *interpolate-product-templates          
-#    - task: interpolate-product-downloads
-#      <<: *interpolate-product-downloads        
   - task: create-vm
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/create-vm.yml
     input_mapping:
@@ -876,6 +907,7 @@ jobs:
             merge: true          
 
   - task: configure-authentication
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-saml-authentication.yml
     attempts: 10
@@ -884,17 +916,9 @@ jobs:
       config: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-      AUTH_CONFIG_FILE: ((foundation))/config/auth.yml          
-  # - task: update certficates
-  #   image: platform-automation-image
-  #   file: additional-tasks/tasks/update-ssl-certificate.yml
-  #   input_mapping:
-  #     env: variable
-  #   params:
-  #     ENV_FILE: ((foundation))/env/env.yml
-  #     CERTIFICATE_PEM: ((fullchain))
-  #     KEY_PEM: ((key)) 
+      AUTH_CONFIG_FILE: ((foundation))/config/auth.yml 
   - task: update om certficates
+    tags: ((tags))
     image: platform-automation-image
     file: additional-tasks/tasks/update-ssl-certificate.yml
     attempts: 10
@@ -904,8 +928,9 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
       CERTIFICATE_PEM: ((pks_domain_cert.certificate))
       KEY_PEM: ((pks_domain_cert.private_key))    
-
   - task: configure-director
+    tags: ((tags))
+    attempts: 3    
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
     input_mapping:
@@ -917,6 +942,8 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
       DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
   - task: apply-director-changes
+    tags: ((tags))
+    attempts: 3    
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-director-changes.yml
     input_mapping:
@@ -937,29 +964,38 @@ jobs:
       <<: *slack_succeeded_param
   plan:
   - put: notify
+    tags: ((tags))      
     params:
      <<: *slack_start_param
   - in_parallel:
     - get: one-time-trigger
+      tags: ((tags))      
       passed: [ install-opsman ]
     - get: platform-automation-image
+      tags: ((tags))      
       params:
         unpack: true
       trigger: true
     - get: platform-automation-tasks
+      tags: ((tags))      
       params:
         unpack: true
     - get: opsman-product
+      tags: ((tags))      
       trigger: true
     - get: installation
+      tags: ((tags))      
       passed: [ export-installation ]
     - get: templates
+      tags: ((tags))      
     - get: variable
+      tags: ((tags))      
   - task: interpolate-product-templates
     <<: *interpolate-product-templates          
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads  
   - task: upgrade-opsman
+    tags: ((tags))      
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upgrade-opsman.yml
     input_mapping:
@@ -982,6 +1018,7 @@ jobs:
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
   - task: apply-director-changes
+    tags: ((tags))      
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-director-changes.yml
     input_mapping:
@@ -1008,19 +1045,24 @@ jobs:
      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
+        tags: ((tags))      
         params:
           unpack: true
         passed:
          - upload-and-stage-pivotal-container-service
         trigger: true
       - get: platform-automation-tasks
+        tags: ((tags))      
         params:
           unpack: true
       - get: templates
+        tags: ((tags))      
       - get: variable
+        tags: ((tags))      
   - task: interpolate-product-templates
     <<: *interpolate-product-templates
   - task: configure-pivotal-container-service-cloud-provider
+    tags: ((tags))      
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
@@ -1032,6 +1074,7 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
   - task: assign-multi-stemcell
+    tags: ((tags))      
     image: platform-automation-image
     file: platform-automation-tasks/tasks/assign-multi-stemcell.yml
     input_mapping:
@@ -1060,20 +1103,26 @@ jobs:
      <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
+      tags: ((tags))      
       params:
         unpack: true
       passed:
         - upload-and-stage-harbor-container-registry
       trigger: true
     - get: platform-automation-tasks
+      tags: ((tags))      
       params:
         unpack: true
     - get: harbor-container-registry-product    
+      tags: ((tags))      
     - get: templates
+      tags: ((tags))      
     - get: variable
+      tags: ((tags))      
   - task: interpolate-product-templates
     <<: *interpolate-product-templates
   - task: configure-harbor-container-registry
+    tags: ((tags))      
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
@@ -1103,9 +1152,11 @@ jobs:
      <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-tasks
+        tags: ((tags))      
         params:
           unpack: true
       - get: platform-automation-image
+        tags: ((tags))      
         params:
           unpack: true
         passed: # ((passed_configs))
@@ -1113,7 +1164,9 @@ jobs:
           - configure-harbor-container-registry
         trigger: true
       - get: variable
+        tags: ((tags))      
   - task: apply-product-changes
+    tags: ((tags))      
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-changes.yml
     input_mapping:
@@ -1232,13 +1285,17 @@ jobs:
      <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: variable
+      tags: ((tags))
   - task: delete-installation
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/delete-installation.yml
     input_mapping:
@@ -1247,6 +1304,7 @@ jobs:
     # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
      ENV_FILE: ((foundation))/env/env.yml
   - task: delete-vm
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/delete-vm.yml
     input_mapping:
@@ -1275,21 +1333,27 @@ jobs:
   plan:
     - in_parallel:
       - get: platform-automation-image
+        tags: ((tags))
         params:
           unpack: true
         trigger: true
         passed: 
         - apply-product-changes           
       - get: one-time-trigger
+        tags: ((tags))
         trigger: true
       - get: variable  
+        tags: ((tags))
       - get: platform-automation-tasks
+        tags: ((tags))
         params:
           unpack: true
       - get: additional-tasks
+        tags: ((tags))
         params:
           unpack: true        
     - task: create-pks-admin
+      tags: ((tags))
       image: platform-automation-image
       file: additional-tasks/tasks/create_pks_admin.yml
       input_mapping:
@@ -1308,21 +1372,27 @@ jobs:
   plan:
     - in_parallel:
       - get: platform-automation-image
+        tags: ((tags))
         params:
           unpack: true
         trigger: true
         passed: 
         - apply-product-changes           
       - get: one-time-trigger
+        tags: ((tags))
         trigger: true
       - get: variable  
+        tags: ((tags))
       - get: platform-automation-tasks
+        tags: ((tags))
         params:
           unpack: true
       - get: additional-tasks
+        tags: ((tags))
         params:
           unpack: true        
     - task: create-pks-cluster
+      tags: ((tags))
       image: platform-automation-image
       file: additional-tasks/tasks/create_pks_cluster.yml
       input_mapping:
@@ -1342,16 +1412,22 @@ jobs:
   plan:
   - in_parallel:
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: one-time-trigger
+      tags: ((tags))
       trigger: false
     - get: additional-tasks
+      tags: ((tags))
       params:
         unpack: true    
     - get: templates
+      tags: ((tags))
     - get: variable
+      tags: ((tags))
   - task: update om certficates
+    tags: ((tags))
     image: platform-automation-image
     file: additional-tasks/tasks/update-ssl-certificate.yml
     input_mapping:
