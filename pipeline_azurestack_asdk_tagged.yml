@@ -1439,10 +1439,11 @@ jobs:
       tags: ((tags))
     - get: opsman-product
       tags: ((tags))
-#    - get: additional-tasks
-#      tags: ((tags))
-#      params:
-#        unpack: true
+      trigger: true
+    - get: additional-tasks
+      tags: ((tags))
+      params:
+        unpack: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -5178,9 +5179,9 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-    - get: one-time-trigger
-      tags: ((tags))
-      trigger: false
+#    - get: one-time-trigger
+#      tags: ((tags))
+#      trigger: false
     - get: additional-tasks
       tags: ((tags))
       params:

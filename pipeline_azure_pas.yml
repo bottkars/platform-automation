@@ -99,8 +99,8 @@ resources:
 - name: after-midnight
   type: time
   source:
-    start: 01:00 AM
-    stop: 6:00 AM
+    start: 01:00 PM
+    stop: 6:00 PM
     interval: 24h
     location: Europe/Berlin 
 
@@ -123,7 +123,7 @@ resources:
   source:
     api_token: ((pivnet-token))
     product_slug: platform-automation
-    product_version: 4\.0\.(.*)
+    product_version: 4\.[0123]\.(.*)
     sort_by: semver
 
 

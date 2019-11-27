@@ -14,3 +14,9 @@ uaac token client get admin -s ${UAA_ADMIN_CREDENTIALS}
 uaac group map --name scim.read "fd570d0b-ae8b-45f8-871e-7e40ef426dd8" --origin labbuildr
 uaac group map --name scim.write "fd570d0b-ae8b-45f8-871e-7e40ef426dd8" --origin labbuildr
 uaac group map --name cloud_controller.admin "fd570d0b-ae8b-45f8-871e-7e40ef426dd8" --origin labbuildr
+
+## wavefront
+uaac -t member add doppler.firehose wavefront_nozzle
+uaac -t user add wavefront-nozzle --password Thyph00n# --emails na
+uaac -t member add cloud_controller.admin_read_only wavefront-nozzle
+uaac -t member add doppler.firehose wavefront-nozzle
