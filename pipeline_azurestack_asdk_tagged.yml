@@ -685,11 +685,9 @@ jobs:
       trigger: true
     - get: one-time-trigger
       tags: ((tags))
-      passed: [ export-installation ]
       trigger: true
     - get: installation
       tags: ((tags))
-      passed: [ export-installation ]  
     - get: azs-concourse
       tags: ((tags))
     - get: platform-automation-image
@@ -983,7 +981,7 @@ jobs:
       unpack: true
   - get: one-time-trigger
     tags: ((tags))
-    trigger: true
+#    trigger: true
   - get: platform-automation-tasks
     tags: ((tags))
     params:
@@ -1127,8 +1125,6 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
       AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
-
-
 - name: configure-opsman ## delete
   on_failure:
     put: notify
@@ -1375,7 +1371,6 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-      passed: [ install-opsman, apply-director, apply-product-changes ]
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -1423,8 +1418,8 @@ jobs:
   - in_parallel:
     - get: one-time-trigger
       tags: ((tags))
-#      passed: [ export-installation, get-opsman-image-azure ]
-#      trigger: true
+      passed: [ export-installation, get-opsman-image-azure ]
+      trigger: true
     - get: azs-concourse  
       tags: ((tags))
     - get: platform-automation-image
@@ -1438,7 +1433,6 @@ jobs:
     - get: installation
       tags: ((tags))
       passed: [ export-installation ]
-#      trigger: true
     - get: templates
       tags: ((tags))
     - get: variable
@@ -1636,7 +1630,7 @@ jobs:
   - in_parallel:
     - get: after-lunch
       tags: ((tags))
-#      trigger: true
+      trigger: true
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -2335,7 +2329,7 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - get: after-lunch
+    - get: after-midnight
       tags: ((tags))
       trigger: true
     - get: platform-automation-image
@@ -2400,7 +2394,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-srt
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2486,7 +2480,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-pas-windows
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2571,7 +2565,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-pivotal-mysql
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2656,7 +2650,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-p-healthwatch
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2741,7 +2735,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-wavefront-nozzle         
+      - upgrade-opsman     
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2826,7 +2820,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-p-event-alerts      
+      - upgrade-opsman   
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2911,7 +2905,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-apm
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -2998,7 +2992,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-p-compliance-scanner
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3083,7 +3077,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-reliability-view-pcf
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3168,7 +3162,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-reliability-view-pas-exporter
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3253,7 +3247,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-p-spring-cloud-services
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3338,7 +3332,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-p-spring-cloud-services-3
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3423,7 +3417,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-p-rabbitmq
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3508,7 +3502,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-container-services-manager
+      - upgrade-opsman
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -3582,8 +3576,7 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-      passed: ((passed_configs))
-      trigger: true
+      passed: ((passed_configs))          
     - get: variable
       tags: ((tags))
   - task: apply-product-changes
@@ -3594,6 +3587,19 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
+  - task: export-installation
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/export-installation.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      INSTALLATION_FILE: installation-$timestamp.zip
+  - put: installation
+    tags: ((tags))
+    params:
+      file: installation/installation*.zip
 
 
 
@@ -4299,7 +4305,7 @@ jobs:
       params:
         unpack: true
       passed:
-        - upload-and-stage-srt
+      - upload-and-stage-srt
       trigger: true
     - get: platform-automation-tasks
       tags: ((tags))
@@ -4939,6 +4945,8 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+      passed:
+      - install-opsman      
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -4998,7 +5006,7 @@ jobs:
       params:
         unpack: true
       passed:
-      - get-azure-service-broker     
+      - upgrade-opsman    
     - get: templates
       tags: ((tags))
     - get: variable
@@ -5226,7 +5234,6 @@ groups:
   - get-container-services-manager
 
 #
-  - export-installation
   - upload-and-stage-srt
   - upload-and-stage-pas-windows  
   - upload-and-stage-pivotal-mysql
@@ -5298,7 +5305,6 @@ groups:
 
 - name: upgrade-products
   jobs:
-  - export-installation
   - upload-and-stage-apm
   - upload-and-stage-srt
   - upload-and-stage-pas-windows  
