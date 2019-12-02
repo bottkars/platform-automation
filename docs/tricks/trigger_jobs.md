@@ -3,6 +3,9 @@
 ```bash
 PIPELINE=pcfsc2
 TARGET=RandD
+
+PIPELINE=pcfazurestack
+TARGET=control
 fly -t ${TARGET} jobs -p ${PIPELINE} | grep get  | cut -f 1 -d " " | xargs -I{} fly -t ${TARGET} tj -j ${PIPELINE}/{}
 
 ```

@@ -678,7 +678,7 @@ jobs:
     params:
       <<: *azure_env
       RESOURCE_GROUP: ((resource_group))
-      VM_NAME: ops_man_vm
+      VM_NAME: ((OPS_MAN_VMNAME))
       
 - name: delete-orphan-azurevm-images
   on_failure:
@@ -980,7 +980,7 @@ jobs:
       config: variable
     params:
       <<: *azure_env
-      VM_NAME: ops_man_vm
+      VM_NAME: ((OPS_MAN_VMNAME))
       STATE_FILE: ((foundation))/state/state.yml 
     ensure: &make-state-commit
       do:
@@ -1297,7 +1297,7 @@ jobs:
   #  params:
   #    <<: *azure_env
   #    RESOURCE_GROUP: ((resource_group))
-  #    VM_NAME: ops_man_vm
+  #    VM_NAME: ((OPS_MAN_VMNAME))
   - task: download-opsman-s3
     tags: ((tags))
     image: platform-automation-image
