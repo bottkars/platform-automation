@@ -1470,6 +1470,7 @@ jobs:
       ACCOUNT_NAME: ((image_account_name))
       STATE_FILE: state.yml
       OPSMAN_URL: ((opsman-url))
+      VM_NAME: ((ops_man_vmname))
     ensure: *make-state-commit
   - task: import-installation
     tags: ((tags))
