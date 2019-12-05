@@ -4,6 +4,11 @@ s3_env: &s3_env
   endpoint:  ((s3_endpoint))
   region_name: ((s3_region_name))
   secret_access_key: ((s3_secret_access_key))
+azure_blob_env: &azure_blob_env
+  storage_account_name: minio
+  storage_account_key: "wAbj285nWMW0DFO/IkSLa7KCif4G7f9q7FI6YlB1ZmwK+LJ/REMS0EJXYTz9UnphzR4gjtPKouepn+kHTK2FLg=="
+  container: minio
+  base_url: sc2.azurestack-rd.cf-app.com  
 azure_env: &azure_env
   PROFILE: ((arm_profile))
   CA_CERT: ((foundation))/cert/root.pem
@@ -107,7 +112,12 @@ resource_types:
   tags: ((tags))
   type: docker-image
   source:
-    repository: cfcommunity/slack-notification-resource    
+    repository: cfcommunity/slack-notification-resource
+- name: azure
+  type: docker-image
+  source:
+    repository: pcfabr/azure-blobstore-resource
+
 resources:
 # triggers
 - name: daily-trigger
@@ -215,10 +225,10 @@ resources:
 - name: srt-product
   tags: ((tags))
   icon: amazon-drive
-  type: s3
+  type: azure
   source:
-    <<: *s3_env
-    bucket: ((buckets_pivnet_products))
+    <<: *azure_blob_env
+    container: ((buckets_pivnet_products))
     regexp: srt-product/\[elastic-runtime,(.*)\]srt-.*.pivotal
 
 - name: p-spring-cloud-services-product
@@ -1043,8 +1053,6 @@ jobs:
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       BOSHSTORAGEACCOUNT: ((boshstorageaccount))
-      VM_NAME: ((ops_man_vmname))
-
   - task: deploy-opsman-template 
     tags: ((tags))
     image: platform-automation-image
