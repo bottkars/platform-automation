@@ -980,7 +980,7 @@ jobs:
       unpack: true
   - get: one-time-trigger
     tags: ((tags))
-#    trigger: true
+    trigger: true
   - get: platform-automation-tasks
     tags: ((tags))
     params:
@@ -1061,6 +1061,7 @@ jobs:
       ACCOUNT_NAME: ((image_account_name))
       DESTINATION_CONTAINER: ((destination_container))
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+      VM_NAME: ((ops_man_vmname))
     on_success: &make-config-director-commit
       do:
         - task: make-commit
@@ -1631,7 +1632,7 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - get: after-lunch
+    - get: after-midnight
       tags: ((tags))
       trigger: true
     - get: platform-automation-image
