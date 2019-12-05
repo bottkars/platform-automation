@@ -124,15 +124,15 @@ resources:
   type: time
   source:
     interval: 999999h
-- name: after-lunch
-  tags: ((tags))
-  icon: calendar-clock
-  type: time
-  source:
-    start: 11:59 AM
-    stop: 11:00 PM
-    interval: 24h
-    location: Europe/Berlin 
+#- name: after-lunch
+#  tags: ((tags))
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    start: 11:59 AM
+#    stop: 11:00 PM
+#    interval: 24h
+#    location: Europe/Berlin 
 
 - name: after-midnight
   tags: ((tags))
@@ -681,7 +681,6 @@ jobs:
     - get: opsman-product
       tags: ((tags))
       passed: 
-      - get-opsman-pivnet 
       trigger: true
     - get: one-time-trigger
       tags: ((tags))
@@ -1044,7 +1043,6 @@ jobs:
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       BOSHSTORAGEACCOUNT: ((boshstorageaccount))
       VM_NAME: ((ops_man_vmname))
-
   - task: deploy-opsman-template 
     tags: ((tags))
     image: platform-automation-image
@@ -1126,46 +1124,7 @@ jobs:
       config: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-      AUTH_CONFIG_FILE: ((foundation))/config/auth.yml
-- name: configure-opsman ## delete
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param  
-  plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-    - get: variable
-      tags: ((tags))
-      passed:
-      - install-opsman
-      trigger: true
-    - get: templates
-      tags: ((tags))
-    - get: platform-automation-image
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      tags: ((tags))
-      params:
-        unpack: true
-    - put: notify
-      tags: ((tags))
-      params:
-        <<: *slack_start_param    
-  - task: interpolate-product-templates
-    tags: ((tags))
-    <<: *interpolate-product-templates          
+      AUTH_CONFIG_FILE: ((foundation))/config/auth.yml       
   - task: configure-director
     tags: ((tags))
     image: platform-automation-image
@@ -1178,49 +1137,6 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
       DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director-azurestack.yml
-    on_success:  
-      put: notify
-      params:
-        <<: *slack_succeeded_param
-    on_failure:
-      put: notify
-      params:
-        <<: *slack_failed_param        
-- name: apply-director 
-  serial_groups:
-  - apply
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param  
-  plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-    - get: variable
-      tags: ((tags))
-    - get: templates
-      tags: ((tags))
-    - get: platform-automation-image
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      tags: ((tags))
-      params:
-        unpack: true
-      passed:
-      - configure-opsman 
-      trigger: true
-    - get: one-time-trigger  
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
@@ -1229,7 +1145,19 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-
+  - task: export-installation
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/export-installation.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      INSTALLATION_FILE: installation-$timestamp.zip
+  - put: installation
+    tags: ((tags))
+    params:
+      file: installation/installation*.zip
 - name: get-opsman-pivnet
   on_failure:
     put: notify
@@ -1383,11 +1311,9 @@ jobs:
     - get: variable
       tags: ((tags))
     - get: one-time-trigger
-      tags: ((tags))
-      passed: 
-      - install-opsman 
-      - apply-director
-      trigger: true
+      passed:
+      - install-opsman
+
   - task: export-installation
     tags: ((tags))
     image: platform-automation-image
@@ -1423,14 +1349,14 @@ jobs:
   - in_parallel:
     - get: one-time-trigger
       tags: ((tags))
-      passed: [ export-installation, get-opsman-image-azure ]
-      trigger: true
+      passed: [ export-installation ]
     - get: azs-concourse  
       tags: ((tags))
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
+      trigger: true  
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -1797,7 +1723,7 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - get: after-lunch
+    - get: after-midnight
       tags: ((tags))
       trigger: true
     - get: platform-automation-image
@@ -5218,8 +5144,8 @@ groups:
   - staged-director-config 
   - install-opsman 
   - get-opsman-image-azure
-  - configure-opsman
-  - apply-director
+#  - configure-opsman
+#  - apply-director
 #
   - get-platform-automation
   - get-srt
