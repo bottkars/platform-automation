@@ -1383,7 +1383,9 @@ jobs:
       tags: ((tags))
     - get: one-time-trigger
       tags: ((tags))
-      passed: [ install-opsman ]
+      passed: 
+      - install-opsman 
+      - apply-director
       trigger: true
   - task: export-installation
     tags: ((tags))
