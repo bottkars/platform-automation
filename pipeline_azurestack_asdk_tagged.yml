@@ -1220,6 +1220,7 @@ jobs:
       passed:
       - configure-opsman 
       trigger: true
+    - get: one-time-trigger  
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
