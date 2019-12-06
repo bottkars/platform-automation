@@ -984,6 +984,10 @@ jobs:
     tags: ((tags))
     params:
       unpack: true
+  - get: additional-tasks
+    tags: ((tags))
+    params:
+      unpack: true      
   - put: notify
     tags: ((tags))
     params:
