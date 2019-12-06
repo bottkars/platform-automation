@@ -1124,11 +1124,22 @@ jobs:
       config: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-      AUTH_CONFIG_FILE: ((foundation))/config/auth.yml       
+      AUTH_CONFIG_FILE: ((foundation))/config/auth.yml 
+  - task: update om certficates
+    tags: ((tags))
+    image: platform-automation-image
+    file: additional-tasks/tasks/update-ssl-certificate.yml
+    attempts: 10
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      CERTIFICATE_PEM: ((pcf_domain_cert.certificate))
+      KEY_PEM: ((pcf_domain_cert.private_key))                
   - task: configure-director
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/configure-director.yml
+    file: platform-automation-tasks/tasks/configure-director.yml 
     input_mapping:
       config: interpolated-product-templates
       env: variable
@@ -1137,6 +1148,19 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
       DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director-azurestack.yml
+  - task: configure-extensions
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-director.yml 
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+      ENV_FILE: ((foundation))/env/env.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions.yml
+
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
