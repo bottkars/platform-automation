@@ -6,9 +6,9 @@ s3_env: &s3_env
   secret_access_key: ((((foundation))/s3_secret_access_key))
 
 credhub_env: &credhub_env
-  CREDHUB_CLIENT: ((credhub-client))
-  CREDHUB_SECRET: ((credhub-secret))
-  CREDHUB_SERVER: ((credhub-server))
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((((foundation))/credhub-server))
   PREFIX: /concourse/main/((foundation))
   CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
 
