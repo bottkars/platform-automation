@@ -322,9 +322,10 @@ jobs:
   - task: download-srt
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
+    file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
+      SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:

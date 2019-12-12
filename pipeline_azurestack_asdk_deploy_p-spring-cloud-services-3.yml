@@ -6,9 +6,9 @@ s3_env: &s3_env
   secret_access_key: ((((foundation))/s3_secret_access_key))
 
 credhub_env: &credhub_env
-  CREDHUB_CLIENT: ((credhub-client))
-  CREDHUB_SECRET: ((credhub-secret))
-  CREDHUB_SERVER: ((credhub-server))
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((((foundation))/credhub-server))
   PREFIX: /concourse/main/((foundation))
   CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
 
@@ -322,9 +322,10 @@ jobs:
   - task: download-p-spring-cloud-services-3
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
+    file: platform-automation-tasks/tasks/download-product.yml
     params:
       CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+      SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
