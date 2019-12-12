@@ -383,6 +383,8 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
+    - get: pipeline-lock
+      tags: ((tags)) 
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -439,6 +441,10 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
+    - get: pipeline-lock
+      tags: ((tags))
+      # passed: 
+      # - configure-srt
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -457,7 +463,7 @@ jobs:
        - configure-srt         
     - get: variable
       tags: ((tags))
-  - task: apply-product-changes
+  - task: apply-product-changes 
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-changes.yml
@@ -479,7 +485,8 @@ jobs:
     params:
       file: installation/installation*.zip
   - put: pipeline-lock
-    params: {release: pas}    
+    tags: ((tags))
+    params: {release: pipeline-lock}    
 
 
 
