@@ -124,15 +124,7 @@ resources:
   type: time
   source:
     interval: 999999h
-#- name: after-lunch
-#  tags: ((tags))
-#  icon: calendar-clock
-#  type: time
-#  source:
-#    start: 11:59 AM
-#    stop: 11:00 PM
-#    interval: 24h
-#    location: Europe/Berlin 
+
 
 - name: after-midnight
   tags: ((tags))
@@ -194,24 +186,6 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
-- name: srt-product
-  tags: ((tags))
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets_pivnet_products))
-    regexp: srt-product/\[elastic-runtime,(.*)\]srt-.*.pivotal
-
-- name: srt-stemcell
-  tags: ((tags))
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets_pivnet_products))
-    regexp: srt-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure.*\.tgz
-
 - name: opsman-product
   type: s3
   source:
@@ -238,6 +212,7 @@ resources:
     branch: master
 
 - name: pipeline-lock
+  icon: cloud-lock-outline
   type: pool
   source:
     uri: ((variable-repo))
@@ -707,6 +682,9 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_start_param
+  - put: pipeline-lock
+    tags: ((tags))  
+    params: {acquire: true}  
   - get: variable
     tags: ((tags))
   - get: templates
@@ -904,7 +882,6 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
       DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions.yml
-
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
@@ -926,6 +903,9 @@ jobs:
     tags: ((tags))
     params:
       file: installation/installation*.zip
+  - put: pipeline-lock
+    tags: ((tags))
+    params: {release: pas}      
 - name: get-opsman-pivnet
   on_failure:
     put: notify
@@ -1058,6 +1038,9 @@ jobs:
   serial: true
   serial_groups: [ install, get-products, upgrade-opsman, opsman, apply ]
   plan:
+  - put: pipeline-lock
+    tags: ((tags))
+    params: {acquire: true}  
   - put: notify
     tags: ((tags))
     params:
@@ -1081,7 +1064,6 @@ jobs:
     - get: one-time-trigger
       passed:
       - install-opsman
-
   - task: export-installation
     tags: ((tags))
     image: platform-automation-image
@@ -1095,7 +1077,9 @@ jobs:
     tags: ((tags))
     params:
       file: installation/installation*.zip
-
+  - put: pipeline-lock
+    tags: ((tags))
+    params: {release: pas}
 - name: upgrade-opsman
   serial: true
   serial_groups: [ install, get-products, upgrade-opsman, opsman, apply ]
@@ -1111,6 +1095,7 @@ jobs:
       <<: *slack_succeeded_param
   plan:
   - put: pipeline-lock
+    tags: ((tags))
     params: {acquire: true}
   - put: notify
     tags: ((tags))
@@ -1205,7 +1190,8 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - put: pipeline-lock
-    params: {release: true}  
+    tags: ((tags))
+    params: {release: pas}  
 
 - name: get-platform-automation
   on_failure:
@@ -1279,345 +1265,6 @@ jobs:
       CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
       VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
       SKIP_MISSING: true    
-- name: test-interpolate-srt
-  plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
-  - get: variable
-    tags: ((tags))
-  - get: templates
-    tags: ((tags))
-  - get: platform-automation-image
-    tags: ((tags))
-    params:
-      unpack: true
-  - get: platform-automation-tasks
-    tags: ((tags))
-    params:
-      unpack: true
-  - task: interpolate
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/test-interpolate.yml
-    input_mapping:
-      config: templates
-      vars: variable
-    params:
-      CONFIG_FILE: product-configs/((pas_version))/srt.yml
-      VARS_FILES: vars/((foundation))/vars/srt-vars.yml
-      SKIP_MISSING: true  
-
-
-
-
-
-- name: get-srt
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
-  serial: true
-  serial_groups: [ get-products ]
-  plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-    - get: after-midnight
-      tags: ((tags))
-      trigger: true
-    - get: platform-automation-image
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: templates
-      tags: ((tags))
-  - task: interpolate-product-downloads
-    tags: ((tags))
-    <<: *interpolate-product-downloads
-  - task: download-srt-product-and-stemcell
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product.yml
-    params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
-    input_mapping:
-      config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: srt-stemcell}
-  - in_parallel:
-    - put: srt-product
-      tags: ((tags))
-      params:
-        file: downloaded-product/*.pivotal
-    - put: srt-stemcell
-      tags: ((tags))
-      params:
-        file: srt-stemcell/*.tgz
-
-- name: upload-and-stage-srt
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
-  serial_groups:
-  - apply
-  - upload-and-stage
-  - configure-products
-  - get-products
-  serial: true
-  plan:
-  - put: pipeline-lock
-    params: {acquire: true}
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-    - get: platform-automation-image
-      tags: ((tags))
-      params:
-        unpack: true
-      passed:
-      - upgrade-opsman
-    - get: platform-automation-tasks
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: templates
-      tags: ((tags))
-    - get: variable
-      tags: ((tags))
-    - get: srt-product
-      tags: ((tags))
-      trigger: true 
-    - get: srt-stemcell
-      tags: ((tags))
-      trigger: true       
-  - task: interpolate-product-downloads
-    tags: ((tags))
-    <<: *interpolate-product-downloads     
-  - task: download-srt
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
-    params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
-    input_mapping:
-      config: interpolated-product-downloads
-    output_mapping:
-      downloaded-product: srt-product
-      downloaded-stemcell: srt-stemcell
-  - task: upload-product
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-product.yml
-    input_mapping:
-      product: srt-product
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-srt-stemcell
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      env: variable
-      stemcell: srt-stemcell
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: stage-product
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/stage-product.yml
-    input_mapping:
-      product: srt-product
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-
-
-- name: apply-product-changes
-  serial_groups: 
-    - apply
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
-  serial: true
-  plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-    - get: platform-automation-tasks
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: platform-automation-image
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: srt-product
-      tags: ((tags))
-      trigger: true         
-      passed: ((passed_configs))          
-    - get: variable
-      tags: ((tags))
-  - task: apply-product-changes
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/apply-changes.yml
-    input_mapping:
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: export-installation
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/export-installation.yml
-    input_mapping:
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-      INSTALLATION_FILE: installation-$timestamp.zip
-  - put: installation
-    tags: ((tags))
-    params:
-      file: installation/installation*.zip
-  - put: pipeline-lock
-    params: {release: true}    
-
-
-
-- name: configure-srt
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
-  serial_groups:
-  - apply
-  - configure-products
-  serial: true
-  plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-    - get: platform-automation-image
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: srt-product
-      tags: ((tags))
-      passed:
-      - upload-and-stage-srt
-      trigger: true
-    - get: platform-automation-tasks
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: templates
-      tags: ((tags))
-    - get: variable
-      tags: ((tags))
-  - task: interpolate-product-templates
-    tags: ((tags))
-    <<: *interpolate-product-templates
-  - task: configure-srt
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/configure-product.yml
-    input_mapping:
-      config: interpolated-product-templates
-      env: variable
-      vars: variable
-    params:
-      CONFIG_FILE: product-configs/((pas_version))/srt.yml
-      VARS_FILES: vars/((foundation))/vars/srt-vars.yml
-      ENV_FILE: ((foundation))/env/env.yml
-
-- name: update-pas-certificates
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
-  serial_groups:
-  - apply
-  - configure-products
-  serial: true
-  plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
-  - in_parallel:
-    - get: platform-automation-image
-      tags: ((tags))
-      params:
-        unpack: true
-      passed:
-        - upload-and-stage-srt
-      trigger: true
-    - get: platform-automation-tasks
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: templates
-      tags: ((tags))
-    - get: variable
-      tags: ((tags))
-  - task: interpolate-product-templates
-    tags: ((tags))
-    <<: *interpolate-product-templates      
-  - task: configure-pas-certicicates
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/configure-product.yml
-    input_mapping:
-      config: interpolated-product-templates
-      env: variable
-      vars: variable
-    params:
-      CONFIG_FILE: product-configs/((pas_version))/pas_certs.yml
 #      VARS_FILES: vars/((foundation))/vars/pas_certs-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
 - name: deploy-asdk
@@ -1754,20 +1401,9 @@ groups:
   - staged-director-config 
   - install-opsman 
   - get-opsman-image-azure
-#  - configure-opsman
-#  - apply-director
-#
   - get-platform-automation
-  - get-srt
   - get-opsman-pivnet
   - get-opsman-image-azure
-
-#
-  - upload-and-stage-srt
-
-#  
-  - configure-srt
-  - apply-product-changes
 
 ###
 
@@ -1777,7 +1413,6 @@ groups:
   jobs:
   - manual-export-installation
   - delete-installation
-  - update-pas-certificates
   - update-om-certificates
   - delete-orphan-azurevm-images
   - query-unattached-azure-disks
@@ -1791,7 +1426,6 @@ groups:
   - run-azcli-get-vms
   - testing
   - test-interpolate
-  - test-interpolate-srt
 
 - name: deploy-asdk-1908-plans
   jobs:  
