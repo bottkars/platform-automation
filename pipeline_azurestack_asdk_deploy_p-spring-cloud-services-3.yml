@@ -118,7 +118,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((buckets_installation))
+    bucket: ((((foundation))/buckets_installation))
     regexp: ((foundation))/installation-(.*).zip    
 
 - name: platform-automation-tasks
@@ -383,6 +383,8 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
+    - get: pipeline-lock
+      tags: ((tags)) 
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -439,6 +441,10 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
+    - get: pipeline-lock
+      tags: ((tags))
+      # passed: 
+      # - configure-p-spring-cloud-services-3
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -457,7 +463,7 @@ jobs:
        - configure-p-spring-cloud-services-3         
     - get: variable
       tags: ((tags))
-  - task: apply-product-changes
+  - task: apply-product-changes 
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-changes.yml
@@ -479,7 +485,8 @@ jobs:
     params:
       file: installation/installation*.zip
   - put: pipeline-lock
-    params: {release: pas}    
+    tags: ((tags))
+    params: {release: pipeline-lock}    
 
 
 

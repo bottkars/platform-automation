@@ -1080,7 +1080,7 @@ jobs:
       file: installation/installation*.zip
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pas}
+    params: {release: pipeline-lock}
 - name: upgrade-opsman
   serial: true
   serial_groups: [ install, get-products, upgrade-opsman, opsman, apply ]
@@ -1193,7 +1193,7 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pas}  
+    params: {release: pipeline-lock}  
 
 - name: get-platform-automation
   on_failure:
