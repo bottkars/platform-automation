@@ -1037,7 +1037,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   serial: true
-  serial_groups: [ install, get-products, upgrade-opsman, opsman, apply ]
+  serial_groups: [ install, upgrade-opsman, opsman, apply ]
   plan:
   - put: pipeline-lock
     tags: ((tags))

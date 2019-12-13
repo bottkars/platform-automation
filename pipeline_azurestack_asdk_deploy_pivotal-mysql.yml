@@ -446,8 +446,7 @@ jobs:
   - in_parallel:
     - get: pipeline-lock
       tags: ((tags))
-      # passed: 
-      # - configure-pivotal-mysql
+
     - get: platform-automation-tasks
       tags: ((tags))
       params:
