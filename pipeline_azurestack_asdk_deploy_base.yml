@@ -1065,6 +1065,7 @@ jobs:
     - get: one-time-trigger
       passed:
       - install-opsman
+      trigger: true
   - task: export-installation
     tags: ((tags))
     image: platform-automation-image
@@ -1112,7 +1113,6 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-      trigger: true  
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -1126,6 +1126,8 @@ jobs:
       tags: ((tags))
     - get: opsman-product
       tags: ((tags))
+      passed: 
+      - get-opsman-image-azure
       trigger: true
     - get: additional-tasks
       tags: ((tags))

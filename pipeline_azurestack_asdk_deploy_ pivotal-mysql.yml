@@ -142,23 +142,23 @@ resources:
 ###### Products go here #####
 #############################    
 
-- name: p-spring-cloud-services-3-product
+- name: pivotal-mysql-product
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: p-spring-cloud-services-3-product/\[p-spring-cloud-services,(.*)\]p_spring-cloud-services-.*.pivotal
+    regexp: pivotal-mysql-product/\[pivotal-mysql,(.*)\]pivotal-mysql-.*.pivotal
 
-- name: p-spring-cloud-services-3-stemcell
+- name: pivotal-mysql-stemcell
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: p-spring-cloud-services-3-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
+    regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
 
 
 #############################
@@ -221,7 +221,7 @@ jobs:
 ## opsman starts here
 
 ## 
-- name: get-p-spring-cloud-services-3
+- name: get-pivotal-mysql
   on_failure:
     put: notify
     tags: ((tags))
@@ -256,27 +256,27 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-p-spring-cloud-services-3-product-and-stemcell
+  - task: download-pivotal-mysql-product-and-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
+    output_mapping: {downloaded-stemcell: pivotal-mysql-stemcell}
   - in_parallel:
-    - put: p-spring-cloud-services-3-product
+    - put: pivotal-mysql-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: p-spring-cloud-services-3-stemcell
+    - put: pivotal-mysql-stemcell
       tags: ((tags))
       params:
-        file: p-spring-cloud-services-3-stemcell/*.tgz
+        file: pivotal-mysql-stemcell/*.tgz
 
 ##
-- name: upload-and-stage-p-spring-cloud-services-3
+- name: upload-and-stage-pivotal-mysql
   on_failure:
     put: notify
     tags: ((tags))
@@ -313,43 +313,43 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-    - get: p-spring-cloud-services-3-product
+    - get: pivotal-mysql-product
       tags: ((tags))
       trigger: true     
-    - get: p-spring-cloud-services-3-stemcell
+    - get: pivotal-mysql-stemcell
       tags: ((tags))
       trigger: true    
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
-  - task: download-p-spring-cloud-services-3
+  - task: download-pivotal-mysql
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: p-spring-cloud-services-3-product
-      downloaded-stemcell: p-spring-cloud-services-3-stemcell
+      downloaded-product: pivotal-mysql-product
+      downloaded-stemcell: pivotal-mysql-stemcell
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: p-spring-cloud-services-3-product
+      product: pivotal-mysql-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-p-spring-cloud-services-3-stemcell
+  - task: upload-pivotal-mysql-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: p-spring-cloud-services-3-stemcell
+      stemcell: pivotal-mysql-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
@@ -357,7 +357,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: p-spring-cloud-services-3-product
+      product: pivotal-mysql-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
@@ -365,7 +365,7 @@ jobs:
 
 ##
 
-- name: configure-p-spring-cloud-services-3
+- name: configure-pivotal-mysql
   on_failure:
     put: notify
     tags: ((tags))
@@ -393,7 +393,7 @@ jobs:
       params:
         unpack: true
       passed:
-        - upload-and-stage-p-spring-cloud-services-3
+        - upload-and-stage-pivotal-mysql
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -402,15 +402,15 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-    - get: p-spring-cloud-services-3-product
+    - get: pivotal-mysql-product
       trigger: true
-    - get: p-spring-cloud-services-3-stemcell
+    - get: pivotal-mysql-stemcell
       tags: ((tags))
       trigger: true           
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
-  - task: configure-p-spring-cloud-services-3
+  - task: configure-pivotal-mysql
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -419,8 +419,8 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services-3.yml
-      VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
+      CONFIG_FILE: product-configs/((pas_version))/pivotal-mysql.yml
+      VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 ##
@@ -447,7 +447,7 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))
       # passed: 
-      # - configure-p-spring-cloud-services-3
+      # - configure-pivotal-mysql
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -456,14 +456,14 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-    - get: p-spring-cloud-services-3-product
+    - get: pivotal-mysql-product
       tags: ((tags))
       trigger: true  
-    - get: p-spring-cloud-services-3-stemcell
+    - get: pivotal-mysql-stemcell
       tags: ((tags))
       trigger: true               
       passed: 
-       - configure-p-spring-cloud-services-3         
+       - configure-pivotal-mysql         
     - get: variable
       tags: ((tags))
   - task: apply-product-changes 
