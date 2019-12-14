@@ -299,8 +299,6 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - put: pipeline-lock
-      params: {acquire: true}   
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -334,6 +332,18 @@ jobs:
     output_mapping:
       downloaded-product: pivotal-mysql-product
       downloaded-stemcell: pivotal-mysql-stemcell
+  - put: pipeline-lock
+    tags: ((tags))    
+    params: 
+      claim: base
+  - put: pipeline-lock
+    tags: ((tags))    
+    params:        
+      claim: base 
+  - put: pipeline-lock
+    tags: ((tags))    
+    params: 
+      claim: tile  
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
@@ -386,8 +396,6 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - get: pipeline-lock
-      tags: ((tags)) 
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -444,9 +452,9 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - get: pipeline-lock
-      tags: ((tags))
-
+    - get: srt-pipeline
+      resource: pipeline-lock
+      tags: ((tags))  
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -488,7 +496,7 @@ jobs:
       file: installation/installation*.zip
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}    
+    params: {release: pipeline-lock}   
 
 
 

@@ -1,0 +1,65 @@
+---
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+resources:
+
+- name: pipeline-lock
+  icon: cloud-lock-outline
+  type: pool
+  source:
+    uri: ((variable-repo))
+    branch: master
+    pool: pas
+    private_key: ((((foundation))/variable-deploy-key.private_key))
+
+- name: platform-automation-image
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+- name: azs-concourse
+  tags: ((tags))
+  icon: github-circle
+  type: git  
+  source: 
+    uri: https://github.com/bottkars/azs-concourse
+    branch: master
+
+
+jobs:
+- name: test-azcli 
+  plan:
+  - put: pipeline
+    resource: pipeline-lock
+    tags: ((tags))
+    params: {claim: lock-1}  
+  - get: pipeline2
+    resource: pipeline-lock   
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: test-azcli
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/test-task.yml
+  - put: pipeline
+    resource: pipeline-lock
+    tags: ((tags))
+    params: {release: pipeline}
+  - put: pipeline2
+    resource: pipeline-lock
+    tags: ((tags))
+    params: {release: pipeline2}    
+
+    

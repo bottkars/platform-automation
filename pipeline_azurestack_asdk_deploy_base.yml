@@ -396,6 +396,7 @@ jobs:
     - get: opsman-product
       tags: ((tags))
       passed: 
+      - get-opsman-pivnet
       trigger: true
     - get: one-time-trigger
       tags: ((tags))
@@ -682,9 +683,10 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_start_param
-  - put: pipeline-lock
-    tags: ((tags))  
-    params: {acquire: true}  
+  - put: base-pipeline
+    resource: pipeline-lock
+    tags: ((tags))
+    params: {claim: base}  
   - get: variable
     tags: ((tags))
   - get: templates
@@ -904,9 +906,11 @@ jobs:
     tags: ((tags))
     params:
       file: installation/installation*.zip
-  - put: pipeline-lock
+  - put: base-pipeline
     tags: ((tags))
-    params: {release: pipeline-lock}      
+    resource: pipeline-lock
+    params: {release: base-pipeline}
+ 
 - name: get-opsman-pivnet
   on_failure:
     put: notify
@@ -1039,9 +1043,10 @@ jobs:
   serial: true
   serial_groups: [ install, upgrade-opsman, opsman, apply ]
   plan:
-  - put: pipeline-lock
+  - put: base-pipeline
+    resource: pipeline-lock
     tags: ((tags))
-    params: {acquire: true}  
+    params: {claim: base}  
   - put: notify
     tags: ((tags))
     params:
@@ -1058,6 +1063,11 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+    - get: opsman-product
+      passed:
+      - get-opsman-image-azure
+      tags: ((tags))
+      trigger: true       
     - get: templates
       tags: ((tags))
     - get: variable
@@ -1081,7 +1091,7 @@ jobs:
       file: installation/installation*.zip
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}
+    params: {release: base-pipeline}
 - name: upgrade-opsman
   serial: true
   serial_groups: [ install, get-products, upgrade-opsman, opsman, apply ]
@@ -1096,9 +1106,10 @@ jobs:
     params:
       <<: *slack_succeeded_param
   plan:
-  - put: pipeline-lock
+  - put: base-pipeline
+    resource: pipeline-lock
     tags: ((tags))
-    params: {acquire: true}
+    params: {claim: base}
   - put: notify
     tags: ((tags))
     params:
@@ -1127,7 +1138,7 @@ jobs:
     - get: opsman-product
       tags: ((tags))
       passed: 
-      - get-opsman-image-azure
+      - export-installation
       trigger: true
     - get: additional-tasks
       tags: ((tags))
@@ -1192,10 +1203,12 @@ jobs:
     input_mapping:
       env: variable
     params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - put: pipeline-lock
+      ENV_FILE: ((foundation))/env/env.yml    
+  - put: pipeline
+    resource: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}  
+    params: {release: base-pipeline}
+          
 
 - name: get-platform-automation
   on_failure:

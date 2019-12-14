@@ -192,6 +192,17 @@ resources:
     pool: pas
     private_key: ((((foundation))/variable-deploy-key.private_key))
     retry_delay: 300s
+
+#- name: cf-lock
+#  icon: cloud-lock
+#  type: pool
+#  source:
+#    uri: ((variable-repo))
+#    branch: master
+#    pool: pas
+#    private_key: ((((foundation))/variable-deploy-key.private_key))
+#    retry_delay: 300s
+
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -297,8 +308,6 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - put: pipeline-lock
-      params: {acquire: true}   
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -332,6 +341,14 @@ jobs:
     output_mapping:
       downloaded-product: srt-product
       downloaded-stemcell: srt-stemcell
+  - put: pipeline-lock
+    tags: ((tags))    
+    params: 
+      claim: cf
+  - put: pipeline-lock
+    tags: ((tags))    
+    params:        
+      claim: base       
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
@@ -384,8 +401,6 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - get: pipeline-lock
-      tags: ((tags)) 
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -443,9 +458,9 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: pipeline-lock
-      tags: ((tags))
-      # passed: 
-      # - configure-srt
+      tags: ((tags))    
+#    - get: cf-lock
+#      tags: ((tags))    
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -487,7 +502,11 @@ jobs:
       file: installation/installation*.zip
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}    
+    params: {release: pipeline-lock}      
+#  - put: cf-lock
+#    tags: ((tags))
+#    params: {release: cf-lock}
+
 
 
 

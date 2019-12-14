@@ -299,8 +299,6 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - put: pipeline-lock
-      params: {acquire: true}   
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -333,7 +331,19 @@ jobs:
       config: interpolated-product-downloads
     output_mapping:
       downloaded-product: p-spring-cloud-services-3-product
-      downloaded-stemcell: p-spring-cloud-services-3-stemcell
+      downloaded-stemcell: p-spring-cloud-services-3-stemcell 
+  - put: pipeline-lock
+    tags: ((tags))    
+    params: 
+      claim: base
+  - put: pipeline-lock
+    tags: ((tags))    
+    params:        
+      claim: base 
+  - put: pipeline-lock
+    tags: ((tags))    
+    params: 
+      claim: tile      
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
@@ -361,8 +371,6 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
-
-
 ##
 
 - name: configure-p-spring-cloud-services-3
@@ -386,8 +394,6 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - get: pipeline-lock
-      tags: ((tags)) 
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -443,11 +449,10 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_start_param
-  - in_parallel:
-    - get: pipeline-lock
-      tags: ((tags))
-      # passed: 
-      # - configure-p-spring-cloud-services-3
+  - in_parallel:   
+    - get: srt-pipeline
+      resource: pipeline-lock
+      tags: ((tags))   
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -486,10 +491,9 @@ jobs:
   - put: installation
     tags: ((tags))
     params:
-      file: installation/installation*.zip
+      file: installation/installation*.zip    
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}    
-
-
+    params: {release: pipeline-lock}   
+  
 
