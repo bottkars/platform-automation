@@ -339,7 +339,7 @@ jobs:
   - put: pipeline-lock
     tags: ((tags))    
     params:        
-      claim: base 
+      claim: cf 
   - put: pipeline-lock
     tags: ((tags))    
     params: 
