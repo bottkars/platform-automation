@@ -450,9 +450,6 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:   
-    - get: srt-pipeline
-      resource: pipeline-lock
-      tags: ((tags))   
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -492,8 +489,28 @@ jobs:
     tags: ((tags))
     params:
       file: installation/installation*.zip    
-  - put: pipeline-lock
+  - get: tile-lock
+    resource: pipeline-lock
+    tags: ((tags))   
+
+  - put: tile-lock
     tags: ((tags))
-    params: {release: pipeline-lock}   
+    params: {release: tile-lock}   
+  
+  - get: srt-lock
+    resource: pipeline-lock
+    tags: ((tags))   
+
+  - put: srt-lock
+    tags: ((tags))
+    params: {release: srt-lock}  
+
+  - get: base-lock
+    resource: pipeline-lock
+    tags: ((tags))   
+
+  - put: base-lock
+    tags: ((tags))
+    params: {release: base-lock}   
   
 

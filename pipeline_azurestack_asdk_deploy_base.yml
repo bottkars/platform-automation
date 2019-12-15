@@ -1073,6 +1073,7 @@ jobs:
     - get: variable
       tags: ((tags))
     - get: one-time-trigger
+      tags: ((tags))
       passed:
       - install-opsman
       trigger: true

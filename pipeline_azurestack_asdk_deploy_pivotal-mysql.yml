@@ -191,7 +191,9 @@ resources:
     branch: master
     pool: pas
     private_key: ((((foundation))/variable-deploy-key.private_key))
-    retry_delay: 300s
+#    retry_delay: 300s
+
+ #   retry_delay: 300s
 
 
 interpolate-product-downloads: &interpolate-product-downloads
@@ -332,18 +334,12 @@ jobs:
     output_mapping:
       downloaded-product: pivotal-mysql-product
       downloaded-stemcell: pivotal-mysql-stemcell
-  - put: pipeline-lock
-    tags: ((tags))    
-    params: 
-      claim: base
+
   - put: pipeline-lock
     tags: ((tags))    
     params:        
       claim: cf 
-  - put: pipeline-lock
-    tags: ((tags))    
-    params: 
-      claim: tile  
+
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
@@ -451,10 +447,7 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_start_param
-  - in_parallel:
-    - get: srt-pipeline
-      resource: pipeline-lock
-      tags: ((tags))  
+  - in_parallel: 
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -494,9 +487,14 @@ jobs:
     tags: ((tags))
     params:
       file: installation/installation*.zip
+
+  
+  - get: pipeline-lock
+    tags: ((tags))   
+
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}   
+    params: {release: pipeline-lock}  
 
 
 
