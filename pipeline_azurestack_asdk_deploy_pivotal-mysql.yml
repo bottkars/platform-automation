@@ -338,7 +338,7 @@ jobs:
   - put: pipeline-lock
     tags: ((tags))    
     params:        
-      claim: cf 
+      claim: tile 
 
   - task: upload-product
     tags: ((tags))
