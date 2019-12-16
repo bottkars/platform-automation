@@ -191,7 +191,9 @@ resources:
     branch: master
     pool: pas
     private_key: ((((foundation))/variable-deploy-key.private_key))
-    retry_delay: 300s
+#    retry_delay: 300s
+
+ #   retry_delay: 300s
 
 
 interpolate-product-downloads: &interpolate-product-downloads
@@ -313,10 +315,10 @@ jobs:
       tags: ((tags))
     - get: p-spring-cloud-services-3-product
       tags: ((tags))
-      trigger: true     
+      trigger: true    
     - get: p-spring-cloud-services-3-stemcell
       tags: ((tags))
-      trigger: true    
+      trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -331,19 +333,13 @@ jobs:
       config: interpolated-product-downloads
     output_mapping:
       downloaded-product: p-spring-cloud-services-3-product
-      downloaded-stemcell: p-spring-cloud-services-3-stemcell 
-  - put: pipeline-lock
-    tags: ((tags))    
-    params: 
-      claim: base
+      downloaded-stemcell: p-spring-cloud-services-3-stemcell
+
   - put: pipeline-lock
     tags: ((tags))    
     params:        
-      claim: cf 
-  - put: pipeline-lock
-    tags: ((tags))    
-    params: 
-      claim: tile      
+      claim: base 
+
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
@@ -352,7 +348,7 @@ jobs:
       product: p-spring-cloud-services-3-product
       env: variable
     params:
-      ENV_FILE: ((foundation))/env/env.yml
+      ENV_FILE: ((foundation))/env/env.yml      
   - task: upload-p-spring-cloud-services-3-stemcell
     tags: ((tags))
     image: platform-automation-image
@@ -371,6 +367,8 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
+
+
 ##
 
 - name: configure-p-spring-cloud-services-3
@@ -394,6 +392,11 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
+    - get: pipeline-lock
+      tags: ((tags))  
+      passed:
+        - upload-and-stage-p-spring-cloud-services-3
+      trigger: true    
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -407,12 +410,7 @@ jobs:
     - get: templates
       tags: ((tags))
     - get: variable
-      tags: ((tags))
-    - get: p-spring-cloud-services-3-product
-      trigger: true
-    - get: p-spring-cloud-services-3-stemcell
-      tags: ((tags))
-      trigger: true           
+      tags: ((tags))            
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
@@ -449,23 +447,20 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_start_param
-  - in_parallel:   
+  - in_parallel: 
     - get: platform-automation-tasks
       tags: ((tags))
       params:
-        unpack: true
+        unpack: true        
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
-    - get: p-spring-cloud-services-3-product
+    - get: pipeline-lock
       tags: ((tags))
-      trigger: true  
-    - get: p-spring-cloud-services-3-stemcell
-      tags: ((tags))
-      trigger: true               
       passed: 
-       - configure-p-spring-cloud-services-3         
+      - configure-p-spring-cloud-services-3 
+      trigger: true   
     - get: variable
       tags: ((tags))
   - task: apply-product-changes 
@@ -488,29 +483,10 @@ jobs:
   - put: installation
     tags: ((tags))
     params:
-      file: installation/installation*.zip    
-  - get: tile-lock
-    resource: pipeline-lock
-    tags: ((tags))   
-
-  - put: tile-lock
+      file: installation/installation*.zip
+  - put: pipeline-lock
     tags: ((tags))
-    params: {release: tile-lock}   
-  
-  - get: srt-lock
-    resource: pipeline-lock
-    tags: ((tags))   
+    params: {release: pipeline-lock}  
 
-  - put: srt-lock
-    tags: ((tags))
-    params: {release: srt-lock}  
 
-  - get: base-lock
-    resource: pipeline-lock
-    tags: ((tags))   
-
-  - put: base-lock
-    tags: ((tags))
-    params: {release: base-lock}   
-  
 

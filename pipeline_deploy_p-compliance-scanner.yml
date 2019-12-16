@@ -142,23 +142,23 @@ resources:
 ###### Products go here #####
 #############################    
 
-- name: pas-windows-product
+- name: p-compliance-scanner-product
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: pas-windows-product/\[pas-windows,(.*)\]pas-windows-.*.pivotal
+    regexp: p-compliance-scanner-product/\[p-compliance-scanner,(.*)\]p-compliance-scanner-.*.pivotal
 
-- name: pas-windows-stemcell
+- name: p-compliance-scanner-stemcell
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-.*-azure-hyperv-windows2019-go_agent\.tgz
+    regexp: p-compliance-scanner-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
 
 
 #############################
@@ -191,6 +191,11 @@ resources:
     branch: master
     pool: pas
     private_key: ((((foundation))/variable-deploy-key.private_key))
+#    retry_delay: 300s
+
+ #   retry_delay: 300s
+
+
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -218,7 +223,7 @@ jobs:
 ## opsman starts here
 
 ## 
-- name: get-pas-windows
+- name: get-p-compliance-scanner
   on_failure:
     put: notify
     tags: ((tags))
@@ -253,27 +258,27 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-pas-windows-product-and-stemcell
+  - task: download-p-compliance-scanner-product-and-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: pas-windows-stemcell}
+    output_mapping: {downloaded-stemcell: p-compliance-scanner-stemcell}
   - in_parallel:
-    - put: pas-windows-product
+    - put: p-compliance-scanner-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: pas-windows-stemcell
+    - put: p-compliance-scanner-stemcell
       tags: ((tags))
       params:
-        file: pas-windows-stemcell/*.tgz
+        file: p-compliance-scanner-stemcell/*.tgz
 
 ##
-- name: upload-and-stage-pas-windows
+- name: upload-and-stage-p-compliance-scanner
   on_failure:
     put: notify
     tags: ((tags))
@@ -296,8 +301,6 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
-    - put: pipeline-lock
-      params: {acquire: true}   
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -310,43 +313,49 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-    - get: pas-windows-product
+    - get: p-compliance-scanner-product
       tags: ((tags))
-      trigger: true     
-    - get: pas-windows-stemcell
+      trigger: true
+    - get: p-compliance-scanner-stemcell
       tags: ((tags))
-      trigger: true    
+      trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
-  - task: download-pas-windows
+  - task: download-p-compliance-scanner
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: pas-windows-product
-      downloaded-stemcell: pas-windows-stemcell
+      downloaded-product: p-compliance-scanner-product
+      downloaded-stemcell: p-compliance-scanner-stemcell
+
+  - put: pipeline-lock
+    tags: ((tags))    
+    params:        
+      claim: base 
+
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: pas-windows-product
+      product: p-compliance-scanner-product
       env: variable
     params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-pas-windows-stemcell
+      ENV_FILE: ((foundation))/env/env.yml      
+  - task: upload-p-compliance-scanner-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: pas-windows-stemcell
+      stemcell: p-compliance-scanner-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
@@ -354,7 +363,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: pas-windows-product
+      product: p-compliance-scanner-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
@@ -362,7 +371,7 @@ jobs:
 
 ##
 
-- name: configure-pas-windows
+- name: configure-p-compliance-scanner
   on_failure:
     put: notify
     tags: ((tags))
@@ -384,13 +393,16 @@ jobs:
       <<: *slack_start_param
   - in_parallel:
     - get: pipeline-lock
-      tags: ((tags)) 
+      tags: ((tags))  
+      passed:
+        - upload-and-stage-p-compliance-scanner
+      trigger: true    
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
       passed:
-        - upload-and-stage-pas-windows
+        - upload-and-stage-p-compliance-scanner
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -398,16 +410,11 @@ jobs:
     - get: templates
       tags: ((tags))
     - get: variable
-      tags: ((tags))
-    - get: pas-windows-product
-      trigger: true
-    - get: pas-windows-stemcell
-      tags: ((tags))
-      trigger: true           
+      tags: ((tags))            
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
-  - task: configure-pas-windows
+  - task: configure-p-compliance-scanner
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -416,8 +423,8 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/pas-windows.yml
-      VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
+      CONFIG_FILE: product-configs/((pas_version))/p-compliance-scanner.yml
+      VARS_FILES: vars/((foundation))/vars/p-compliance-scanner-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 ##
@@ -440,27 +447,20 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_start_param
-  - in_parallel:
-    - get: pipeline-lock
-      tags: ((tags))
-      # passed: 
-      # - configure-pas-windows
+  - in_parallel: 
     - get: platform-automation-tasks
       tags: ((tags))
       params:
-        unpack: true
+        unpack: true        
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
-    - get: pas-windows-product
+    - get: pipeline-lock
       tags: ((tags))
-      trigger: true  
-    - get: pas-windows-stemcell
-      tags: ((tags))
-      trigger: true               
       passed: 
-       - configure-pas-windows         
+      - configure-p-compliance-scanner 
+      trigger: true   
     - get: variable
       tags: ((tags))
   - task: apply-product-changes 
@@ -486,7 +486,7 @@ jobs:
       file: installation/installation*.zip
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}    
+    params: {release: pipeline-lock}  
 
 
 

@@ -1,0 +1,492 @@
+---
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+
+stage_steps: &stage_steps
+  steps:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
+
+stage_config: &stage_config
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/staged-config.yml
+  input_mapping:
+    env: variable
+
+do_stage_commit: &do_stage_commit
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/make-git-commit.yml
+  input_mapping:
+    repository: variable
+    file-source: generated-config
+  output_mapping:
+    repository-commit: variable-commit
+
+true_trigger: &true_trigger
+  trigger: true
+
+  
+git_commit_env: &git_commit_env
+  GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@ebottnet.de"
+  GIT_AUTHOR_NAME: "Platform Automation Bot"
+  COMMIT_MESSAGE: 'Staged  Config Writer'
+
+slack_start_param: &slack_start_param
+  channel: ((slack.channel))
+  text: |
+    ((foundation)) Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-started:"
+
+slack_succeeded_param: &slack_succeeded_param
+  channel: ((slack.channel))
+  text: |
+    ((foundation)) Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME    
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-succeeded:"
+
+slack_failed_param: &slack_failed_param
+  channel: ((slack.channel))
+  text: |
+    ((foundation)) Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-failed:"
+
+resource_types:
+- name: pivnet
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+- name: slack-notification
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource    
+resources:
+# triggers
+
+- name: after-midnight
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    start: 01:00 AM
+    stop: 6:00 AM
+    interval: 24h
+    location: Europe/Berlin 
+# notifications
+- name: notify
+  tags: ((tags))
+  icon: bell
+  type: slack-notification
+  source:
+    url: ((slack.webhook))
+- name: installation
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_installation))
+    regexp: ((foundation))/installation-(.*).zip    
+
+- name: platform-automation-tasks
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_tasks))
+    regexp: platform-automation-tasks-(.*).zip
+
+- name: platform-automation-image
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+#############################
+###### Products go here #####
+#############################    
+
+- name: pas-windows-product
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_products))
+    regexp: pas-windows-product/\[pas-windows,(.*)\]pas-windows-.*.pivotal
+
+- name: pas-windows-stemcell
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_products))
+    regexp: pas-windows-stemcell/\[stemcells-windows-server,(.*)\]light-bosh-stemcell-.*-azure-hyperv-windows2019-go_agent\.tgz
+
+
+#############################
+###### Products end here ####
+############################# 
+
+- name: templates
+  tags: ((tags))
+  icon: github-circle
+  type: git  
+  source:
+    uri: ((template-repo))
+    private_key: ((((foundation))/template-deploy-key.private_key))
+    branch: master
+
+- name: variable
+  tags: ((tags))
+  icon: github-circle
+  type: git  
+  source:
+    uri: ((variable-repo))
+    private_key: ((((foundation))/variable-deploy-key.private_key))
+    branch: master
+
+- name: pipeline-lock
+  icon: cloud-lock
+  type: pool
+  source:
+    uri: ((variable-repo))
+    branch: master
+    pool: pas
+    private_key: ((((foundation))/variable-deploy-key.private_key))
+#    retry_delay: 300s
+
+ #   retry_delay: 300s
+
+
+interpolate-product-downloads: &interpolate-product-downloads
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: "download-product-configs/((pas_version))"
+  input_mapping:
+    files: templates
+  output_mapping:
+    interpolated-files: interpolated-product-downloads
+
+interpolate-product-templates: &interpolate-product-templates
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: product-configs/((pas_version))
+    SKIP_MISSING: true
+  input_mapping:
+    files: templates
+  output_mapping:
+    interpolated-files: interpolated-product-templates
+
+jobs:
+## opsman starts here
+
+## 
+- name: get-pas-windows
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param
+  serial: true
+  serial_groups: [ get-products ]
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+    - get: after-midnight
+      tags: ((tags))
+      trigger: true
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+  - task: interpolate-product-downloads
+    tags: ((tags))
+    <<: *interpolate-product-downloads
+  - task: download-pas-windows-product-and-stemcell
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping: {downloaded-stemcell: pas-windows-stemcell}
+  - in_parallel:
+    - put: pas-windows-product
+      tags: ((tags))
+      params:
+        file: downloaded-product/*.pivotal
+    - put: pas-windows-stemcell
+      tags: ((tags))
+      params:
+        file: pas-windows-stemcell/*.tgz
+
+##
+- name: upload-and-stage-pas-windows
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param
+  serial: true
+  serial_groups:
+  - apply
+  - upload-and-stage
+  - configure-products
+  - get-products
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
+    - get: pas-windows-product
+      tags: ((tags))
+      trigger: true
+    - get: pas-windows-stemcell
+      tags: ((tags))
+      trigger: true
+  - task: interpolate-product-downloads
+    tags: ((tags))
+    <<: *interpolate-product-downloads     
+  - task: download-pas-windows
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
+      SOURCE: s3
+    input_mapping:
+      config: interpolated-product-downloads
+    output_mapping:
+      downloaded-product: pas-windows-product
+      downloaded-stemcell: pas-windows-stemcell
+
+  - put: pipeline-lock
+    tags: ((tags))    
+    params:        
+      claim: base 
+
+  - task: upload-product
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: pas-windows-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml      
+  - task: upload-pas-windows-stemcell
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      env: variable
+      stemcell: pas-windows-stemcell
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: stage-product
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/stage-product.yml
+    input_mapping:
+      product: pas-windows-product
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml      
+
+
+##
+
+- name: configure-pas-windows
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param
+  serial_groups:
+  - apply
+  - configure-products
+  serial: true
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - in_parallel:
+    - get: pipeline-lock
+      tags: ((tags))  
+      passed:
+        - upload-and-stage-pas-windows
+      trigger: true    
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+      passed:
+        - upload-and-stage-pas-windows
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))            
+  - task: interpolate-product-templates
+    tags: ((tags))
+    <<: *interpolate-product-templates
+  - task: configure-pas-windows
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: interpolated-product-templates
+      env: variable
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/pas-windows.yml
+      VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
+
+##
+- name: apply-product-changes
+  serial_groups: 
+    - apply
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param
+  serial: true
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - in_parallel: 
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true        
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: pipeline-lock
+      tags: ((tags))
+      passed: 
+      - configure-pas-windows 
+      trigger: true   
+    - get: variable
+      tags: ((tags))
+  - task: apply-product-changes 
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-changes.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: export-installation
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/export-installation.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      INSTALLATION_FILE: installation-$timestamp.zip
+  - put: installation
+    tags: ((tags))
+    params:
+      file: installation/installation*.zip
+  - put: pipeline-lock
+    tags: ((tags))
+    params: {release: pipeline-lock}  
+
+
+

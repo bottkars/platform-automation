@@ -1043,7 +1043,7 @@ jobs:
   serial: true
   serial_groups: [ install, upgrade-opsman, opsman, apply ]
   plan:
-  - put: base-pipeline
+  - put: pipeline-lock
     resource: pipeline-lock
     tags: ((tags))
     params: {claim: base}  
@@ -1092,7 +1092,7 @@ jobs:
       file: installation/installation*.zip
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: base-pipeline}
+    params: {release: pipeline-lock}
 - name: upgrade-opsman
   serial: true
   serial_groups: [ install, get-products, upgrade-opsman, opsman, apply ]
@@ -1107,8 +1107,7 @@ jobs:
     params:
       <<: *slack_succeeded_param
   plan:
-  - put: base-pipeline
-    resource: pipeline-lock
+  - put: pipeline-lock
     tags: ((tags))
     params: {claim: base}
   - put: notify
@@ -1205,8 +1204,7 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml    
-  - put: pipeline
-    resource: pipeline-lock
+  - put: pipeline-lock
     tags: ((tags))
     params: {release: base-pipeline}
           

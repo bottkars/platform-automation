@@ -102,7 +102,7 @@ resources:
   type: time
   source:
     start: 01:00 AM
-    stop: 6:00 AM
+    stop: 11:00 AM
     interval: 24h
     location: Europe/Berlin 
 # notifications
@@ -142,23 +142,23 @@ resources:
 ###### Products go here #####
 #############################    
 
-- name: pivotal-mysql-product
+- name: app-metrics-product
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: pivotal-mysql-product/\[pivotal-mysql,(.*)\]pivotal-mysql-.*.pivotal
+    regexp: app-metrics-product/\[apm,(.*)\]app-metrics-.*.pivotal
 
-- name: pivotal-mysql-stemcell
+- name: app-metrics-stemcell
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: pivotal-mysql-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
+    regexp: app-metrics-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
 
 
 #############################
@@ -223,7 +223,7 @@ jobs:
 ## opsman starts here
 
 ## 
-- name: get-pivotal-mysql
+- name: get-app-metrics
   on_failure:
     put: notify
     tags: ((tags))
@@ -258,27 +258,27 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-pivotal-mysql-product-and-stemcell
+  - task: download-app-metrics-product-and-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-app-metrics.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: pivotal-mysql-stemcell}
+    output_mapping: {downloaded-stemcell: app-metrics-stemcell}
   - in_parallel:
-    - put: pivotal-mysql-product
+    - put: app-metrics-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: pivotal-mysql-stemcell
+    - put: app-metrics-stemcell
       tags: ((tags))
       params:
-        file: pivotal-mysql-stemcell/*.tgz
+        file: app-metrics-stemcell/*.tgz
 
 ##
-- name: upload-and-stage-pivotal-mysql
+- name: upload-and-stage-app-metrics
   on_failure:
     put: notify
     tags: ((tags))
@@ -313,49 +313,49 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-    - get: pivotal-mysql-product
+    - get: app-metrics-product
       tags: ((tags))
-      trigger: true     
-    - get: pivotal-mysql-stemcell
+      trigger: true
+    - get: app-metrics-stemcell
       tags: ((tags))
-      trigger: true    
+      trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
-  - task: download-pivotal-mysql
+  - task: download-app-metrics
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-app-metrics.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: pivotal-mysql-product
-      downloaded-stemcell: pivotal-mysql-stemcell
+      downloaded-product: app-metrics-product
+      downloaded-stemcell: app-metrics-stemcell
 
   - put: pipeline-lock
     tags: ((tags))    
     params:        
-      claim: tile 
+      claim: base 
 
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: pivotal-mysql-product
+      product: app-metrics-product
       env: variable
     params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-pivotal-mysql-stemcell
+      ENV_FILE: ((foundation))/env/env.yml      
+  - task: upload-app-metrics-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: pivotal-mysql-stemcell
+      stemcell: app-metrics-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
@@ -363,7 +363,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: pivotal-mysql-product
+      product: app-metrics-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
@@ -371,7 +371,7 @@ jobs:
 
 ##
 
-- name: configure-pivotal-mysql
+- name: configure-app-metrics
   on_failure:
     put: notify
     tags: ((tags))
@@ -392,12 +392,17 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
+    - get: pipeline-lock
+      tags: ((tags))  
+      passed:
+        - upload-and-stage-app-metrics
+      trigger: true    
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
       passed:
-        - upload-and-stage-pivotal-mysql
+        - upload-and-stage-app-metrics
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -405,16 +410,11 @@ jobs:
     - get: templates
       tags: ((tags))
     - get: variable
-      tags: ((tags))
-    - get: pivotal-mysql-product
-      trigger: true
-    - get: pivotal-mysql-stemcell
-      tags: ((tags))
-      trigger: true           
+      tags: ((tags))            
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
-  - task: configure-pivotal-mysql
+  - task: configure-app-metrics
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -423,8 +423,8 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/pivotal-mysql.yml
-      VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml
+      CONFIG_FILE: product-configs/((pas_version))/app-metrics.yml
+      VARS_FILES: vars/((foundation))/vars/app-metrics-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 ##
@@ -451,19 +451,16 @@ jobs:
     - get: platform-automation-tasks
       tags: ((tags))
       params:
-        unpack: true
+        unpack: true        
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
-    - get: pivotal-mysql-product
+    - get: pipeline-lock
       tags: ((tags))
-      trigger: true  
-    - get: pivotal-mysql-stemcell
-      tags: ((tags))
-      trigger: true               
       passed: 
-       - configure-pivotal-mysql         
+      - configure-app-metrics 
+      trigger: true   
     - get: variable
       tags: ((tags))
   - task: apply-product-changes 
@@ -487,11 +484,6 @@ jobs:
     tags: ((tags))
     params:
       file: installation/installation*.zip
-
-  
-  - get: pipeline-lock
-    tags: ((tags))   
-
   - put: pipeline-lock
     tags: ((tags))
     params: {release: pipeline-lock}  

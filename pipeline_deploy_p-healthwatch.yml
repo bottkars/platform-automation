@@ -142,23 +142,23 @@ resources:
 ###### Products go here #####
 #############################    
 
-- name: srt-product
+- name: wavefront-nozzle-product
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: srt-product/\[elastic-runtime,(.*)\]srt-.*.pivotal
+    regexp: wavefront-nozzle-product/\[wavefront-nozzle,(.*)\]wavefront-nozzle-.*.pivotal
 
-- name: srt-stemcell
+- name: wavefront-nozzle-stemcell
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: srt-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
+    regexp: wavefront-nozzle-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
 
 
 #############################
@@ -191,17 +191,10 @@ resources:
     branch: master
     pool: pas
     private_key: ((((foundation))/variable-deploy-key.private_key))
-    retry_delay: 300s
-
-#- name: cf-lock
-#  icon: cloud-lock
-#  type: pool
-#  source:
-#    uri: ((variable-repo))
-#    branch: master
-#    pool: pas
-#    private_key: ((((foundation))/variable-deploy-key.private_key))
 #    retry_delay: 300s
+
+ #   retry_delay: 300s
+
 
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
@@ -230,7 +223,7 @@ jobs:
 ## opsman starts here
 
 ## 
-- name: get-srt
+- name: get-wavefront-nozzle
   on_failure:
     put: notify
     tags: ((tags))
@@ -265,27 +258,27 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-srt-product-and-stemcell
+  - task: download-wavefront-nozzle-product-and-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: srt-stemcell}
+    output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
   - in_parallel:
-    - put: srt-product
+    - put: wavefront-nozzle-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: srt-stemcell
+    - put: wavefront-nozzle-stemcell
       tags: ((tags))
       params:
-        file: srt-stemcell/*.tgz
+        file: wavefront-nozzle-stemcell/*.tgz
 
 ##
-- name: upload-and-stage-srt
+- name: upload-and-stage-wavefront-nozzle
   on_failure:
     put: notify
     tags: ((tags))
@@ -320,51 +313,49 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-    - get: srt-product
+    - get: wavefront-nozzle-product
       tags: ((tags))
-      trigger: true     
-    - get: srt-stemcell
+      trigger: true
+    - get: wavefront-nozzle-stemcell
       tags: ((tags))
-      trigger: true    
+      trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
-  - task: download-srt
+  - task: download-wavefront-nozzle
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: srt-product
-      downloaded-stemcell: srt-stemcell
-  - put: pipeline-lock
-    tags: ((tags))    
-    params: 
-      claim: cf
+      downloaded-product: wavefront-nozzle-product
+      downloaded-stemcell: wavefront-nozzle-stemcell
+
   - put: pipeline-lock
     tags: ((tags))    
     params:        
-      claim: base       
+      claim: base 
+
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: srt-product
+      product: wavefront-nozzle-product
       env: variable
     params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-srt-stemcell
+      ENV_FILE: ((foundation))/env/env.yml      
+  - task: upload-wavefront-nozzle-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: srt-stemcell
+      stemcell: wavefront-nozzle-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
@@ -372,7 +363,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: srt-product
+      product: wavefront-nozzle-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
@@ -380,7 +371,7 @@ jobs:
 
 ##
 
-- name: configure-srt
+- name: configure-wavefront-nozzle
   on_failure:
     put: notify
     tags: ((tags))
@@ -401,12 +392,17 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel:
+    - get: pipeline-lock
+      tags: ((tags))  
+      passed:
+        - upload-and-stage-wavefront-nozzle
+      trigger: true    
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
       passed:
-        - upload-and-stage-srt
+        - upload-and-stage-wavefront-nozzle
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -414,16 +410,11 @@ jobs:
     - get: templates
       tags: ((tags))
     - get: variable
-      tags: ((tags))
-    - get: srt-product
-      trigger: true
-    - get: srt-stemcell
-      tags: ((tags))
-      trigger: true           
+      tags: ((tags))            
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
-  - task: configure-srt
+  - task: configure-wavefront-nozzle
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -432,8 +423,8 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/srt.yml
-      VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+      CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
+      VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 ##
@@ -456,27 +447,20 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_start_param
-  - in_parallel:
-    - get: pipeline-lock
-      tags: ((tags))    
-#    - get: cf-lock
-#      tags: ((tags))    
+  - in_parallel: 
     - get: platform-automation-tasks
       tags: ((tags))
       params:
-        unpack: true
+        unpack: true        
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
-    - get: srt-product
+    - get: pipeline-lock
       tags: ((tags))
-      trigger: true  
-    - get: srt-stemcell
-      tags: ((tags))
-      trigger: true               
       passed: 
-       - configure-srt         
+      - configure-wavefront-nozzle 
+      trigger: true   
     - get: variable
       tags: ((tags))
   - task: apply-product-changes 
@@ -502,11 +486,7 @@ jobs:
       file: installation/installation*.zip
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}      
-#  - put: cf-lock
-#    tags: ((tags))
-#    params: {release: cf-lock}
-
+    params: {release: pipeline-lock}  
 
 
 
