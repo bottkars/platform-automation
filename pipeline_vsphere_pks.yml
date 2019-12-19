@@ -648,6 +648,10 @@ jobs:
         trigger: true
   - get: pivotal-container-service-stemcell-windows  
     tags: ((tags))
+    trigger: true
+  - get: pivotal-container-service-stemcell
+    tags: ((tags))
+    trigger: true    
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads       
   - task: download-pivotal-container-service

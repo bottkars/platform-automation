@@ -142,23 +142,23 @@ resources:
 ###### Products go here #####
 #############################    
 
-- name: wavefront-nozzle-product
+- name: p-healthwatch-product
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: wavefront-nozzle-product/\[wavefront-nozzle,(.*)\]wavefront-nozzle-.*.pivotal
+    regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]p-healthwatch-.*.pivotal
 
-- name: wavefront-nozzle-stemcell
+- name: p-healthwatch-stemcell
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: wavefront-nozzle-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
+    regexp: p-healthwatch-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
 
 
 #############################
@@ -191,10 +191,16 @@ resources:
     branch: master
     pool: pas
     private_key: ((((foundation))/variable-deploy-key.private_key))
-#    retry_delay: 300s
 
- #   retry_delay: 300s
-
+- name: download-lock
+  icon: cloud-lock-outline
+  type: pool
+  source:
+    uri: ((variable-repo))
+    branch: master
+    pool: download-lock
+    private_key: ((((foundation))/variable-deploy-key.private_key))
+    retry_delay: 300s
 
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
@@ -223,7 +229,7 @@ jobs:
 ## opsman starts here
 
 ## 
-- name: get-wavefront-nozzle
+- name: get-p-healthwatch
   on_failure:
     put: notify
     tags: ((tags))
@@ -241,6 +247,9 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_start_param
+  - put: download-lock
+    params:
+      acquire: true    
   - in_parallel:
     - get: after-midnight
       tags: ((tags))
@@ -258,27 +267,30 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-wavefront-nozzle-product-and-stemcell
+  - task: download-p-healthwatch-product-and-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-healthwatch.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
+    output_mapping: {downloaded-stemcell: p-healthwatch-stemcell}
   - in_parallel:
-    - put: wavefront-nozzle-product
+    - put: p-healthwatch-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: wavefront-nozzle-stemcell
+    - put: p-healthwatch-stemcell
       tags: ((tags))
       params:
-        file: wavefront-nozzle-stemcell/*.tgz
+        file: p-healthwatch-stemcell/*.tgz
+  - put: download-lock
+    params:
+      release: download-lock      
 
 ##
-- name: upload-and-stage-wavefront-nozzle
+- name: upload-and-stage-p-healthwatch
   on_failure:
     put: notify
     tags: ((tags))
@@ -313,27 +325,27 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-    - get: wavefront-nozzle-product
+    - get: p-healthwatch-product
       tags: ((tags))
       trigger: true
-    - get: wavefront-nozzle-stemcell
+    - get: p-healthwatch-stemcell
       tags: ((tags))
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
-  - task: download-wavefront-nozzle
+  - task: download-p-healthwatch
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-healthwatch.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: wavefront-nozzle-product
-      downloaded-stemcell: wavefront-nozzle-stemcell
+      downloaded-product: p-healthwatch-product
+      downloaded-stemcell: p-healthwatch-stemcell
 
   - put: pipeline-lock
     tags: ((tags))    
@@ -345,17 +357,17 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: wavefront-nozzle-product
+      product: p-healthwatch-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
-  - task: upload-wavefront-nozzle-stemcell
+  - task: upload-p-healthwatch-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: wavefront-nozzle-stemcell
+      stemcell: p-healthwatch-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
@@ -363,7 +375,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: wavefront-nozzle-product
+      product: p-healthwatch-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
@@ -371,7 +383,7 @@ jobs:
 
 ##
 
-- name: configure-wavefront-nozzle
+- name: configure-p-healthwatch
   on_failure:
     put: notify
     tags: ((tags))
@@ -395,14 +407,14 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))  
       passed:
-        - upload-and-stage-wavefront-nozzle
+        - upload-and-stage-p-healthwatch
       trigger: true    
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
       passed:
-        - upload-and-stage-wavefront-nozzle
+        - upload-and-stage-p-healthwatch
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -414,7 +426,7 @@ jobs:
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
-  - task: configure-wavefront-nozzle
+  - task: configure-p-healthwatch
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -423,8 +435,8 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
-      VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+      CONFIG_FILE: product-configs/((pas_version))/p-healthwatch.yml
+      VARS_FILES: vars/((foundation))/vars/p-healthwatch-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 ##
@@ -459,7 +471,7 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))
       passed: 
-      - configure-wavefront-nozzle 
+      - configure-p-healthwatch 
       trigger: true   
     - get: variable
       tags: ((tags))

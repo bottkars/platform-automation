@@ -191,10 +191,16 @@ resources:
     branch: master
     pool: pas
     private_key: ((((foundation))/variable-deploy-key.private_key))
-#    retry_delay: 300s
 
- #   retry_delay: 300s
-
+- name: download-lock
+  icon: cloud-lock-outline
+  type: pool
+  source:
+    uri: ((variable-repo))
+    branch: master
+    pool: download-lock
+    private_key: ((((foundation))/variable-deploy-key.private_key))
+    retry_delay: 300s
 
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
@@ -220,9 +226,6 @@ interpolate-product-templates: &interpolate-product-templates
     interpolated-files: interpolated-product-templates
 
 jobs:
-## opsman starts here
-
-## 
 - name: get-app-metrics
   on_failure:
     put: notify
@@ -237,6 +240,9 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: download-lock
+    params:
+      acquire: true
   - put: notify
     tags: ((tags))
     params:
@@ -276,6 +282,9 @@ jobs:
       tags: ((tags))
       params:
         file: app-metrics-stemcell/*.tgz
+  - put: download-lock
+    params:
+      release: true      
 
 ##
 - name: upload-and-stage-app-metrics
