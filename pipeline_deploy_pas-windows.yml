@@ -94,6 +94,13 @@ resource_types:
   source:
     repository: cfcommunity/slack-notification-resource    
 resources:
+- name: additional-tasks
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_tasks))
+    regexp: additional-tasks-(.*).zip
 # triggers
 
 - name: after-midnight
@@ -458,6 +465,8 @@ jobs:
     params:
       <<: *slack_start_param
   - in_parallel: 
+    - get: additional-tasks
+      tags: ((tags))
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -476,10 +485,11 @@ jobs:
   - task: apply-product-changes 
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/apply-changes.yml
+    file: additional-tasks/tasks/apply-product-changes.yml
     input_mapping:
       env: variable
     params:
+      PRODUCT_NAME: pas-windows
       ENV_FILE: ((foundation))/env/env.yml
   - task: export-installation
     tags: ((tags))

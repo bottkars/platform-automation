@@ -109,6 +109,13 @@ resource_types:
   source:
     repository: cfcommunity/slack-notification-resource    
 resources:
+- name: additional-tasks
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_tasks))
+    regexp: additional-tasks-(.*).zip
 # triggers
 - name: daily-trigger
   tags: ((tags))
