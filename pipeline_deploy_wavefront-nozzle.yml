@@ -462,7 +462,7 @@ jobs:
       FIREHOSE_PASSWORD: Thyph00n#
       FIREHOSE_USER_EMAIL: email@na
       UAA_ENDPOINT: ((pas-uaa-endpoint))
-      GROUP_NAMES: doppler.firehose cloud_controller.admin_read_only    
+      GROUP_NAMES: "doppler.firehose cloud_controller.admin_read_only"    
       ENV_FILE: ((foundation))/env/env.yml
 ##
 - name: apply-product-changes
