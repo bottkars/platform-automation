@@ -28,7 +28,7 @@ run:
   - "-c"
   - |
     cat /var/version && echo ""
-    set -eu
+    set -eux
     # receive client admin
     ADMIN_CLIENT_SECRET=$(om --env env/${ENV_FILE} credentials --product-name cf \
      --credential-reference .uaa.admin_client_credentials \
@@ -70,7 +70,7 @@ run:
     -H "Authorization: Bearer ${TOKEN}" | jp.py "resources[?userName=='$FIREHOSE_USERNAME'].id | [0]")
     
     USER_ID=$(echo "${USER_ID//\"}")
-    IFS=', ' read -r -a array <<< "$GROUP_NAMES"
+    IFS=', ' read -r -a array <<< "${GROUP_NAMES}"
     for GROUP_NAME in "${array[@]}"
     do
     echo
