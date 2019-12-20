@@ -461,7 +461,7 @@ jobs:
       FIREHOSE_USERNAME: wavefront-nozzle
       FIREHOSE_PASSWORD: Thyph00n#
       FIREHOSE_USER_EMAIL: email@na
-      UAA_ENDPOINT: uaa.sys.pcfsc2.sc2.azurestack-rd.cf-app.com
+      UAA_ENDPOINT: ((pas-uaa-endpoint))
       GROUP_NAMES: doppler.firehose cloud_controller.admin_read_only    
       ENV_FILE: ((foundation))/env/env.yml
 ##
