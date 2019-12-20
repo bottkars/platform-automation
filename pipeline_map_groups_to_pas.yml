@@ -1,0 +1,119 @@
+---
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+
+
+
+slack_start_param: &slack_start_param
+  channel: ((slack.channel))
+  text: |
+    ((foundation)) Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-started:"
+
+slack_succeeded_param: &slack_succeeded_param
+  channel: ((slack.channel))
+  text: |
+    ((foundation)) Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME    
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-succeeded:"
+
+slack_failed_param: &slack_failed_param
+  channel: ((slack.channel))
+  text: |
+    ((foundation)) Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-failed:"
+
+resource_types:
+- name: pivnet
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+- name: slack-notification
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource    
+resources:
+- name: additional-tasks
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_tasks))
+    regexp: additional-tasks-(.*).zip
+- name: variable
+  tags: ((tags))
+  icon: github-circle
+  type: git
+  check_every: 10m  
+  source: 
+    uri: ((variable-repo))
+    private_key: ((((foundation))/variable-deploy-key.private_key))
+    branch: master
+
+# triggers
+
+# notifications
+
+- name: platform-automation-image
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+
+
+jobs:
+
+##
+- name: map_external_groups
+  plan:
+  - in_parallel: 
+    - get: additional-tasks
+      tags: ((tags))
+      params:
+        unpack: true             
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: variable
+      tags: ((tags))
+  - task: map_external_groups_to_uaa 
+    tags: ((tags))
+    image: platform-automation-image
+    file: additional-tasks/tasks/map_external_group_to_uaa.yml
+    input_mapping:
+      env: variable
+    params:
+      EXTERNAL_GROUP: fd570d0b-ae8b-45f8-871e-7e40ef426dd8
+      ORIGIN: labbuildr
+      UAA_ENDPOINT: ((pas-uaa-endpoint))
+      GROUP_NAMES:  cloud_controller.admin scim.read scim.write
+      ENV_FILE: ((foundation))/env/env.yml
