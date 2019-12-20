@@ -1,9 +1,12 @@
-#!/bin/bash
-
-# this will be the base for pas customizing
-
-
 # retrieving uaa password
+
+
+
+
+
+
+
+
 ENV=${HOME}/workspace/pcfsc2_azurestack_config/pcfsc2/env/env.yml
 uaac target https://uaa.sys.pcfsc2.sc2.azurestack-rd.cf-app.com
 

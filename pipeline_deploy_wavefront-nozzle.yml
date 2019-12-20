@@ -175,8 +175,9 @@ resources:
 - name: templates
   tags: ((tags))
   icon: github-circle
-  type: git  
-  source:
+  type: git
+  check_every: 10m  
+  source: 
     uri: ((template-repo))
     private_key: ((((foundation))/template-deploy-key.private_key))
     branch: master
@@ -184,8 +185,9 @@ resources:
 - name: variable
   tags: ((tags))
   icon: github-circle
-  type: git  
-  source:
+  type: git
+  check_every: 10m  
+  source: 
     uri: ((variable-repo))
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
@@ -424,6 +426,10 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+    - get: additional-tasks
+      tags: ((tags))
+      params:
+        unpack: true        
     - get: templates
       tags: ((tags))
     - get: variable
@@ -442,8 +448,22 @@ jobs:
     params:
       CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
       VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
-      ENV_FILE: ((foundation))/env/env.yml 
-
+      ENV_FILE: ((foundation))/env/env.yml
+  - task: configure-wavefront-user     
+    tags: ((tags))
+    image: platform-automation-image
+    file: additional-tasks/tasks/add-firehose-admin.yml
+    input_mapping:
+      env: variable
+    params:
+      FIREHOSE_FAMILY_NAME: wavefront
+      FIREHOSE_GIVEN_NAME: nozzle
+      FIREHOSE_USERNAME: wavefront-nozzle
+      FIREHOSE_PASSWORD: Thyph00n#
+      FIREHOSE_USER_EMAIL: email@na
+      UAA_ENDPOINT: uaa.sys.pcfsc2.sc2.azurestack-rd.cf-app.com
+      GROUP_NAMES: doppler.firehose cloud_controller.admin_read_only    
+      ENV_FILE: ((foundation))/env/env.yml
 ##
 - name: apply-product-changes
   serial_groups: 

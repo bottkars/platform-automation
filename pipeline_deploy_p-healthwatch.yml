@@ -175,8 +175,9 @@ resources:
 - name: templates
   tags: ((tags))
   icon: github-circle
-  type: git  
-  source:
+  type: git
+  check_every: 10m  
+  source: 
     uri: ((template-repo))
     private_key: ((((foundation))/template-deploy-key.private_key))
     branch: master
@@ -184,8 +185,9 @@ resources:
 - name: variable
   tags: ((tags))
   icon: github-circle
-  type: git  
-  source:
+  type: git
+  check_every: 10m  
+  source: 
     uri: ((variable-repo))
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master

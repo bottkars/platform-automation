@@ -1,0 +1,100 @@
+# code_snippet to create pks admin user
+# 02.09.2019 @azurestack_guy
+---
+platform: linux
+
+inputs:
+- name: env # contains the env file with target OpsMan Information
+
+params:
+  ENV_FILE: env.yml
+  # - Required
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+  # conatins the opsman private key
+  FIREHOSE_FAMILY_NAME:
+  FIREHOSE_GIVEN_NAME:
+  FIREHOSE_USERNAME: 
+  FIREHOSE_PASSWORD: 
+  FIREHOSE_USER_EMAIL: email@na
+  UAA_ENDPOINT:
+  GROUP_NAMES: doppler.firehose cloud_controller.admin_read_only 
+
+
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    cat /var/version && echo ""
+    set -eu
+    # receive client admin
+    ADMIN_CLIENT_SECRET=$(om --env env/${ENV_FILE} credentials --product-name cf \
+     --credential-reference .uaa.admin_client_credentials \
+     --credential-field password) 
+
+    TOKEN=$(curl -k -s "https://${UAA_ENDPOINT}:443/oauth/token" -X POST \
+    -H "Accept: application/json" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "client_id=admin&client_secret=${ADMIN_CLIENT_SECRET}&grant_type=client_credentials&token_format=opaque" \
+     | awk -F\" '/access_token/{printf $4}')
+
+
+    echo "-->Creating user ${FIREHOSE_USERNAME}"
+
+    DATA=$(cat <<EOF
+    {
+        "userName" : "${FIREHOSE_USERNAME}",
+        "name" : {
+            "familyName" : "${FIREHOSE_FAMILY_NAME}",
+            "givenName" : "${FIREHOSE_GIVEN_NAME}"
+        },
+        "emails" : [ {
+            "value" : "${FIREHOSE_USER_EMAIL}",
+            "primary" : true
+        } ],
+        "password" : "${FIREHOSE_PASSWORD}"
+    }
+    EOF
+    )
+
+    curl -k -s "https://${UAA_ENDPOINT}:443/Users" -X POST \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "${DATA}"
+
+    USER_ID=$(curl -k -s "https://${UAA_ENDPOINT}:443/Users?attributes=id%2CuserName&filter=userName+eq+%${FIREHOSE_USERNAME}" -X GET  \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer ${TOKEN}" | jp.py "resources[?userName=='$FIREHOSE_USERNAME'].id | [0]")
+    
+    USER_ID=$(echo "${USER_ID//\"}")
+    IFS=', ' read -r -a array <<< "$GROUP_NAMES"
+    for GROUP_NAME in "${array[@]}"
+    do
+    echo
+    echo "Getting ID for $GROUP_NAME"
+    GROUP_NAME="'doppler.firehose'"
+    GROUP_ID=$(curl -k -s "https://${UAA_ENDPOINT}:443/Groups?scheme=openid&filter=displayName+eq+%${GROUP_NAME}" -X GET \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer ${TOKEN}" | jp.py "resources[?displayName==${GROUP_NAME}].id | [0]")
+
+    GROUP_ID=$(echo "${GROUP_ID//\"}")
+
+    DATA=$(cat <<EOF 
+    {
+        "origin" : "uaa",
+        "type" : "USER",
+        "value" : "${USER_ID}"
+    }
+    EOF
+    )
+    echo      
+    echo "-->adding ${FIREHOSE_USERNAME} to ${GROUP_ID} $GROUP_NAME"
+
+    curl -k  "https://${UAA_ENDPOINT}:443/Groups/${GROUP_ID}/members" -X POST \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer ${TOKEN}" \
+        -d "${DATA}"
+    done

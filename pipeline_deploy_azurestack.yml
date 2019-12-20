@@ -194,8 +194,9 @@ resources:
 - name: templates
   tags: ((tags))
   icon: github-circle
-  type: git  
-  source:
+  type: git
+  check_every: 10m  
+  source: 
     uri: ((template-repo))
     private_key: ((template-deploy-key.private_key))
     branch: master
@@ -203,8 +204,9 @@ resources:
 - name: variable
   tags: ((tags))
   icon: github-circle
-  type: git  
-  source:
+  type: git
+  check_every: 10m  
+  source: 
     uri: ((variable-repo))
     private_key: ((variable-deploy-key.private_key))
     branch: master
@@ -232,8 +234,9 @@ resources:
 - name: azs-concourse
   tags: ((tags))
   icon: github-circle
-  type: git  
-  source: 
+  type: git
+  check_every: 10m  
+  source:  
     uri: https://github.com/bottkars/azs-concourse
     branch: master
 
