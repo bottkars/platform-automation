@@ -109,7 +109,7 @@ resources:
   type: time
   source:
     start: 01:00 AM
-    stop: 6:00 AM
+    stop: ((after_midnight_end))
     interval: 24h
     location: Europe/Berlin 
 # notifications
@@ -254,6 +254,7 @@ jobs:
     params:
       <<: *slack_start_param
   - put: download-lock
+    tags: ((tags))
     params:
       acquire: true    
   - in_parallel:
@@ -292,6 +293,7 @@ jobs:
       params:
         file: p-spring-cloud-services-3-stemcell/*.tgz
   - put: download-lock
+    tags: ((tags))
     params:
       release: download-lock     
 
@@ -468,7 +470,10 @@ jobs:
   - in_parallel: 
     - get: additional-tasks
       tags: ((tags))
-    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: platform-automation-tasks   
+
       tags: ((tags))
       params:
         unpack: true        

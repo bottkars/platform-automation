@@ -13,4 +13,12 @@ params:
   # - The path is relative to root of the `env` input
 
 run:
-  path: additional-tasks/tasks/scripts/apply-product-changes.sh
+  path: bash
+  args:
+  - "-c"
+  - |
+    set -eux
+    om --env env/"${ENV_FILE}" apply-changes \
+    --product-name ${PRODUCT_NAME} \
+    --reattach  
+

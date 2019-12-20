@@ -466,7 +466,10 @@ jobs:
   - in_parallel: 
     - get: additional-tasks
       tags: ((tags))
-    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: platform-automation-tasks   
+
       tags: ((tags))
       params:
         unpack: true        

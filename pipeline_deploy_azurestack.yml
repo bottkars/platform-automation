@@ -139,7 +139,7 @@ resources:
   type: time
   source:
     start: 01:00 AM
-    stop: 6:00 AM
+    stop: ((after_midnight_end))
     interval: 24h
     location: Europe/Berlin 
 # notifications
@@ -166,15 +166,6 @@ resources:
     product_slug: platform-automation
     product_version: 4\.(.*)
     sort_by: semver
-
-- name: additional-tasks
-  tags: ((tags))
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets_pivnet_tasks))
-    regexp: additional-tasks-(.*).zip
 
 - name: platform-automation-tasks
   tags: ((tags))
@@ -1243,6 +1234,7 @@ jobs:
     params:
       <<: *slack_start_param
   - put: download-lock
+    tags: ((tags))
     params:
       acquire: true    
   - in_parallel:
@@ -1262,6 +1254,7 @@ jobs:
       params:
         file: platform-automation-pivnet/*image*.tgz
   - put: download-lock
+    tags: ((tags))
     params:
       release: download-lock
 - name: test-interpolate
