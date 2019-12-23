@@ -191,6 +191,8 @@ resources:
     uri: ((variable-repo))
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
+    paths:
+    - ((foundation))/vars/srt-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
