@@ -400,10 +400,10 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_succeeded_param
-  serial_groups:
-  - apply
-  - configure-products
-  serial: true
+#  serial_groups:
+#  - apply
+#  - configure-products
+#  serial: true
   plan:
   - put: notify
     tags: ((tags))
@@ -447,8 +447,8 @@ jobs:
 
 ##
 - name: apply-product-changes
-  serial_groups: 
-    - apply
+#  serial_groups: 
+#    - apply
   on_failure:
     put: notify
     tags: ((tags))
