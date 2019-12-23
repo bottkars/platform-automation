@@ -339,6 +339,7 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+      trigger: true
     - get: srt-product
       tags: ((tags))
       trigger: true     
