@@ -694,7 +694,7 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_start_param
-  - put: base-pipeline
+  - put: pipeline-lock
     resource: pipeline-lock
     tags: ((tags))
     params: {claim: base}  
@@ -917,10 +917,9 @@ jobs:
     tags: ((tags))
     params:
       file: installation/installation*.zip
-  - put: base-pipeline
+  - put: pipeline-lock
     tags: ((tags))
-    resource: pipeline-lock
-    params: {release: base-pipeline}
+    params: {release: pipeline-lock}
  
 - name: get-opsman-pivnet
   on_failure:
@@ -1055,7 +1054,6 @@ jobs:
   serial_groups: [ install, upgrade-opsman, opsman, apply ]
   plan:
   - put: pipeline-lock
-    resource: pipeline-lock
     tags: ((tags))
     params: {claim: base}  
   - put: notify

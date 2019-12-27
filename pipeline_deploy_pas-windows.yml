@@ -191,6 +191,8 @@ resources:
     uri: ((variable-repo))
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
+    paths:
+    - ((foundation))/vars/pas-windows-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
@@ -333,6 +335,7 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+      trigger: true
     - get: pas-windows-product
       tags: ((tags))
       trigger: true

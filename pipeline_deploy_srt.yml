@@ -238,9 +238,6 @@ interpolate-product-templates: &interpolate-product-templates
     interpolated-files: interpolated-product-templates
 
 jobs:
-## opsman starts here
-
-## 
 - name: get-srt
   on_failure:
     put: notify

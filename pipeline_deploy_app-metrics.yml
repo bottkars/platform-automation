@@ -191,6 +191,8 @@ resources:
     uri: ((variable-repo))
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
+    paths:
+    - ((foundation))/vars/app-metrics-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
@@ -331,6 +333,7 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+      trigger: true
     - get: app-metrics-product
       tags: ((tags))
       trigger: true

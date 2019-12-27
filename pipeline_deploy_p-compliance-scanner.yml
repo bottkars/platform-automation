@@ -191,6 +191,8 @@ resources:
     uri: ((variable-repo))
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
+    paths:
+    - ((foundation))/vars/p-compliance-scanner-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
@@ -336,6 +338,7 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+      trigger: true
     - get: p-compliance-scanner-product
       tags: ((tags))
       trigger: true

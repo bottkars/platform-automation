@@ -191,6 +191,8 @@ resources:
     uri: ((variable-repo))
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
+    paths:
+    - ((foundation))/vars/wavefront-nozzle-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
@@ -332,6 +334,7 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+      trigger: true
     - get: wavefront-nozzle-product
       tags: ((tags))
       trigger: true
