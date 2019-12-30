@@ -289,6 +289,11 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-compliance-scanner-stemcell}
+    on_failure:
+      put: download-lock
+      tags: ((tags))
+      params:
+        release: download-lock
   - in_parallel:
     - put: p-compliance-scanner-product
       tags: ((tags))

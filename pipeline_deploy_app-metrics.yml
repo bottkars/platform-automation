@@ -284,6 +284,11 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: app-metrics-stemcell}
+    on_failure:
+      put: download-lock
+      tags: ((tags))
+      params:
+        release: download-lock
   - in_parallel:
     - put: app-metrics-product
       tags: ((tags))

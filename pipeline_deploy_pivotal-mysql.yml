@@ -286,6 +286,11 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: pivotal-mysql-stemcell}
+    on_failure:
+      put: download-lock
+      tags: ((tags))
+      params:
+        release: download-lock
   - in_parallel:
     - put: pivotal-mysql-product
       tags: ((tags))

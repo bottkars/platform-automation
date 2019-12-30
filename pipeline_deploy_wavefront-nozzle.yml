@@ -285,6 +285,11 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
+    on_failure:
+      put: download-lock
+      tags: ((tags))
+      params:
+        release: download-lock
   - in_parallel:
     - put: wavefront-nozzle-product
       tags: ((tags))

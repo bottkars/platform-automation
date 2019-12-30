@@ -287,6 +287,11 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
+    on_failure:
+      put: download-lock
+      tags: ((tags))
+      params:
+        release: download-lock
   - in_parallel:
     - put: p-spring-cloud-services-3-product
       tags: ((tags))
