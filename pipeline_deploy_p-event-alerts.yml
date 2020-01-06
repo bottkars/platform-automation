@@ -149,23 +149,23 @@ resources:
 ###### Products go here #####
 #############################    
 
-- name: app-metrics-product
+- name: p-event-alerts-product
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: app-metrics-product/\[apm,(.*)\]app-metrics-.*.pivotal
+    regexp: p-event-alerts-product/\[p-event-alerts,(.*)\]p-event-alerts-.*.pivotal
 
-- name: app-metrics-stemcell
+- name: p-event-alerts-stemcell
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: app-metrics-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
+    regexp: p-event-alerts-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
 
 
 #############################
@@ -192,7 +192,7 @@ resources:
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
     paths:
-    - ((foundation))/vars/app-metrics-vars.yml
+    - ((foundation))/vars/p-event-alerts-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
@@ -240,7 +240,7 @@ jobs:
 ## opsman starts here
 
 ## 
-- name: get-app-metrics
+- name: get-p-event-alerts
   on_failure:
     put: notify
     tags: ((tags))
@@ -279,36 +279,36 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-app-metrics-product-and-stemcell
+  - task: download-p-event-alerts-product-and-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-app-metrics.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: app-metrics-stemcell}
+    output_mapping: {downloaded-stemcell: p-event-alerts-stemcell}
     on_failure:
       put: download-lock
       tags: ((tags))
       params:
         release: download-lock
   - in_parallel:
-    - put: app-metrics-product
+    - put: p-event-alerts-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: app-metrics-stemcell
+    - put: p-event-alerts-stemcell
       tags: ((tags))
       params:
-        file: app-metrics-stemcell/*.tgz
+        file: p-event-alerts-stemcell/*.tgz
   - put: download-lock
     tags: ((tags))
     params:
       release: download-lock      
 
 ##
-- name: upload-and-stage-app-metrics
+- name: upload-and-stage-p-event-alerts
   on_failure:
     put: notify
     tags: ((tags))
@@ -344,27 +344,27 @@ jobs:
     - get: variable
       tags: ((tags))
       trigger: true
-    - get: app-metrics-product
+    - get: p-event-alerts-product
       tags: ((tags))
       trigger: true
-    - get: app-metrics-stemcell
+    - get: p-event-alerts-stemcell
       tags: ((tags))
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
-  - task: download-app-metrics
+  - task: download-p-event-alerts
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-app-metrics.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: app-metrics-product
-      downloaded-stemcell: app-metrics-stemcell
+      downloaded-product: p-event-alerts-product
+      downloaded-stemcell: p-event-alerts-stemcell
 
   - put: pipeline-lock
     tags: ((tags))    
@@ -376,17 +376,17 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: app-metrics-product
+      product: p-event-alerts-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
-  - task: upload-app-metrics-stemcell
+  - task: upload-p-event-alerts-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: app-metrics-stemcell
+      stemcell: p-event-alerts-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
@@ -394,7 +394,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: app-metrics-product
+      product: p-event-alerts-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
@@ -402,7 +402,7 @@ jobs:
 
 ##
 
-- name: configure-app-metrics
+- name: configure-p-event-alerts
   on_failure:
     put: notify
     tags: ((tags))
@@ -426,14 +426,14 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))  
       passed:
-        - upload-and-stage-app-metrics
+        - upload-and-stage-p-event-alerts
       trigger: true    
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
       passed:
-        - upload-and-stage-app-metrics
+        - upload-and-stage-p-event-alerts
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -445,7 +445,7 @@ jobs:
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
-  - task: configure-app-metrics
+  - task: configure-p-event-alerts
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -454,8 +454,8 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/app-metrics.yml
-      VARS_FILES: vars/((foundation))/vars/app-metrics-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 ##
@@ -495,7 +495,7 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))
       passed: 
-      - configure-app-metrics 
+      - configure-p-event-alerts 
       trigger: true   
     - get: variable
       tags: ((tags))
@@ -506,7 +506,7 @@ jobs:
     input_mapping:
       env: variable
     params:
-      PRODUCT_NAME: appMetrics
+      PRODUCT_NAME: p-event-alerts
       ENV_FILE: ((foundation))/env/env.yml
   - task: export-installation
     tags: ((tags))
