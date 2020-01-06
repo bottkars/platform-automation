@@ -672,8 +672,42 @@ jobs:
       config: variable
     params:
       <<: *azure_env
+      RESOURCE_GROUP: ((resource_groups))
 
      
+- name: reboot-control
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param  
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - get: variable
+    tags: ((tags))
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: reboot-rg
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/reboot-vms-rg.yml 
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: control
 
 ## opsman starts here
 - name: install-opsman
@@ -1453,6 +1487,7 @@ groups:
   - delete-unattached-azure-nics
   - delete-opsman-vm
   - delete-pcf
+  - reboot-control
   - test-azcli
   - deploy-opsman-from-arm
   - run-azcli-get-vms
