@@ -1400,9 +1400,6 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-#    - get: one-time-trigger
-#      tags: ((tags))
-#      trigger: false
     - get: additional-tasks
       tags: ((tags))
       params:
