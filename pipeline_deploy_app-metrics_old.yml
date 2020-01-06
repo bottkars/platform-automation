@@ -109,7 +109,7 @@ resources:
   type: time
   source:
     start: 01:00 AM
-    stop: ((after_midnight_end))
+    stop: 11:00 AM
     interval: 24h
     location: Europe/Berlin 
 # notifications
@@ -237,9 +237,6 @@ interpolate-product-templates: &interpolate-product-templates
     interpolated-files: interpolated-product-templates
 
 jobs:
-## opsman starts here
-
-## 
 - name: get-app-metrics
   on_failure:
     put: notify
@@ -254,14 +251,13 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
+  - put: download-lock
+    params:
+      acquire: true
   - put: notify
     tags: ((tags))
     params:
       <<: *slack_start_param
-  - put: download-lock
-    tags: ((tags))
-    params:
-      acquire: true    
   - in_parallel:
     - get: after-midnight
       tags: ((tags))
@@ -303,9 +299,8 @@ jobs:
       params:
         file: app-metrics-stemcell/*.tgz
   - put: download-lock
-    tags: ((tags))
     params:
-      release: download-lock      
+      release: true      
 
 ##
 - name: upload-and-stage-app-metrics
