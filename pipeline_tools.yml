@@ -1,9 +1,9 @@
 ---
 s3_env: &s3_env
-  access_key_id: ((s3_access_key_id))
-  endpoint:  ((s3_endpoint))
-  region_name: ((s3_region_name))
-  secret_access_key: ((s3_secret_access_key))
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
 azure_env: &azure_env
   PROFILE: ((arm_profile))
   CA_CERT: ((foundation))/cert/root.pem
@@ -127,7 +127,7 @@ resources:
   icon: cloudfoundry
   type: pivnet
   source:
-    api_token: ((pivnet-token))
+    api_token: ((((foundation))/pivnet-token))
     product_slug: platform-automation
     product_version: 4\.(.*)
     sort_by: semver
@@ -138,7 +138,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((buckets_pivnet_tasks))
+    bucket: ((((foundation))/buckets_pivnet_tasks))
     regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
@@ -147,7 +147,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((buckets_pivnet_image))
+    bucket: ((((foundation))/buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 
 - name: templates
@@ -157,14 +157,14 @@ resources:
   check_every: 10m  
   source: 
     uri: ((template-repo))
-    private_key: ((template-deploy-key.private_key))
+    private_key: ((((foundation))/template-deploy-key.private_key))
     branch: master
 
 - name: opsman-product
   type: s3
   source:
     <<: *s3_env
-    bucket: ((buckets_pivnet_products))
+    bucket: ((((foundation))/buckets_pivnet_products))
     regexp: \[ops-manager,(.*)\].*.yml
 - name: variable
   tags: ((tags))
@@ -173,7 +173,7 @@ resources:
   check_every: 10m  
   source: 
     uri: ((variable-repo))
-    private_key: ((variable-deploy-key.private_key))
+    private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
 
 - name: pipeline-lock
@@ -534,11 +534,7 @@ jobs:
 
 
 - name: get-platform-automation
-  plan:
-  - put: download-lock
-    tags: ((tags))
-    params:
-      acquire: true    
+  plan: 
   - in_parallel:
     - get: platform-automation-pivnet
       tags: ((tags))
@@ -552,10 +548,6 @@ jobs:
       tags: ((tags))
       params:
         file: platform-automation-pivnet/*image*.tgz
-  - put: download-lock
-    tags: ((tags))
-    params:
-      release: download-lock
 ####
 groups:
 
