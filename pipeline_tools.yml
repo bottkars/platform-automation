@@ -276,6 +276,39 @@ jobs:
   - put: download-lock
     tags: ((tags))
     params: {release: download-lock}       
+- name: reboot-control
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  on_success:  
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_succeeded_param  
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - get: variable
+    tags: ((tags))
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: reboot-rg
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/reboot-vms-rg.yml 
+    input_mapping:
+      config: variable
+    params:
+      <<: *azure_env
+      RESOURCE_GROUP: control
 
 - name: deploy-opsman-from-arm
   plan:
@@ -571,7 +604,8 @@ groups:
   - test-azcli
   - run-azcli-get-vms
   - deploy-opsman-from-arm
-  - get-platform-automation  
+  - get-platform-automation
+  - reboot-control
 
 
 
