@@ -365,6 +365,33 @@ jobs:
     tags: ((tags))      
     params:
       file: installation/installation*.zip
+##
+- name: set-opsman-banner
+  serial: true
+  plan:
+  - in_parallel:
+      - get: azs-concourse
+      - get: platform-automation-image
+        tags: ((tags))      
+        params:
+          unpack: true
+#      - get: platform-automation-tasks
+#        tags: ((tags))      
+#        params:
+#          unpack: true    
+      - get: variable
+        tags: ((tags))      
+  - task: set-banner
+    tags: ((tags))      
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/set-director-banner.yml
+    input_mapping:
+      env: variable
+    params:
+      ENV_FILE: ((foundation))/env/env.yml
+      SSH_BANNER: ((director.ssh_banner))
+      UI_BANNER: ((director.ui_banner))
+##
 
 - name: delete-installation
   serial: true
