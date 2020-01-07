@@ -179,6 +179,7 @@ resources:
 - name: pipeline-lock
   icon: cloud-lock-outline
   type: pool
+  check_every: 10m
   source:
     uri: ((variable-repo))
     branch: master
@@ -189,6 +190,7 @@ resources:
 - name: download-lock
   icon: cloud-lock-outline
   type: pool
+  check_every: 10m
   source:
     uri: ((variable-repo))
     branch: master

@@ -214,6 +214,7 @@ resources:
 - name: pipeline-lock
   icon: cloud-lock-outline
   type: pool
+  check_every: 10m
   source:
     uri: ((variable-repo))
     branch: master
@@ -224,6 +225,7 @@ resources:
 - name: download-lock
   icon: cloud-lock-outline
   type: pool
+  check_every: 10m
   source:
     uri: ((variable-repo))
     branch: master
@@ -270,11 +272,6 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products, upgrade-opsman, opsman ]
   plan:
@@ -330,11 +327,6 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ install ]
   plan:
@@ -575,11 +567,7 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
+
   serial_groups: [ get-products ]
   plan:
   - put: notify
@@ -625,11 +613,6 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ staged-products ]
   plan:
@@ -663,11 +646,6 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ install, upgrade-opsman, opsman, apply ]
   plan:
@@ -728,11 +706,7 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: pipeline-lock
     tags: ((tags))
@@ -842,11 +816,7 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     tags: ((tags))
@@ -882,11 +852,7 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     tags: ((tags))

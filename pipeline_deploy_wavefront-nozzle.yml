@@ -197,6 +197,7 @@ resources:
 - name: pipeline-lock
   icon: cloud-lock
   type: pool
+  check_every: 10m
   source:
     uri: ((variable-repo))
     branch: master
@@ -207,6 +208,7 @@ resources:
 - name: download-lock
   icon: cloud-lock-outline
   type: pool
+  check_every: 10m
   source:
     uri: ((variable-repo))
     branch: master
@@ -244,11 +246,6 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -310,11 +307,6 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
   serial: true
   serial_groups:
   - apply
@@ -404,11 +396,7 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
+
 #  serial_groups:
 #  - apply
 #  - configure-products
@@ -481,11 +469,6 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param
   serial: true
   plan:
   - put: notify
