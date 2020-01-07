@@ -619,6 +619,7 @@ groups:
   - deploy-opsman-from-arm
   - get-platform-automation
   - reboot-control
+  - set-opsman-banner
 
 
 
