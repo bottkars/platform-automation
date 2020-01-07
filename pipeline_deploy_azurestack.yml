@@ -592,37 +592,6 @@ jobs:
       tags: ((tags))
       params:
         file: downloaded-product/*
-        
-
-
-- name: staged-director-config
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-  serial: true
-  serial_groups: [ staged-products ]
-  plan:
-  - in_parallel:
-    - get: platform-automation-tasks
-      tags: ((tags))
-      params: {unpack: true}
-    - get: platform-automation-image
-      tags: ((tags))
-      params: {unpack: true}
-    - get: variable
-      tags: ((tags))
-
-  - task: staged-director-config
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/staged-director-config.yml
-    input_mapping:
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-    ensure: *make-state-commit
 
 - name: export-installation
   on_failure:
@@ -826,89 +795,6 @@ jobs:
     tags: ((tags))
     params:
       release: download-lock
-- name: test-interpolate
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-
-  plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
-  - get: variable
-    tags: ((tags))
-  - get: templates
-    tags: ((tags))
-  - get: platform-automation-image
-    tags: ((tags))
-    params:
-      unpack: true
-  - get: platform-automation-tasks
-    tags: ((tags))
-    params:
-      unpack: true
-  - task: interpolate
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/test-interpolate.yml
-    input_mapping:
-      config: templates
-      vars: variable
-    params:
-      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
-      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
-      SKIP_MISSING: true    
-#      VARS_FILES: vars/((foundation))/vars/pas_certs-vars.yml
-      ENV_FILE: ((foundation))/env/env.yml
-- name: delete-installation
-  serial: true
-  plan:
-  - in_parallel:
-    - get: platform-automation-image
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: variable
-  - task: delete-installation
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/delete-installation.yml
-    input_mapping:
-      env: variable
-    params:
-    # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
-     ENV_FILE: ((foundation))/env/env.yml
-- name: update-om-certificates
-  serial: true
-  serial_groups: [ install ]
-  plan:
-  - in_parallel:
-    - get: platform-automation-image
-      tags: ((tags))
-      params:
-        unpack: true
-    - get: additional-tasks
-      tags: ((tags))
-      params:
-        unpack: true    
-    - get: templates
-      tags: ((tags))
-    - get: variable
-      tags: ((tags))
-  - task: update om certficates
-    tags: ((tags))
-    image: platform-automation-image
-    file: additional-tasks/tasks/update-ssl-certificate.yml
-    input_mapping:
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((pcf_domain_cert.certificate))
-      KEY_PEM: ((pcf_domain_cert.private_key))
 
 ####
 groups:
@@ -918,22 +804,12 @@ groups:
   - get-opsman-pivnet
   - upgrade-opsman
   - export-installation
-  - staged-director-config 
   - install-opsman 
   - get-opsman-image-azure
   - get-platform-automation
   - get-opsman-pivnet
   - get-opsman-image-azure
 
-###
-
-
-
-- name: opsman-service-jobs
-  jobs:
-  - delete-installation
-  - update-om-certificates
-  - test-interpolate
 
 
 

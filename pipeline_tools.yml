@@ -596,6 +596,43 @@ jobs:
       tags: ((tags))
       params:
         file: platform-automation-pivnet/*image*.tgz
+- name: test-interpolate
+  on_failure:
+    put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_failed_param
+  plan:
+  - put: notify
+    tags: ((tags))
+    params:
+      <<: *slack_start_param
+  - get: variable
+    tags: ((tags))
+  - get: templates
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: interpolate
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+      SKIP_MISSING: true    
+#      VARS_FILES: vars/((foundation))/vars/pas_certs-vars.yml
+      ENV_FILE: ((foundation))/env/env.yml
+
 ####
 groups:
 
@@ -622,6 +659,7 @@ groups:
   - get-platform-automation
   - reboot-control
   - set-opsman-banner
+  - test-interpolate
 
 
 
