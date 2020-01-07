@@ -249,10 +249,6 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - put: download-lock
     params:
       acquire: true
@@ -315,10 +311,6 @@ jobs:
   - configure-products
   - get-products
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       tags: ((tags))
@@ -403,10 +395,6 @@ jobs:
 #  - configure-products
 #  serial: true
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - in_parallel:
     - get: pipeline-lock
       tags: ((tags))  
@@ -454,10 +442,6 @@ jobs:
       <<: *slack_failed_param
   serial: true
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - in_parallel: 
     - get: additional-tasks
       tags: ((tags))

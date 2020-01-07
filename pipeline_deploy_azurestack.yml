@@ -275,10 +275,6 @@ jobs:
   serial: true
   serial_groups: [ get-products, upgrade-opsman, opsman ]
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - in_parallel:
     - get: templates
       tags: ((tags))
@@ -330,10 +326,6 @@ jobs:
   serial: true
   serial_groups: [ install ]
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - put: pipeline-lock
     resource: pipeline-lock
     tags: ((tags))
@@ -570,10 +562,6 @@ jobs:
 
   serial_groups: [ get-products ]
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       tags: ((tags))
@@ -616,10 +604,6 @@ jobs:
   serial: true
   serial_groups: [ staged-products ]
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-tasks
       tags: ((tags))
@@ -818,10 +802,6 @@ jobs:
       <<: *slack_failed_param
 
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - put: download-lock
     tags: ((tags))
     params:
