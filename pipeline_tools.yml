@@ -277,21 +277,7 @@ jobs:
     tags: ((tags))
     params: {release: download-lock}       
 - name: reboot-control
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-  on_success:  
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_succeeded_param  
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - get: variable
     tags: ((tags))
   - get: azs-concourse
