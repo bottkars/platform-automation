@@ -1122,7 +1122,8 @@ jobs:
       params:
         unpack: true
     - get: harbor-container-registry-product    
-      tags: ((tags))      
+      tags: ((tags)) 
+      trigger: true     
     - get: templates
       tags: ((tags))      
     - get: variable
