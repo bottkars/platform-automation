@@ -1,5 +1,6 @@
 # jq based 
 alias jp.py="/usr/local/Cellar/azure-cli/2.0.70/libexec/bin/jp.py"
+alias jp.py=/opt/az/bin/jp.py
 update=true
 GOALSTATE=2.2.38
 DEPLOYMENTS=$(bosh deployments --json | jp.py 'Tables[].Rows[].name[]' | tr -d '[]"\n ')
