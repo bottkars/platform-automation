@@ -109,7 +109,7 @@ resources:
   type: time
   source:
     start: 01:00 AM
-    stop: 11:00 AM
+    stop: ((after_midnight_end))
     interval: 24h
     location: Europe/Berlin 
 # notifications
@@ -191,7 +191,8 @@ resources:
     uri: ((variable-repo))
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
-    paths: ((foundation))/vars/p-metric-store-vars.yml
+    paths:
+    - ((foundation))/vars/p-metric-store-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
@@ -202,7 +203,6 @@ resources:
     branch: master
     pool: pas
     private_key: ((((foundation))/variable-deploy-key.private_key))
-    retry_delay: 300s
 
 - name: download-lock
   icon: cloud-lock-outline
@@ -238,7 +238,10 @@ interpolate-product-templates: &interpolate-product-templates
   output_mapping:
     interpolated-files: interpolated-product-templates
 
-jobs: 
+jobs:
+## opsman starts here
+
+## 
 - name: get-p-metric-store
   on_failure:
     put: notify
@@ -249,8 +252,9 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - put: download-lock
+    tags: ((tags))
     params:
-      acquire: true   
+      acquire: true    
   - in_parallel:
     - get: after-midnight
       tags: ((tags))
@@ -296,6 +300,7 @@ jobs:
     params:
       release: download-lock      
 
+##
 - name: upload-and-stage-p-metric-store
   on_failure:
     put: notify
