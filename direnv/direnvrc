@@ -2,7 +2,7 @@ use_bosh-env(){
         echo "Reading BoSH Settings from lpass"
         eval "$(om bosh-env --ssh-private-key ${DEPLOYMENT}/env/opsman.key)"
 }
-use_om-env(){
+use_om-env-client(){
         echo "Reading Opsman Settings from lpass"
         export OM_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
