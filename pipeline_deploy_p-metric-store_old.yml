@@ -109,7 +109,7 @@ resources:
   type: time
   source:
     start: 01:00 AM
-    stop: ((after_midnight_end))
+    stop: 11:00 AM
     interval: 24h
     location: Europe/Berlin 
 # notifications
@@ -149,23 +149,23 @@ resources:
 ###### Products go here #####
 #############################    
 
-- name: wavefront-nozzle-product
+- name: p-metric-store-product
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: wavefront-nozzle-product/\[wavefront-nozzle,(.*)\]wavefront-nozzle-.*.pivotal
+    regexp: p-metric-store-product/\[p-metric-store,(.*)\]metric-store-.*.pivotal
 
-- name: wavefront-nozzle-stemcell
+- name: p-metric-store-stemcell
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: wavefront-nozzle-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
+    regexp: p-metric-store-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
 
 
 #############################
@@ -191,8 +191,7 @@ resources:
     uri: ((variable-repo))
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
-    paths:
-    - ((foundation))/vars/wavefront-nozzle-vars.yml
+    paths: ((foundation))/vars/p-metric-store-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
@@ -214,7 +213,7 @@ resources:
     branch: master
     pool: download-lock
     private_key: ((((foundation))/variable-deploy-key.private_key))
-    retry_delay: 300s    
+    retry_delay: 300s
 
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
@@ -239,8 +238,8 @@ interpolate-product-templates: &interpolate-product-templates
   output_mapping:
     interpolated-files: interpolated-product-templates
 
-jobs:
-- name: get-wavefront-nozzle
+jobs: 
+- name: get-p-metric-store
   on_failure:
     put: notify
     tags: ((tags))
@@ -269,35 +268,35 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-wavefront-nozzle-product-and-stemcell
+  - task: download-p-metric-store-product-and-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-metric-store.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
+    output_mapping: {downloaded-stemcell: p-metric-store-stemcell}
     on_failure:
       put: download-lock
       tags: ((tags))
       params:
         release: download-lock
   - in_parallel:
-    - put: wavefront-nozzle-product
+    - put: p-metric-store-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: wavefront-nozzle-stemcell
+    - put: p-metric-store-stemcell
       tags: ((tags))
       params:
-        file: wavefront-nozzle-stemcell/*.tgz
+        file: p-metric-store-stemcell/*.tgz
   - put: download-lock
     tags: ((tags))
     params:
-      release: download-lock
-##
-- name: upload-and-stage-wavefront-nozzle
+      release: download-lock      
+
+- name: upload-and-stage-p-metric-store
   on_failure:
     put: notify
     tags: ((tags))
@@ -324,27 +323,27 @@ jobs:
     - get: variable
       tags: ((tags))
       trigger: true
-    - get: wavefront-nozzle-product
+    - get: p-metric-store-product
       tags: ((tags))
       trigger: true
-    - get: wavefront-nozzle-stemcell
+    - get: p-metric-store-stemcell
       tags: ((tags))
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
-  - task: download-wavefront-nozzle
+  - task: download-p-metric-store
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+      CONFIG_FILE: download-product-configs/((pas_version))/download-p-metric-store.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: wavefront-nozzle-product
-      downloaded-stemcell: wavefront-nozzle-stemcell
+      downloaded-product: p-metric-store-product
+      downloaded-stemcell: p-metric-store-stemcell
 
   - put: pipeline-lock
     tags: ((tags))    
@@ -356,17 +355,17 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: wavefront-nozzle-product
+      product: p-metric-store-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
-  - task: upload-wavefront-nozzle-stemcell
+  - task: upload-p-metric-store-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: wavefront-nozzle-stemcell
+      stemcell: p-metric-store-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
@@ -374,7 +373,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: wavefront-nozzle-product
+      product: p-metric-store-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
@@ -382,7 +381,7 @@ jobs:
 
 ##
 
-- name: configure-wavefront-nozzle
+- name: configure-p-metric-store
   on_failure:
     put: notify
     tags: ((tags))
@@ -398,22 +397,18 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))  
       passed:
-        - upload-and-stage-wavefront-nozzle
+        - upload-and-stage-p-metric-store
       trigger: true    
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
       passed:
-        - upload-and-stage-wavefront-nozzle
+        - upload-and-stage-p-metric-store
     - get: platform-automation-tasks
       tags: ((tags))
       params:
         unpack: true
-    - get: additional-tasks
-      tags: ((tags))
-      params:
-        unpack: true        
     - get: templates
       tags: ((tags))
     - get: variable
@@ -421,7 +416,7 @@ jobs:
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
-  - task: configure-wavefront-nozzle
+  - task: configure-p-metric-store
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -430,24 +425,10 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
-      VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: configure-wavefront-user     
-    tags: ((tags))
-    image: platform-automation-image
-    file: additional-tasks/tasks/add-firehose-admin.yml
-    input_mapping:
-      env: variable
-    params:
-      FIREHOSE_FAMILY_NAME: wavefront
-      FIREHOSE_GIVEN_NAME: nozzle
-      FIREHOSE_USERNAME: wavefront-nozzle
-      FIREHOSE_PASSWORD: Thyph00n#
-      FIREHOSE_USER_EMAIL: email@na
-      UAA_ENDPOINT: ((pas-uaa-endpoint))
-      GROUP_NAMES: "doppler.firehose cloud_controller.admin_read_only"    
-      ENV_FILE: ((foundation))/env/env.yml
+      CONFIG_FILE: product-configs/((pas_version))/p-metric-store.yml
+      VARS_FILES: vars/((foundation))/vars/p-metric-store-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+      ENV_FILE: ((foundation))/env/env.yml 
+
 ##
 - name: apply-product-changes
 #  serial_groups: 
@@ -476,7 +457,7 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))
       passed: 
-      - configure-wavefront-nozzle 
+      - configure-p-metric-store 
       trigger: true   
     - get: variable
       tags: ((tags))
@@ -487,7 +468,7 @@ jobs:
     input_mapping:
       env: variable
     params:
-      PRODUCT_NAME: wavefront-nozzle
+      PRODUCT_NAME: p-metric-store
       ENV_FILE: ((foundation))/env/env.yml
   - task: export-installation
     tags: ((tags))
@@ -504,4 +485,7 @@ jobs:
       file: installation/installation*.zip
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}
+    params: {release: pipeline-lock}  
+
+
+
