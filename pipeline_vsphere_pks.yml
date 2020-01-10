@@ -728,14 +728,18 @@ jobs:
         unpack: true
       passed:
       - upgrade-opsman
-#      - get-harbor-container-registry
+#     - get-harbor-container-registry
       trigger: true          
     - get: platform-automation-tasks
       tags: ((tags))
       params:
         unpack: true
+    - get: harbor-container-registry-stemcell
+      tags: ((tags))
+      trigger: true        
     - get: harbor-container-registry-product
       tags: ((tags))
+      trigger: true
     - get: templates
       tags: ((tags))
     - get: variable
