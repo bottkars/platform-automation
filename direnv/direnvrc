@@ -25,7 +25,7 @@ use_om-env-client(){
 use_om-env-user(){
         echo "Reading Opsman Settings from lpass"
         export OM_SKIP_SSL_VALIDATION=true
-	      export OM_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
+	export OM_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_PASSWORD=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_DECRYPTION_PASSPHRASE --password)
         export OM_TARGET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --url)
@@ -62,7 +62,7 @@ use_azurestack-env(){
         # AZURE_CLI_CA_PATH: "/usr/local/lib/python3.6/site-packages/certifi/cacert.pem"
         # az cli
         ### evaluate active AzureCloud
-        export CLOUDPROFILE="AzureStackUser@${ENDPOINT}"
+        export CLOUDPROFILE="AzureStackUser"
         CLOUDCHECK=$(az cloud list --query "[?name=='${CLOUDPROFILE}']" --output tsv)
         if [[ ! -z $CLOUDCHECK ]]
         then
