@@ -25,10 +25,22 @@ use_om-env-client(){
 use_om-env-user(){
         echo "Reading Opsman Settings from lpass"
         export OM_SKIP_SSL_VALIDATION=true
-	export OM_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
+	      export OM_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_PASSWORD=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_DECRYPTION_PASSPHRASE --password)
         export OM_TARGET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --url)
+}
+
+use_flyme(){
+        export_alias flyme "fly -t ${CONCOURSE_TARGET} \$@"
+
+        export_alias destroytilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme destroy-pipeline -p ${PIPELINE}_${TILE} ;done'
+        export_alias unpausetilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme unpause-pipeline -p ${PIPELINE}_${TILE} ;done'
+        export_alias settilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_deploy_${TILE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}_${TILE} ;done'
+
+        export_alias setbasepipe 'flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_deploy_azurestack.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}'
+        export_alias unpausebasepipe 'flyme unpause-pipeline -p ${PIPELINE}'
+        export_alias destroybasepipe 'flyme destroy-pipeline -p ${PIPELINE}'
 }
 
 use_azurestack-env(){
