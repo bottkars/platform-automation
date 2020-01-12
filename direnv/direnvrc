@@ -1,3 +1,15 @@
+export_alias() {
+  local name=$1
+  shift
+  local alias_dir=$PWD/.direnv/aliases
+  local target="$alias_dir/$name"
+  mkdir -p "$alias_dir"
+  PATH_add "$alias_dir"
+  echo "#!/usr/bin/env bash" > "$target"
+  echo "$@" >> "$target"
+  chmod +x "$target"
+}
+
 use_bosh-env(){
         echo "Reading BoSH Settings from lpass"
         eval "$(om bosh-env --ssh-private-key ${DEPLOYMENT}/env/opsman.key)"
@@ -9,12 +21,61 @@ use_om-env-client(){
         export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_TARGET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --url)
 
-}
+} 
 use_om-env-user(){
         echo "Reading Opsman Settings from lpass"
         export OM_SKIP_SSL_VALIDATION=true
-        export OM_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
+	export OM_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_PASSWORD=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
-        export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
+        export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_DECRYPTION_PASSPHRASE --password)
         export OM_TARGET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --url)
+}
+
+use_azurestack-env(){
+
+        export AZURE_CONFIG_DIR=$(pwd)/.azure
+        mkdir -p ${AZURE_CONFIG_DIR}
+        echo "Reading Azurestack Settings from lpass"
+        export PROFILE="2019-03-01-hybrid"
+        export ENDPOINT=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURESTACK_ENV --field=ENDPOINT)
+        # CA_CERT: cert/root.pem
+        export ENDPOINT_RESOURCE_MANAGER="https://management.${ENDPOINT}"
+        export VAULT_DNS=".vault.${ENDPOINT}"
+        export SUFFIX_STORAGE_ENDPOINT="${ENDPOINT}"
+        export AZURE_TENANT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURESTACK_ENV --field=TENANT_ID)
+        export AZURE_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURESTACK_ENV --field=CLIENT_ID)
+        export AZURE_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURESTACK_ENV --field=CLIENT_SECRET)
+        export AZURE_SUBSCRIPTION_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURESTACK_ENV --field=SUBSCRIPTION_ID)
+        # export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+        # AZURE_CLI_CA_PATH: "/usr/local/lib/python3.6/site-packages/certifi/cacert.pem"
+        # az cli
+        ### evaluate active AzureCloud
+        export CLOUDPROFILE="AzureStackUser@${ENDPOINT}"
+        CLOUDCHECK=$(az cloud list --query "[?name=='${CLOUDPROFILE}']" --output tsv)
+        if [[ ! -z $CLOUDCHECK ]]
+        then
+          echo "Cloud Profile ${CLOUDPROFILE} already exists, reconfiguring with new settings"
+          az cloud update \
+            --name ${CLOUDPROFILE} \
+            --endpoint-resource-manager "${ENDPOINT_RESOURCE_MANAGER}" \
+            --suffix-storage-endpoint "${SUFFIX_STORAGE_ENDPOINT}" \
+            --suffix-keyvault-dns "{VAULT_DNS}" \
+            --profile ${PROFILE}
+        else
+        echo "Creating Cloud Profile ${CLOUDPROFILE}"
+            az cloud register \
+            --name ${CLOUDPROFILE} \
+            --endpoint-resource-manager "${ENDPOINT_RESOURCE_MANAGER}" \
+            --suffix-storage-endpoint "${SUFFIX_STORAGE_ENDPOINT}" \
+            --suffix-keyvault-dns "${VAULT_DNS}" \
+            --profile ${PROFILE}
+        fi
+        az cloud set --name ${CLOUDPROFILE}
+        az login --service-principal \
+          -u ${AZURE_CLIENT_ID} \
+          -p ${AZURE_CLIENT_SECRET} \
+          --tenant ${AZURE_TENANT_ID}
+        az account set --subscription ${AZURE_SUBSCRIPTION_ID}  
+        export_alias az-boshvms "az vm list  --query \"[?tags.director=='p-bosh'].{Name:name, vmid:vmId, deployment:tags.deployment, RG:resourceGroup,Size:hardwareProfile.vmSize,state:provisioningState}\" --output table"
+        export_alias az-failedvms "az vm list  --query \"[?provisioningState=='Failed'].{Name:name, vmid:vmId}\" --output table"
 }
