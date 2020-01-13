@@ -8,13 +8,13 @@ azure_env: &azure_env
   PROFILE: ((arm_profile))
   CA_CERT: ((foundation))/cert/root.pem
   AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
-  ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
-  VAULT_DNS:  ((vault-dns))
-  SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
-  AZURE_TENANT_ID: ((tenant_id))
-  AZURE_CLIENT_ID: ((client_id))
-  AZURE_CLIENT_SECRET: ((client_secret))
-  AZURE_SUBSCRIPTION_ID: ((subscription_id))
+  ENDPOINT_RESOURCE_MANAGER: ((((foundation))/endpoint-resource-manager)) 
+  VAULT_DNS:  ((((foundation))/vault-dns))
+  SUFFIX_STORAGE_ENDPOINT: ((((foundation))/suffix-storage-endpoint))
+  AZURE_TENANT_ID: ((((foundation))/tenant_id))
+  AZURE_CLIENT_ID: ((((foundation))/client_id))
+  AZURE_CLIENT_SECRET: ((((foundation))/client_secret))
+  AZURE_SUBSCRIPTION_ID: ((((foundation))/subscription_id))
   RESOURCE_GROUP: ((resource_group))
   LOCATION: ((azurestack_region))
 
@@ -597,16 +597,7 @@ jobs:
       params:
         file: platform-automation-pivnet/*image*.tgz
 - name: test-interpolate
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
   - get: variable
     tags: ((tags))
   - get: templates
