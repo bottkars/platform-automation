@@ -1,11 +1,14 @@
 # jq based 
 update=true
 GOALSTATE=2.2.38
+printf  "\e[1mReading BoSH deployments for \e[35m$BOSH_ENVIRONMENT \e[0m\e[1mas client \e[35m$BOSH_CLIENT\e[0m\n"
+
 DEPLOYMENTS=$(bosh deployments --json | jq -r ".Tables[].Rows[].name")
 while IFS= read -r DEPLOYMENT
 do
-    if [[ ${DEPLOYMENT} != *"pas-windows"* ]];then
-        echo "\e[1mChecking WAAGENT for deployment \e[35m$DEPLOYMENT \e[0m"
+    if [[ ${DEPLOYMENT} != *"pas-windows"* ]]
+    then
+        printf  "\e[1mChecking WAAGENT for deployment \e[35m$DEPLOYMENT \e[0m\n"
         VMS=$(bosh -d $DEPLOYMENT vms --json | jq -r ".Tables[].Rows[].instance")
         while IFS= read -r VM
             do
