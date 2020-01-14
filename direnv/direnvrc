@@ -107,3 +107,27 @@ use_azurestack-env(){
         export_alias az-boshavailability-sets 'az vm availability-set list --query "[?tags.\"user-agent\"=='"'"'bosh'"'"'].{Name:name, RG:resourceGroup,FDcount:platformFaultDomainCount, UDcount:platformUpdateDomainCount}" --output table'
 
 }
+
+
+use_vsphere-env(){
+        #####################        
+        # Notes on jmespath ( az-cli)
+        # within az-cli, jamespath search for types with Dash (-)
+        # need to be escaped in \"type-with-dash\"
+        ######################
+        echo "Reading vSphere Settings from lpass"
+        export GOVC_INSECURE=1
+        export GOVC_URL=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_URL)
+        export GOVC_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_USERNAME)
+        export GOVC_PASSWORD=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_PASSWORD)
+        echo "testing connection to ${GOVC_URL}"
+        govc about
+        # export GOVC_SUBSCRIPTION_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=SUBSCRIPTION_ID)
+        export_alias vc-boshvms 'govc ls -json '${VM_FOLDER}' | jq -r '"'"'[
+                "VM-Name                            ",
+                "Guest-Hostname                     ",
+                "Guest-IP  ",
+                "PowerState"],
+                (.elements[].Object | [.Name, .Guest.HostName, .Guest.IpAddress, .Runtime.PowerState]) | @tsv '"'"''
+}
+
