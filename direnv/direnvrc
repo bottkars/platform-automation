@@ -154,3 +154,5 @@ sys_domain: ${PAS_SYSTEM_DOMAIN}
 EOF
 }
 
+export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
+
