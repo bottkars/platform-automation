@@ -143,15 +143,14 @@ export HAMMER_TARGET_CONFIG=.direnv/hammer.yml
 cat <<EOF > ${HAMMER_TARGET_CONFIG}
 name: ${DEPLOYMENT}
 ops_manager:
-  password: ${OM_CLIENT_SECRET}
+  password: ${OM_USERNAME}
   url: ${OM_TARGET}
-  username: ${OM_CLIENT_ID}
+  username: ${OM_PASSWORD}
 ops_manager_private_key: OPSMAN-RSA-PRIVATE-KEY
 ops_manager_public_ip: 172.16.100.8
 pks_api:
   url: ${PKS_API_ENDPOINT}
-sys_domain: PAS-SYSTEM-DOMAIN
+sys_domain: ${PAS_SYSTEM_DOMAIN}
 EOF
-
 }
 
