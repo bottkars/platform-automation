@@ -124,8 +124,7 @@ use_pks-admin-env(){
         grep -A 0 pks_api_hostname | \
         cut -d ':' -f2 | \
         tr -d ' "')
-        echo "retrieving PKS Admin Credentials"
-
+        echo "Retrieving PKS Admin Credentials"
         export ADMIN_SECRET=$(om credentials --product-name pivotal-container-service --credential-reference .properties.uaa_admin_password --credential-field secret)
         pks login -a ${PKS_API_ENDPOINT} -k -u admin -p ${ADMIN_SECRET}
 }
