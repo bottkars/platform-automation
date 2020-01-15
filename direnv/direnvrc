@@ -109,12 +109,13 @@ use_azurestack-env(){
 
 }
 use_pcf-env(){
-        echo "Retrieving PAS System Domain from Pipeline Config"
+        echo -n "Retrieving PAS System Domain from Pipeline Config: "
         export PAS_SYSTEM_DOMAIN=$(\
         cat "./${PIPELINE}/vars/srt-vars.yml" | \
         grep -A 0 pcf_system_domain | \
         cut -d ':' -f2 | \
         tr -d ' "')
+        echo $PAS_SYSTEM_DOMAIN
 }
 
 use_pks-admin-env(){
