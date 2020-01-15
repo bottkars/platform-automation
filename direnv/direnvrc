@@ -111,7 +111,7 @@ use_azurestack-env(){
 use_pcf-env(){
         echo "Retrieving PAS System Domain from Pipeline Config"
         export PAS_SYSTEM_DOMAIN=$(\
-        cat "./${PIPELINE}/vars/pas-vars.yml" | \
+        cat "./${PIPELINE}/vars/srt-vars.yml" | \
         grep -A 0 pfc_system_doamin | \
         cut -d ':' -f2 | \
         tr -d ' "')
