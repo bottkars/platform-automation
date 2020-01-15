@@ -108,6 +108,14 @@ use_azurestack-env(){
         export_alias az-boshavailability-sets 'az vm availability-set list --query "[?tags.\"user-agent\"=='"'"'bosh'"'"'].{Name:name, RG:resourceGroup,FDcount:platformFaultDomainCount, UDcount:platformUpdateDomainCount}" --output table'
 
 }
+use_pcf-env(){
+        export PCF_SYSTEM_DOMAIN=$(\
+        cat "./${PIPELINE}/config/cf.yml" | \
+        grep -A 1 .cloud_controller.system_domain | \
+        grep value | \
+        cut -d ':' -f2 | \
+        tr -d ' "')
+}
 
 use_pks-admin-env(){
         echo "retrieving PKS Admin Credentials"
@@ -153,6 +161,7 @@ pks_api:
 sys_domain: ${PAS_SYSTEM_DOMAIN}
 EOF
 }
+
 
 export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
 
