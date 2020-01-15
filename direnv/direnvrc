@@ -112,7 +112,7 @@ use_pcf-env(){
         echo "Retrieving PAS System Domain from Pipeline Config"
         export PAS_SYSTEM_DOMAIN=$(\
         cat "./${PIPELINE}/vars/srt-vars.yml" | \
-        grep -A 0 pfc_system_domain | \
+        grep -A 0 pcf_system_domain | \
         cut -d ':' -f2 | \
         tr -d ' "')
 }
