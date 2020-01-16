@@ -156,7 +156,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: pas-for-kubernetes-product/\[elastic-runtime,(.*)\]pas-for-kubernetes-.*.pivotal
+    regexp: pas-for-kubernetes-product/\[pas-for-kubernetes,(.*)\]pas-for-kubernetes-.*.pivotal
 
 - name: pas-for-kubernetes-stemcell
   tags: ((tags))
