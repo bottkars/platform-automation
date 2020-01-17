@@ -109,7 +109,7 @@ use_azurestack-env(){
 
 }
 use_pcf-env(){
-        export CF_HOME="$(pwd)/.cf"
+        export CF_HOME="$(pwd)"
         echo -n "Retrieving PAS System Domain from Pipeline Config: "
         export PAS_SYSTEM_DOMAIN=$(\
         cat "./${PIPELINE}/vars/srt-vars.yml" | \
