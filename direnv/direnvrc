@@ -120,7 +120,7 @@ use_pcf-env(){
         echo "Retrieving UAA Admin Credentials from ${OM_TARGET}"        
         export ADMIN_PASSWORD=$(om credentials --product-name cf --credential-reference .uaa.admin_credentials --credential-field password)
         echo "Performing login to api.${PAS_SYSTEM_DOMAIN}"
-        cf login -a api.${PAS_SYSTEM_DOMAIN} -u admin -p ${ADMIN_PASSWORD} -s system -o system
+        cf login -a api.${PAS_SYSTEM_DOMAIN} -u admin -p ${ADMIN_PASSWORD} -s system -o system --skip-ssl-validation
 }
 
 use_pks-admin-env(){
