@@ -95,7 +95,8 @@ use_azurestack-env(){
             --endpoint-resource-manager "${ENDPOINT_RESOURCE_MANAGER}" \
             --suffix-storage-endpoint "${SUFFIX_STORAGE_ENDPOINT}" \
             --suffix-keyvault-dns "${VAULT_DNS}" \
-            --profile ${PROFILE}
+            --profile ${PROFILE} \
+            --output tsv
         fi
         az cloud set --name ${CLOUDPROFILE}
         az login --service-principal \
