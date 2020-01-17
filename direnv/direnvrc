@@ -102,7 +102,8 @@ use_azurestack-env(){
         az login --service-principal \
           -u ${AZURE_CLIENT_ID} \
           -p ${AZURE_CLIENT_SECRET} \
-          --tenant ${AZURE_TENANT_ID}  
+          --tenant ${AZURE_TENANT_ID} \
+          --output tsv
         az account set --subscription ${AZURE_SUBSCRIPTION_ID}  
         export_alias az-boshvms 'az vm list --query "[?tags.\"user-agent\"=='"'"'bosh'"'"'].{BoshName:tags.name, Name:name, vmid:vmId, deployment:tags.deployment, RG:resourceGroup,Size:hardwareProfile.vmSize,state:provisioningState}" --output table'
         export_alias az-boshfailedvms 'az vm list  --query "[?tags.\"user-agent\"=='"'"'bosh'"'"' && provisioningState=='"'"'Failed'"'"'].{BoshName:tags.name, Name:name, vmid:vmId, deployment:tags.deployment, RG:resourceGroup,Size:hardwareProfile.vmSize,state:provisioningState}" --output table'
