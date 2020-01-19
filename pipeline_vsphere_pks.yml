@@ -142,7 +142,7 @@ resources:
   type: time
   source:
     start: 01:00 AM
-    stop: 6:00 AM
+    stop: ((after_midnight_end))
     interval: 24h
     location: Europe/Berlin 
 - name: notify

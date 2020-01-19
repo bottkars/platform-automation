@@ -121,7 +121,7 @@ $KEY="variable-deploy-key"
 ssh-keygen -t rsa -b 4096 -C "$($KEY)@sc2.com" -f $HOME/.ssh/$KEY
 
 credhub set /name:/concourse/main/$FOUNDATION/$($KEY) /type:ssh `
-        /private:$HOME\.ssh\$($KEY) `
+        /private:$HOME.ssh\$($KEY) `
         /public:$HOME\.ssh\$($KEY).pub
 
 
