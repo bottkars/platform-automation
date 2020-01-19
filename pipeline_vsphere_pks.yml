@@ -948,7 +948,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
+      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director((setup_type)).yml        
   - task: apply-director-changes
     tags: ((tags))
     attempts: 3    
