@@ -917,7 +917,7 @@ jobs:
   - task: configure-authentication
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/configure-saml-authentication.yml
+    file: platform-automation-tasks/tasks/configure-((auth_type))authentication.yml
     attempts: 10
     input_mapping:
       env: variable
