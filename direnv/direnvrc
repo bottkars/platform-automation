@@ -122,7 +122,7 @@ use_pcf-env(){
         tr -d ' "')
         echo $PAS_SYSTEM_DOMAIN
         echo "Retrieving UAA Admin Credentials from ${OM_TARGET}"        
-        export ADMIN_PASSWORD=$(om credentials --product-name cf --credential-reference .uaa.admin_credentials --credential-field password)
+	export ADMIN_PASSWORD=$(om credentials --product-name cf --credential-reference .uaa.admin_credentials --credential-field password) 
         echo "Performing login to api.${PAS_SYSTEM_DOMAIN}"
         cf login -a api.${PAS_SYSTEM_DOMAIN} -u admin -p ${ADMIN_PASSWORD} -s system -o system --skip-ssl-validation
 }
@@ -177,7 +177,23 @@ pks_api:
 sys_domain: ${PAS_SYSTEM_DOMAIN}
 EOF
 }
-
-
+use_wsl_dns_fix(){
+	echo -n "Checking if we run on WSL: "
+        if [[ $(grep Microsoft /proc/version) ]]
+	then
+		echo "true"	
+		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/6/pwsh.exe  -Command "(Get-DnsClientServerAddress -Family IPv4).ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
+		echo "adjusting DNS Order with fix-dns"
+		fix-dns
+	else
+		echo "not running WSL, no DNS Order Fix required"
+	fi	
+	}
+use_check_vpn(){
+	while  ! ping -c 1 -W 1 10.70.0.10 &>/dev/null
+       	do
+		echo "VPN is down, Please connect first"
+		sleep 10
+	done	
+}
 export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
-
