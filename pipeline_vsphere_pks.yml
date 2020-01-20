@@ -266,10 +266,6 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
   plan:
   - put: notify
     params:
@@ -292,10 +288,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -331,10 +324,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -374,10 +364,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -414,10 +401,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -458,10 +442,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -494,10 +475,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -530,10 +508,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -567,10 +542,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -618,10 +590,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -712,10 +681,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     tags: ((tags))
@@ -792,10 +758,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -844,10 +807,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -966,10 +926,6 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
   plan:
   - put: notify
     tags: ((tags))      
@@ -1043,10 +999,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -1101,10 +1054,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -1151,10 +1101,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -1188,10 +1135,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -1221,10 +1165,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -1252,10 +1193,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
@@ -1284,10 +1222,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-  on_success:  
-    put: notify
-    params:
-      <<: *slack_succeeded_param
+
   plan:
   - put: notify
     params:
