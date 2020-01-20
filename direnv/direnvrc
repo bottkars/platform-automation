@@ -179,7 +179,7 @@ EOF
 }
 use_wsl_dns_fix(){
 	echo -n "Checking if we run on WSL: "
-        if [[ $(grep Microsoft /proc/version) ]]
+        if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
 	then
 		echo "true"	
 		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/6/pwsh.exe  -Command "(Get-DnsClientServerAddress -Family IPv4).ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
