@@ -908,7 +908,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director((setup_type)).yml        
+      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director((overlay_type)).yml        
   - task: apply-director-changes
     tags: ((tags))
     attempts: 3    
@@ -999,7 +999,6 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
   - put: notify
     params:
@@ -1031,7 +1030,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-flannel.yml
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service((overlay_type)).yml
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
   - task: assign-multi-stemcell
