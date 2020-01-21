@@ -224,9 +224,8 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: "windows-stemcell"
-    # regexp: pivotal-container-service-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
-    regexp: stemcell/bosh-stemcell-(.*)-vsphere-esxi-(.*)-go_agent.tgz
+    bucket: windows-stemcell
+    regexp: stemcells/\[stemcells-windows-server-internal,(.*)\]bosh-stemcell-2019.7-vsphere-esxi-windows2019-go_agent.tgz
 
 - name: pivotal-container-service-product
   icon: amazon-drive
@@ -267,9 +266,6 @@ jobs:
     params:
       <<: *slack_failed_param
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -288,11 +284,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -324,11 +316,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -364,11 +352,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
     # - get: after-midnight
     #  trigger: true
@@ -401,11 +385,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: after-midnight
       trigger: true
@@ -442,11 +422,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
       <<: *stage_steps
   - task: staged-config
@@ -475,11 +451,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
      <<: *stage_steps
   - task: staged-config
@@ -508,11 +480,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
      <<: *stage_steps
   - task: staged-director-config
@@ -542,11 +510,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
       - get: daily-trigger
         trigger: true
@@ -590,11 +554,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         tags: ((tags))
@@ -681,7 +641,6 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
   - put: notify
     tags: ((tags))
@@ -758,11 +717,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       tags: ((tags))
@@ -807,11 +762,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       tags: ((tags))
@@ -1000,9 +951,6 @@ jobs:
     params:
       <<: *slack_failed_param
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-image
         tags: ((tags))      
@@ -1053,11 +1001,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       tags: ((tags))      
@@ -1100,11 +1044,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
       - get: platform-automation-tasks
         tags: ((tags))      
@@ -1134,11 +1074,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -1164,11 +1100,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -1192,11 +1124,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - get: variable
   - get: templates
   - get: platform-automation-image
@@ -1221,11 +1149,7 @@ jobs:
     put: notify
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: notify
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       tags: ((tags))
