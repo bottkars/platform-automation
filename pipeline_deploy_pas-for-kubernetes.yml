@@ -77,7 +77,11 @@ slack_failed_param: &slack_failed_param
     ((foundation)) Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
     build $BUILD_NAME for team $BUILD_TEAM_NAME at
     $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
-    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/p$os_type="windows"
+$sku="2019-sku2"
+$version="2019.15.045003"
+$publisher="pivotal"
+$offer="bosh-windows-server-2019"ipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
     for details
   icon_emoji: ":concourse-failed:"
 
@@ -485,7 +489,4 @@ jobs:
       file: installation/installation*.zip
   - put: pipeline-lock
     tags: ((tags))
-    params: {release: pipeline-lock}      
-
-
-
+    params: {release: pipeline-lock}
