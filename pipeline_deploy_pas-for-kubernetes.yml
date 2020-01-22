@@ -391,11 +391,6 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-
-#  serial_groups:
-#  - apply
-#  - configure-products
-#  serial: true
   plan:
   - in_parallel:
     - get: platform-automation-image
@@ -472,7 +467,7 @@ jobs:
     input_mapping:
       env: variable
     params:
-      PRODUCT_NAME: cf
+      PRODUCT_NAME: pas-for-kubernetes
       ENV_FILE: ((foundation))/env/env.yml
   - task: export-installation
     tags: ((tags))
