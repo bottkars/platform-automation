@@ -87,3 +87,19 @@ staged-p-rabbitmq-config                        no      succeeded  n/a
 get-p-compliance-scanner                        no      succeeded  n/a
 upload-and-stage-p-compliance-scanner           no      succeeded  n/a
 configure-p-compliance-scanner                  no      succeeded  n/a
+
+
+
+
+export BOSH_CLIENT=ops_manager \
+BOSH_CLIENT_SECRET=QMzbL_OvZTuGBbokKSOKwh6cyDTgfmKj \
+BOSH_ENVIRONMENT=172.16.1.11 \
+BOSH_CA_CERT=/var/tempest/workspaces/default/root_ca_certificate \
+CREDHUB_CLIENT=ops_manager \
+CREDHUB_SERVER=https://172.16.1.11:8844 \
+CREDHUB_SECRET=QMzbL_OvZTuGBbokKSOKwh6cyDTgfmKj \
+CREDHUB_CA_CERT=/var/tempest/workspaces/default/root_ca_certificate
+
+
+
+*.istio-apps.run.haas-259.pez.pivotal.io,*.sys.run.haas-259.pez.pivotal.io,*.login.sys.run.haas-259.pez.pivotal.io,*.apps.run.haas-259.pez.pivotal.io,*.uaa.sys.run.haas-259.pez.pivotal.io,*.run.haas-259.pez.pivotal.io

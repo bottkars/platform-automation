@@ -764,6 +764,8 @@ jobs:
       <<: *slack_failed_param
   plan:
   - in_parallel:
+    - get: opsman-product
+      tags: ((tags))
     - get: platform-automation-image
       tags: ((tags))
       params:
