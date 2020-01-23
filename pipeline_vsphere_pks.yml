@@ -1090,7 +1090,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/director((overlay_type)).yml
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       SKIP_MISSING: true    
 
