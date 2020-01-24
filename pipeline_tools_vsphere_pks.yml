@@ -267,6 +267,9 @@ jobs:
   plan:
   - in_parallel:
       - get: additional-tasks
+        tags: ((tags))      
+        params:
+          unpack: true 
       - get: platform-automation-image
         tags: ((tags))      
         params:
