@@ -135,6 +135,21 @@ use_pcf-env(){
         cf login -a api.${PAS_SYSTEM_DOMAIN} -u admin -p ${ADMIN_PASSWORD} -s system -o system --skip-ssl-validation
 }
 
+use_pas4k8s-env(){
+        export CF_HOME="$(pwd)"
+        echo -n "Retrieving PAS System Domain from Pipeline Config: "
+        export PAS_SYSTEM_DOMAIN=$(\
+        cat "./${PIPELINE}/vars/pas-for-kubernetes-vars.yml" | \
+        grep -A 0 system_domain | \
+        cut -d ':' -f2 | \
+        tr -d ' "')
+        echo $PAS_SYSTEM_DOMAIN
+        echo "Retrieving CF Admin Credentials from ${OM_TARGET}"        
+	export ADMIN_PASSWORD=$(om credentials --product-name pas-for-kubernetes --credential-reference /.properties.cf_admin_password --credential-field secret) 
+        echo "Performing login to api.${PAS_SYSTEM_DOMAIN}"
+        cf login -a api.${PAS_SYSTEM_DOMAIN} -u admin -p ${ADMIN_PASSWORD} -o system --skip-ssl-validation
+}
+
 use_pks-admin-env(){
         echo "Retrieving PKS API Endpoint from Pipeline Config"
         export PKS_API_ENDPOINT=$(\
@@ -190,7 +205,7 @@ use_wsl_dns_fix(){
         if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
 	then
 		echo "true"	
-		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/6/pwsh.exe  -Command "Get-NetAdapter | where status -eq up | Get-DnsClientServerAddress -Family IPv4 |Sort-Object -Property ID | Select-Object ServerAddresses -ExpandProperty ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
+		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/6/pwsh.exe  -Command "Get-NetAdapter | where status -eq up | Get-DnsClientServerAddress -Family IPv4 |Sort-Object -Property InterfaceIndex -Descending | Select-Object ServerAddresses -ExpandProperty ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
 		echo "adjusting DNS Order with fix-dns"
 		fix-dns
 	else
