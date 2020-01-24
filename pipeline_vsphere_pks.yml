@@ -444,6 +444,35 @@ jobs:
             repository: variable-commit
             merge: true
 
+- name: staged-pas-for-kubernetes-config
+  serial_groups:
+  - staged-configs
+  on_failure:
+    put: notify
+    params:
+      <<: *slack_failed_param
+  plan:
+  - in_parallel:
+      <<: *stage_steps
+  - task: staged-config
+    <<: *stage_config
+    params:
+      PRODUCT_NAME: pas-for-kubernetes
+      ENV_FILE: ((foundation))/env/env.yml
+      SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: false
+    ensure: #&make-config-commit
+      do:
+        - task: make-commit
+          <<: *do_config_commit
+          params:
+            FILE_SOURCE_PATH: pas-for-kubernetes.yml
+            FILE_DESTINATION_PATH: ((foundation))/generated-config/pas-for-kubernetes.yml
+            <<: *git_commit_env
+        - put: variable
+          params:
+            repository: variable-commit
+            merge: true
+
 - name: staged-harbor-container-registry-config
   serial_groups:
   - staged-configs
@@ -1345,6 +1374,7 @@ groups:
   jobs:
     - staged-harbor-container-registry-config
     - staged-pivotal-container-service-config
+    - staged-pas-for-kubernetes-config
     - staged-director-config
     - export-installation
 - name: test-interpolate
