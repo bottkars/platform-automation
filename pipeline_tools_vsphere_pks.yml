@@ -171,7 +171,7 @@ resources:
   source:
     uri: ((variable-repo))
     branch: master
-    pool: pas
+    pool: pks
     private_key: ((((foundation))/variable-deploy-key.private_key))
     retry_delay: 300s
 
