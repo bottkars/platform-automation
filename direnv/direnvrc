@@ -31,7 +31,8 @@ use_om-env-client(){
         export OM_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_TARGET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --url)
-
+        export_alias om-version 'om curl --path /api/v0/info -s | jq -r .info.version'
+        echo "Running Opsman $(om-version)"
 } 
 use_om-env-user(){
         echo "Reading Opsman Settings from lpass"
@@ -40,6 +41,8 @@ use_om-env-user(){
         export OM_PASSWORD=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_DECRYPTION_PASSPHRASE --password)
         export OM_TARGET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --url)
+        export_alias om-version 'om curl --path /api/v0/info -s | jq -r .info.version'
+        echo "Running Opsman $(om-version)"
 }
 
 use_flyme(){
@@ -60,6 +63,41 @@ use_flyme(){
         export_alias pipeline-builds-failed "pipeline-builds --json --count 10 | jq -r '.[] | select(.status==\"failed\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
 
         export_alias expose-pipelines "flyme pipelines --json | jq -r '.[].name' | xargs -n 1 -I {} flyme expose-pipeline --pipeline {}"
+}
+
+use_azure-env(){
+        #####################        
+        # Notes on jmespath ( az-cli)
+        # within az-cli, jamespath search for types with Dash (-)
+        # need to be escaped in \"type-with-dash\"
+        ######################
+        export AZURE_CONFIG_DIR=$(pwd)/.azure
+        mkdir -p ${AZURE_CONFIG_DIR}
+        echo "Reading Azure Settings from lpass"
+        export PROFILE="2019-03-01-hybrid"
+        export CLOUDPROFILE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=ENDPOINT)
+        export AZURE_TENANT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=TENANT_ID)
+        export AZURE_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=CLIENT_ID)
+        export AZURE_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=CLIENT_SECRET)
+        export AZURE_SUBSCRIPTION_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=SUBSCRIPTION_ID)
+        # export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+        # AZURE_CLI_CA_PATH: "/usr/local/lib/python3.6/site-packages/certifi/cacert.pem"
+        # az cli
+        ### evaluate active AzureCloud
+
+
+        az cloud set --name ${CLOUDPROFILE}
+        az login --service-principal \
+          -u ${AZURE_CLIENT_ID} \
+          -p ${AZURE_CLIENT_SECRET} \
+          --tenant ${AZURE_TENANT_ID} \
+          --output tsv
+        az account set --subscription ${AZURE_SUBSCRIPTION_ID}  
+        export_alias az-boshvms 'az vm list --query "[?tags.\"user-agent\"=='"'"'bosh'"'"'].{deployment:tags.deployment, BoshName:tags.name, Name:name, RG:resourceGroup,state:provisioningState}" --output table'
+        export_alias az-boshvms-id 'az vm list --query "[?tags.\"user-agent\"=='"'"'bosh'"'"'].{deployment:tags.deployment, BoshName:tags.name, vmid:vmId, RG:resourceGroup,state:provisioningState}" --output table'
+        export_alias az-boshvms-size 'az vm list --query "[?tags.\"user-agent\"=='"'"'bosh'"'"'].{deployment:tags.deployment, BoshName:tags.name, RG:resourceGroup,Size:hardwareProfile.vmSize,state:provisioningState}" --output table'
+        export_alias az-boshfailedvms 'az vm list  --query "[?tags.\"user-agent\"=='"'"'bosh'"'"' && provisioningState=='"'"'Failed'"'"'].{BoshName:tags.name, Name:name, vmid:vmId, deployment:tags.deployment, RG:resourceGroup,Size:hardwareProfile.vmSize,state:provisioningState}" --output table'
+        export_alias az-boshavailability-sets 'az vm availability-set list --query "[?tags.\"user-agent\"=='"'"'bosh'"'"'].{Name:name, RG:resourceGroup,FDcount:platformFaultDomainCount, UDcount:platformUpdateDomainCount}" --output table'
 }
 
 use_azurestack-env(){
@@ -95,7 +133,8 @@ use_azurestack-env(){
             --endpoint-resource-manager "${ENDPOINT_RESOURCE_MANAGER}" \
             --suffix-storage-endpoint "${SUFFIX_STORAGE_ENDPOINT}" \
             --suffix-keyvault-dns "{VAULT_DNS}" \
-            --profile ${PROFILE}
+            --profile ${PROFILE} \
+            --endpoint-vm-image-alias-doc https://raw.githubusercontent.com/bottkars/Azurestack-Kickstart/master/admin/tools/imagedoc.json
         else
         echo "Creating Cloud Profile ${CLOUDPROFILE}"
             az cloud register \
@@ -104,6 +143,7 @@ use_azurestack-env(){
             --suffix-storage-endpoint "${SUFFIX_STORAGE_ENDPOINT}" \
             --suffix-keyvault-dns "${VAULT_DNS}" \
             --profile ${PROFILE} \
+            --endpoint-vm-image-alias-doc https://raw.githubusercontent.com/bottkars/Azurestack-Kickstart/master/admin/tools/imagedoc.json \
             --output tsv
         fi
         az cloud set --name ${CLOUDPROFILE}
