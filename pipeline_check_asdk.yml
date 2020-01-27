@@ -1,0 +1,89 @@
+---
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+
+resources:
+- name: asdk-release-file
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_asdk_release))
+    regexp: asdk-((ASDK_VERSION))(.*).yml
+
+- name: platform-automation-image
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+- name: azs-concourse
+  tags: ((tags))
+  icon: github-circle
+  type: git  
+  source: 
+    uri: https://github.com/bottkars/azs-concourse
+    branch: master
+
+jobs:
+- name: get-asdk-release
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true      
+    - get: azs-concourse
+      tags: ((tags))
+  - task: check-asdk-release 
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/check-asdk.yml
+  #   input_mapping:
+  #     config: variable
+  #     asdk: asdk-release
+    output_mapping:
+      asdk-release: asdk-release-file  
+    params:
+      ASDK_VERSION: ((asdk_version))
+  - put: asdk-release-file
+    params:
+     file: asdk-release-file/asdk-*.yml  
+
+
+- name: download-asdk
+  plan:
+  - in_parallel:
+    - get: asdk-release-file
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true      
+    - get: azs-concourse
+      tags: ((tags))
+  - task: download-asdk-release 
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/download-asdk.yml
+    input_mapping:
+  #     config: variable
+      asdk: asdk-release-file
+    params:
+      <<: *s3_env
+      bucket: ((buckets_asdk_release))  
+  #  output_mapping:
+  #    asdk-release: asdk-release-file  
+  #  params:
+  #    ASDK_VERSION: ((asdk_version))
+  #- put: asdk-release-file
+  #  params:
+  #   file: asdk-release-file/asdk-*.yml  
+
