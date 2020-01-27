@@ -16,6 +16,15 @@ resources:
     bucket: ((buckets_asdk_release))
     regexp: asdk-(((asdk_version)).*).yml
 
+- name: after-midnight
+  type: time
+  source:
+    start: 01:00 AM
+    stop: ((after_midnight_end))
+    interval: 24h
+    location: Europe/Berlin 
+
+
 - name: platform-automation-image
   icon: amazon-drive
   type: s3
@@ -36,6 +45,8 @@ jobs:
 - name: get-asdk-release
   plan:
   - in_parallel:
+    - get: after-midnight
+      trigger: true
     - get: platform-automation-image
       tags: ((tags))
       params:
