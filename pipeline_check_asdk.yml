@@ -14,7 +14,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_asdk_release))
-    regexp: asdk-((ASDK_VERSION))(.*).yml
+    regexp: asdk-(((asdk_version)).*).yml
 
 - name: platform-automation-image
   icon: amazon-drive
@@ -46,9 +46,6 @@ jobs:
     tags: ((tags))
     image: platform-automation-image
     file: azs-concourse/ci/tasks/check-asdk.yml
-  #   input_mapping:
-  #     config: variable
-  #     asdk: asdk-release
     output_mapping:
       asdk-release: asdk-release-file  
     params:
@@ -63,6 +60,7 @@ jobs:
   - in_parallel:
     - get: asdk-release-file
       tags: ((tags))
+      trigger: true
     - get: platform-automation-image
       tags: ((tags))
       params:
