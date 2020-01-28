@@ -61,9 +61,11 @@ jobs:
       asdk-release: asdk-release-file  
     params:
       ASDK_VERSION: ((asdk_version))
-  - put: asdk-release-file
-    params:
-     file: asdk-release-file/asdk-*.yml  
+    on_success:
+      try:    
+        put: asdk-release-file
+        params:
+          file: asdk-release-file/asdk-*.yml  
 
 
 - name: download-asdk
