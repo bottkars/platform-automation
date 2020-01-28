@@ -327,9 +327,11 @@ jobs:
       trigger: true
     - get: pas-for-kubernetes-product
       tags: ((tags))
+      skip_download: true
       trigger: true     
     - get: pas-for-kubernetes-stemcell
       tags: ((tags))
+      skip_download: true
       trigger: true    
   - task: interpolate-product-downloads
     tags: ((tags))

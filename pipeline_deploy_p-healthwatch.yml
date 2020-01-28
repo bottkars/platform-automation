@@ -330,9 +330,11 @@ jobs:
       trigger: true
     - get: p-healthwatch-product
       tags: ((tags))
+      skip_download: true
       trigger: true
     - get: p-healthwatch-stemcell
       tags: ((tags))
+      skip_download: true
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))

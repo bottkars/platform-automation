@@ -330,9 +330,11 @@ jobs:
       trigger: true
     - get: p-rabbitmq-product
       tags: ((tags))
+      skip_download: true
       trigger: true
     - get: p-rabbitmq-stemcell
       tags: ((tags))
+      skip_download: true
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))

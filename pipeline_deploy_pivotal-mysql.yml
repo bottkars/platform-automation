@@ -327,9 +327,11 @@ jobs:
       trigger: true
     - get: pivotal-mysql-product
       tags: ((tags))
+      skip_download: true
       trigger: true
     - get: pivotal-mysql-stemcell
       tags: ((tags))
+      skip_download: true
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))

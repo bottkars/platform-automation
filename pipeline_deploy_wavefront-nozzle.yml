@@ -326,9 +326,11 @@ jobs:
       trigger: true
     - get: wavefront-nozzle-product
       tags: ((tags))
+      skip_download: true
       trigger: true
     - get: wavefront-nozzle-stemcell
       tags: ((tags))
+      skip_download: true
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))

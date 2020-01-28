@@ -329,9 +329,11 @@ jobs:
       trigger: true
     - get: app-metrics-product
       tags: ((tags))
+      skip_download: true
       trigger: true
     - get: app-metrics-stemcell
       tags: ((tags))
+      skip_download: true
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))

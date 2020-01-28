@@ -328,9 +328,11 @@ jobs:
       trigger: true
     - get: srt-product
       tags: ((tags))
+      skip_download: true
       trigger: true     
     - get: srt-stemcell
       tags: ((tags))
+      skip_download: true
       trigger: true    
   - task: interpolate-product-downloads
     tags: ((tags))
