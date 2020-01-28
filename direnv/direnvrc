@@ -45,6 +45,12 @@ use_om-env-user(){
         echo "Running Opsman $(om-version)"
 }
 
+use_git-token(){
+	export GIT_USERNAME=$(lpass show ${CONCOURSE_TARGET}/GIT_TOKEN --username)
+        export GIT_TOKEN=$(lpass show ${CONCOURSE_TARGET}/GIT_TOKEN --password)
+
+
+}
 use_flyme(){
         export_alias flyme "fly -t ${CONCOURSE_TARGET} \$@"
 
