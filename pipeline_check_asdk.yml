@@ -38,7 +38,7 @@ resources:
   icon: github-circle
   type: git  
   source: 
-    uri: https://github.com/bottkars/azs-concourse
+    uri: https://github.com/bottkars/azs-concourse.git
     branch: master
 
 jobs:
