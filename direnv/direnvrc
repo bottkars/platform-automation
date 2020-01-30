@@ -50,16 +50,17 @@ use_git-token(){
         export GIT_TOKEN=$(lpass show ${CONCOURSE_TARGET}/GIT_TOKEN --password)
 }
 use_minio-client(){
-        export minio_dir=.minio
-        export_alias mc "mc --config-dir ${minio_dir}" 
+        # export minio_dir=.minio
+        # mkdir -p ${minio_dir}
+        # export_alias mc "mc --config-dir ${minio_dir} \$@" 
+        echo "Getting minio settings from lpass"
         export AWS_DEFAULT_REGION=region
 	export AWS_ACCESS_KEY_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --username)
         export AWS_SECRET_ACCESS_KEY=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --password)
         AWS_ENDPOINT=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --url)
         PROTOCOL=$(echo ${AWS_ENDPOINT} | grep -Po  '(http|https):\/\/')
         DOMAIN=$(echo ${AWS_ENDPOINT} | grep -Po   '[a-zA-Z0-9_.\-:]*' | sed -n '2p')
-        # export MINIO_ENDPOIN
-        # export AWS_ENDPOINT=$(echo ${AWS_ENDPOINT} | grep -Po  '((http|https):\/\/[a-zA-Z0-9_.\-:]*)')
+        echo "exporting host ${PROTOCOL}${DOMAIN} as minio target ${CONCOURSE_TARGET}"
         export MC_HOST_${CONCOURSE_TARGET}="${PROTOCOL}${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@${DOMAIN}"
 }
 
