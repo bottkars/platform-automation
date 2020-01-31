@@ -60,7 +60,6 @@ use_minio-client(){
         AWS_ENDPOINT=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --url)
         PROTOCOL=$(echo ${AWS_ENDPOINT} | grep -Po  '(http|https):\/\/')
         DOMAIN=$(echo ${AWS_ENDPOINT} | grep -Po   '[a-zA-Z0-9_.\-:]*' | sed -n '2p')
-        AWS_ENDPOINT="${PROTOCOL}${DOMAIN}"
         echo "exporting host ${PROTOCOL}${DOMAIN} as minio target ${CONCOURSE_TARGET}"
         export MC_HOST_${CONCOURSE_TARGET}="${PROTOCOL}${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@${DOMAIN}"
 }
