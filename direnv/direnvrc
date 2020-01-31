@@ -9,6 +9,23 @@
 # need to be escaped in \"type-with-dash\"
 ######################
 
+######################
+#
+# colors section is mandatory
+######################
+
+export reset=`tput sgr0`
+export black=`tput setaf 0`
+export red=`tput setaf 1`
+export green=`tput setaf 2`
+export yellow=`tput setaf 3`
+export blue=`tput setaf 4`
+export magenta=`tput setaf 5`
+export cyan=`tput setaf 6`
+export white=`tput setaf 7`
+######################
+
+
 export_alias() {
   local name=$1
   shift
@@ -22,27 +39,27 @@ export_alias() {
 }
 
 use_bosh-env(){
-        echo "Reading BoSH Settings from lpass"
+        echo "${white}Reading BoSH Settings from lpass${reset}"
         eval "$(om bosh-env --ssh-private-key ${DEPLOYMENT}/env/opsman.key)"
 }
 use_om-env-client(){
-        echo "Reading Opsman Settings from lpass"
+        echo "${white}Reading Opsman Settings from lpass${reset}"
         export OM_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_TARGET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --url)
         export_alias om-version 'om curl --path /api/v0/info -s | jq -r .info.version'
-        echo "Running Opsman $(om-version)"
+        echo "${white}Running Opsman ${cyan}${OM_TARGET}${reset} version ${cyan}$(om-version)${reset}"
 } 
 use_om-env-user(){
-        echo "Reading Opsman Settings from lpass"
+        echo "${white}Reading Opsman Settings from lpass${reset}"
         export OM_SKIP_SSL_VALIDATION=true
 	export OM_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_PASSWORD=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_DECRYPTION_PASSPHRASE --password)
         export OM_TARGET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --url)
         export_alias om-version 'om curl --path /api/v0/info -s | jq -r .info.version'
-        echo "Running Opsman $(om-version)"
+        echo "${white}Running Opsman ${cyan}${OM_TARGET}${reset} version ${cyan}$(om-version)${reset}"
 }
 
 use_git-token(){
@@ -58,9 +75,10 @@ use_minio-client(){
 	export AWS_ACCESS_KEY_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --username)
         export AWS_SECRET_ACCESS_KEY=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --password)
         AWS_ENDPOINT=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --url)
-        PROTOCOL=$(echo ${AWS_ENDPOINT} | grep -Po  '(http|https):\/\/')
-        DOMAIN=$(echo ${AWS_ENDPOINT} | grep -Po   '[a-zA-Z0-9_.\-:]*' | sed -n '2p')
-        echo "exporting host ${PROTOCOL}${DOMAIN} as minio target ${CONCOURSE_TARGET}"
+        PROTOCOL=$(echo ${AWS_ENDPOINT} | egrep -o  '(http|https):\/\/')
+        DOMAIN=$(echo ${AWS_ENDPOINT#*//})
+        DOMAIN=$(echo ${DOMAIN%%\/*} )
+        echo "exporting host ${cyan} ${PROTOCOL}${DOMAIN}${reset} as minio target ${cyan}${CONCOURSE_TARGET}${reset}"
         export MC_HOST_${CONCOURSE_TARGET}="${PROTOCOL}${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@${DOMAIN}"
 }
 
@@ -147,7 +165,7 @@ use_azurestack-env(){
         CLOUDCHECK=$(az cloud list --query "[?name=='${CLOUDPROFILE}']" --output tsv)
         if [[ ! -z $CLOUDCHECK ]]
         then
-          echo "Cloud Profile ${CLOUDPROFILE} already exists, reconfiguring with new settings"
+          echo "Cloud Profile ${cyan}${CLOUDPROFILE}${reset} already exists, reconfiguring with new settings"
           az cloud update \
             --name ${CLOUDPROFILE} \
             --endpoint-resource-manager "${ENDPOINT_RESOURCE_MANAGER}" \
@@ -156,7 +174,7 @@ use_azurestack-env(){
             --profile ${PROFILE} \
             --endpoint-vm-image-alias-doc https://raw.githubusercontent.com/bottkars/Azurestack-Kickstart/master/admin/tools/imagedoc.json
         else
-        echo "Creating Cloud Profile ${CLOUDPROFILE}"
+        echo "Creating Cloud Profile ${cyan}${CLOUDPROFILE}${reset}"
             az cloud register \
             --name ${CLOUDPROFILE} \
             --endpoint-resource-manager "${ENDPOINT_RESOURCE_MANAGER}" \
@@ -188,10 +206,10 @@ use_pcf-env(){
         grep -A 0 pcf_system_domain | \
         cut -d ':' -f2 | \
         tr -d ' "')
-        echo $PAS_SYSTEM_DOMAIN
-        echo "Retrieving UAA Admin Credentials from ${OM_TARGET}"        
+        echo "${cyan}$PAS_SYSTEM_DOMAIN${reset}"
+        echo "Retrieving UAA Admin Credentials from ${cyan}${OM_TARGET}${reset}"        
 	export ADMIN_PASSWORD=$(om credentials --product-name cf --credential-reference .uaa.admin_credentials --credential-field password) 
-        echo "Performing login to api.${PAS_SYSTEM_DOMAIN}"
+        echo "Performing login to ${cyan}api.${PAS_SYSTEM_DOMAIN}${reset}"
         cf login -a api.${PAS_SYSTEM_DOMAIN} -u admin -p ${ADMIN_PASSWORD} -s system -o system --skip-ssl-validation
 }
 
@@ -203,10 +221,10 @@ use_pas4k8s-env(){
         grep -A 0 system_domain | \
         cut -d ':' -f2 | \
         tr -d ' "')
-        echo $PAS_SYSTEM_DOMAIN
-        echo "Retrieving CF Admin Credentials from ${OM_TARGET}"        
+        echo "${cyan}$PAS_SYSTEM_DOMAIN${reset}"
+        echo "Retrieving CF Admin Credentials from ${cyan}${OM_TARGET}"${reset}        
 	export ADMIN_PASSWORD=$(om credentials --product-name pas-for-kubernetes --credential-reference /.properties.cf_admin_password --credential-field secret) 
-        echo "Performing login to api.${PAS_SYSTEM_DOMAIN}"
+        echo "Performing login to ${cyan}api.${PAS_SYSTEM_DOMAIN}${reset}"
         cf login -a api.${PAS_SYSTEM_DOMAIN} -u admin -p ${ADMIN_PASSWORD} -o system --skip-ssl-validation
 }
 
@@ -217,7 +235,7 @@ use_pks-admin-env(){
         grep -A 0 pks_api_hostname | \
         cut -d ':' -f2 | \
         tr -d ' "')
-        echo "Retrieving PKS Admin Client Credentials from ${OM_TARGET}"
+        echo "Retrieving PKS Admin Client Credentials from ${cyan}${OM_TARGET}${reset}"
         export ADMIN_SECRET=$(om credentials --product-name pivotal-container-service --credential-reference .properties.uaa_admin_password --credential-field secret)
         pks login -a ${PKS_API_ENDPOINT} -k -u admin -p ${ADMIN_SECRET}
 }
@@ -232,7 +250,7 @@ use_vsphere-env(){
         export GOVC_URL=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_URL)
         export GOVC_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_USERNAME)
         export GOVC_PASSWORD=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_PASSWORD)
-        echo "testing connection to ${GOVC_URL}"
+        echo "testing connection to ${cyan}${GOVC_URL}${reset}"
         govc about
         # export GOVC_SUBSCRIPTION_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=SUBSCRIPTION_ID)
         export_alias vc-boshvms 'govc ls -json '${VM_FOLDER}' | jq -r '"'"'[
@@ -264,18 +282,18 @@ use_wsl_dns_fix(){
 	echo -n "Checking if we run on WSL: "
         if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
 	then
-		echo "true"	
+		echo "${green}true${reset}"	
 		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/6/pwsh.exe  -Command "Get-NetAdapter | where status -eq up | Get-DnsClientServerAddress -Family IPv4 |Sort-Object -Property InterfaceIndex -Descending | Select-Object ServerAddresses -ExpandProperty ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
-		echo "adjusting DNS Order with fix-dns"
+		echo "${magenta}adjusting DNS Order with fix-dns${reset}"
 		fix-dns
 	else
-		echo "not running WSL, no DNS Order Fix required"
+		echo "${green}not running WSL, no DNS Order Fix required${reset}"
 	fi	
 	}
 use_check_vpn(){
 	while  ! ping -c 1 -W 1 10.70.0.10 &>/dev/null
        	do
-		echo "VPN is down, Please connect first"
+		echo "${red}VPN is down, Please connect first${reset}"
 		sleep 10
 	done	
 }
