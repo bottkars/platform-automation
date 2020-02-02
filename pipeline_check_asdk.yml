@@ -10,7 +10,7 @@ resource_types:
   type: docker-image
   source:
     repository: starkandwayne/rss-resource
-    tag:        latest
+    tag: latest
 - name: twitter
   type: docker-image
   source:
@@ -35,11 +35,10 @@ resources:
     access_token: ((twitter.AccessToken))
     access_token_secret: ((twitter.AccessTokenSecret))   
 
-resources:
-  - name: azurestack-rss
-    type: rss
-    source:
-      url: https://support.microsoft.com/app/content/api/content/feeds/sap/en-us/32d322a8-acae-202d-e9a9-7371dccf381b/rss     
+- name: azurestack-rss
+  type: rss
+  source:
+    url: "https://support.microsoft.com/app/content/api/content/feeds/sap/en-us/32d322a8-acae-202d-e9a9-7371dccf381b/rss"
 
 - name: after-midnight
   type: time
@@ -48,7 +47,6 @@ resources:
     stop: ((after_midnight_end))
     interval: 24h
     location: Europe/Berlin 
-
 
 - name: platform-automation-image
   icon: amazon-drive
@@ -112,15 +110,16 @@ jobs:
         unpack: true      
     - get: azs-concourse
       tags: ((tags))
-    - put: tweet
-      tags: ((tags))
-      params:
-        media:
-        - azs-concourse/media/avatar.jpg
-        status: >
-          OMG! Apparently, I strongly believe that #AzureStackHub #ASDK ((asdk_version)) 
-          is soon available !! (indicated by my Harddrive LED))
-          from my custom @concourseci pipeline in my Homelab  
+#  - put: tweet
+#    tags: ((tags))
+#    params:
+#      media:
+#      - azs-concourse/media/avatar.jpg
+#      status: >
+#        OMG! Apparently, I strongly believe that #AzureStackHub #ASDK ((asdk_version)) 
+#        is soon available !! (indicated by my Harddrive LED))
+#        from my custom @concourseci pipeline in my Homelab  
+
   - task: download-asdk-release 
     tags: ((tags))
     image: platform-automation-image
@@ -131,18 +130,22 @@ jobs:
       <<: *s3_env
       bucket: ((buckets_asdk_release))
 
-name: check-rss    
+- name: check-rss    
   plan:
   - get: azurestack-rss
     trigger: true
-
   - task: alert
+    inputs: azurestack-rss
     config:
       platform: linux
       image_resource:
         type: docker-image
         source: {repository: ubuntu}
       run:
-        path: echo
-        args: ["I cant believe this works"]  
+        path: bash
+        args:
+        - "-c"
+        - |
+          echo "I cant believe this works"
+          ls -lisaR
 
