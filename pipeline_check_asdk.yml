@@ -6,6 +6,11 @@ s3_env: &s3_env
   secret_access_key: ((((foundation))/s3_secret_access_key))
 
 resource_types:
+- name: rss
+  type: docker-image
+  source:
+    repository: starkandwayne/rss-resource
+    tag:        latest
 - name: twitter
   type: docker-image
   source:
@@ -28,7 +33,13 @@ resources:
     consumer_key: ((twitter.ConsumerKey))
     consumer_secret: ((twitter.ConsumerSecret))
     access_token: ((twitter.AccessToken))
-    access_token_secret: ((twitter.AccessTokenSecret))    
+    access_token_secret: ((twitter.AccessTokenSecret))   
+
+resources:
+  - name: azurestack-rss
+    type: rss
+    source:
+      url: https://support.microsoft.com/app/content/api/content/feeds/sap/en-us/32d322a8-acae-202d-e9a9-7371dccf381b/rss     
 
 - name: after-midnight
   type: time
@@ -118,5 +129,20 @@ jobs:
       asdk: asdk-release-file
     params:
       <<: *s3_env
-      bucket: ((buckets_asdk_release))  
+      bucket: ((buckets_asdk_release))
+
+name: check-rss    
+  plan:
+  - get: azurestack-rss
+    trigger: true
+
+  - task: alert
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: ubuntu}
+      run:
+        path: echo
+        args: ["I cant believe this works"]  
 
