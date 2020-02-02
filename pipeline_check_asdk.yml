@@ -5,6 +5,11 @@ s3_env: &s3_env
   region_name: ((((foundation))/s3_region_name))
   secret_access_key: ((((foundation))/s3_secret_access_key))
 
+resource-types:
+- name: twitter
+  type: docker-image
+  source:
+    repository: ecsteam/twitter-concourse-resource
 
 resources:
 - name: asdk-release-file
@@ -15,6 +20,15 @@ resources:
     <<: *s3_env
     bucket: ((buckets_asdk_release))
     regexp: asdk-(((asdk_version)).*).yml
+
+- name: tweet
+  type: twitter
+  icon: twitter
+  source:
+    consumer_key: ((twitter.ConsumerKey))
+    consumer_secret: ((twitter.ConsumerSecret))
+    access_token: ((twitter.AccessToken))
+    access_token_secret: ((twitter.AccessTokenSecret))    
 
 - name: after-midnight
   type: time
@@ -65,8 +79,15 @@ jobs:
       try:    
         put: asdk-release-file
         params:
-          file: asdk-release-file/asdk-*.yml  
-
+          file: asdk-release-file/asdk-*.yml
+        on_success:
+          put: tweet
+          params:
+            media:
+            - azs-conourse/avatar.jpg
+            status: >
+              OMG! #AzureSTackHub ASDK $asdk_version is now live deployed
+              from my custom @concourseci pioeline in Homelab  
 
 - name: download-asdk
   plan:
