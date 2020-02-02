@@ -80,14 +80,14 @@ jobs:
         put: asdk-release-file
         params:
           file: asdk-release-file/asdk-*.yml
-#        on_success:
-#          put: tweet
-#          params:
-#            media:
-#            - azs-concourse/media/avatar.jpg
-#            status: >
-#              OMG! #AzureStackHub ASDK ((asdk_version)) is now live deployed
-#              from my custom @concourseci pipeline in our PeZ environment!  
+        on_success:
+          put: tweet
+          params:
+            media:
+            - azs-concourse/media/avatar.jpg
+            status: >
+              OMG! #AzureStackHub ASDK ((asdk_version)) is now live deployed
+              from my custom @concourseci pipeline in our PeZ environment!  
 
 - name: download-asdk
   plan:
@@ -107,8 +107,8 @@ jobs:
         media:
         - azs-concourse/media/avatar.jpg
         status: >
-          OMG! Apparently, I Stronly believe that #AzureStackHub #ASDK ((asdk_version)) 
-          is soon live  deployed !!
+          OMG! Apparently, I strongly believe that #AzureStackHub #ASDK ((asdk_version)) 
+          is soon available !! (indicated by my Harddrive LED))
           from my custom @concourseci pipeline in my Homelab  
   - task: download-asdk-release 
     tags: ((tags))
