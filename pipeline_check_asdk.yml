@@ -5,11 +5,11 @@ s3_env: &s3_env
   region_name: ((((foundation))/s3_region_name))
   secret_access_key: ((((foundation))/s3_secret_access_key))
 
-resource-types:
+resource_types:
 - name: twitter
   type: docker-image
   source:
-    repository: ecsteam/twitter-concourse-resource
+    repository: jghiloni/twitter-concourse-resource
 
 resources:
 - name: asdk-release-file
@@ -80,14 +80,14 @@ jobs:
         put: asdk-release-file
         params:
           file: asdk-release-file/asdk-*.yml
-        on_success:
-          put: tweet
-          params:
-            media:
-            - azs-conourse/avatar.jpg
-            status: >
-              OMG! #AzureSTackHub ASDK $asdk_version is now live deployed
-              from my custom @concourseci pioeline in Homelab  
+#        on_success:
+#          put: tweet
+#          params:
+#            media:
+#            - azs-concourse/media/avatar.jpg
+#            status: >
+#              OMG! #AzureStackHub ASDK ((asdk_version)) is now live deployed
+#              from my custom @concourseci pipeline in our PeZ environment!  
 
 - name: download-asdk
   plan:
@@ -101,21 +101,22 @@ jobs:
         unpack: true      
     - get: azs-concourse
       tags: ((tags))
+    - put: tweet
+      tags: ((tags))
+      params:
+        media:
+        - azs-concourse/media/avatar.jpg
+        status: >
+          OMG! Apparently, I Stronly believe that #AzureStackHub #ASDK ((asdk_version)) 
+          is soon live  deployed !!
+          from my custom @concourseci pipeline in my Homelab  
   - task: download-asdk-release 
     tags: ((tags))
     image: platform-automation-image
     file: azs-concourse/ci/tasks/download-asdk.yml
     input_mapping:
-  #     config: variable
       asdk: asdk-release-file
     params:
       <<: *s3_env
       bucket: ((buckets_asdk_release))  
-  #  output_mapping:
-  #    asdk-release: asdk-release-file  
-  #  params:
-  #    ASDK_VERSION: ((asdk_version))
-  #- put: asdk-release-file
-  #  params:
-  #   file: asdk-release-file/asdk-*.yml  
 
