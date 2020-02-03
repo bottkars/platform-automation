@@ -153,12 +153,12 @@ jobs:
 
 - name: deploy-asdk
   plan:
-   - get: azs-concourse
+  - get: azs-concourse
     tags: ((tags))
   - task: reboot-host
     tags: ((tags))
     params:
       ASDK_HOST: 192.168.1.193
-      ASDK_USERNAME: "Azuerstack\AzureStackAdmin"
-      ASDK_PASSWORD:  "Yeti2019!"
+      ASDK_USERNAME: "Azuerstack\\\\AzureStackAdmin"
+      ASDK_PASSWORD:  ((cloudadmin_password))
     file: azs-concourse/ci/tasks/deploy-asdk.yml
