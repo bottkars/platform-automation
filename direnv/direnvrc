@@ -66,6 +66,14 @@ use_git-token(){
 	export GIT_USERNAME=$(lpass show ${CONCOURSE_TARGET}/GIT_TOKEN --username)
         export GIT_TOKEN=$(lpass show ${CONCOURSE_TARGET}/GIT_TOKEN --password)
 }
+use_jumphost(){
+        echo "${white}Reading Jumpost config from lpass${reset}"
+        export JUMPHOST_NAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/jumphost --field=Hostname)
+        export JUMPHOST_PRIVATE_KEY=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/jumphost --field="Private Key" | awk '{gsub(/\\r\\n/,"\n")}1')
+        export_alias ssh-jumphost 'eval `ssh-agent`; ssh-add - <<< "$JUMPHOST_PRIVATE_KEY"; ssh $JUMPHOST_NAME;kill $SSH_AGENT_PID'
+        echo "${white}connect to Jumhost ${cyan}${JUMPHOST_NAME}${reset} with commands ${cyan}ssh-jumphost${reset}"
+
+}
 use_minio-client(){
         # export minio_dir=.minio
         # mkdir -p ${minio_dir}

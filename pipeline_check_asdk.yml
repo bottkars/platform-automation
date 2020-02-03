@@ -151,3 +151,14 @@ jobs:
           ls -lisaR
           printenv
 
+- name: deploy-asdk
+  plan:
+   - get: azs-concourse
+    tags: ((tags))
+  - task: reboot-host
+    tags: ((tags))
+    params:
+      ASDK_HOST: 192.168.1.193
+      ASDK_USERNAME: "Azuerstack\AzureStackAdmin"
+      ASDK_PASSWORD:  "Yeti2019!"
+    file: azs-concourse/ci/tasks/deploy-asdk.yml
