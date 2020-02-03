@@ -135,9 +135,9 @@ jobs:
   - get: azurestack-rss
     trigger: true
   - task: alert
-    inputs: 
-      name: azurestack-rss
     config:
+      inputs: 
+        - name: azurestack-rss
       platform: linux
       image_resource:
         type: docker-image
@@ -149,4 +149,5 @@ jobs:
         - |
           echo "I cant believe this works"
           ls -lisaR
+          printenv
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ueo pipefail
 VERSIONS_FILE="${HOME}/workspace/pcf-controlplane-azurestack/templates/versions.yml"
 function get_latest_release() {
 curl -u "${GIT_USERNAME}:${GIT_TOKEN}" --silent "https://api.github.com/repos/$1/tags"  | jq -r '[.[] | select(.name!="v1")] | .[0].name'
@@ -28,7 +29,7 @@ while IFS=", " read -r REPO RELEASE; do
         echo "Replacing ${RELEASE} version ${OLD_VERSION} with ${VERSION//v} in $VERSIONS_FILE"
         sed -i "/${RELEASE}/s/.*/${RELEASE}: \"${VERSION//v}\"/" $VERSIONS_FILE
     else
-        echo "Already at version ${VERSION//v}"
+        echo "$RELEASE already at version ${VERSION//v}"
     fi
 done <<< "${RELEASES}"    
 
@@ -37,8 +38,17 @@ RELEASE=stemcell-release
     OLD_VERSION=$(grep -A0 ${RELEASE} $VERSIONS_FILE | cut -d ':' -f2 | tr -d ' "')
     if [[ ${VERSION//ubuntu-xenial\/v} != ${OLD_VERSION} ]]
         then
-        echo "Replacing ${RELEASE} version ${OLD_VERSION} with \"${VERSION//ubuntu-xenial\/v}\" in $VERSIONS_FILE"
-        sed -i "/${RELEASE}/s/.*/${RELEASE}: \"${VERSION//ubuntu-xenial\/v}\"/" $VERSIONS_FILE
+        echo "testing if new stemcell exists from Stemcell Builder ${VERSION//ubuntu-xenial\/v}"
+        return=$(curl --write-out %{http_code} --silent --head --output /dev/null  "https://bosh.io/d/stemcells//bosh-stemcell-${VERSION//ubuntu-xenial\/v}-azure-hyperv-ubuntu-xenial-go_agent.tgz")
+        echo "getting return $return for Stemcell $VERSION"
+        if [[ $return != *"40"* ]]
+        then
+            echo "we found Stemcell $VERSION"
+            echo "Replacing ${RELEASE} version ${OLD_VERSION} with \"${VERSION//ubuntu-xenial\/v}\" in $VERSIONS_FILE"
+            sed -i "/${RELEASE}/s/.*/${RELEASE}: \"${VERSION//ubuntu-xenial\/v}\"/" $VERSIONS_FILE
+        else
+            echo "Stemcell for $VERSION not yet published"        
+        fi    
     else
         echo "Already at Stemcell version ${VERSION//ubuntu-xenial\/v}"
     fi
