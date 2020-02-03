@@ -135,7 +135,8 @@ jobs:
   - get: azurestack-rss
     trigger: true
   - task: alert
-    inputs: azurestack-rss
+    inputs: 
+      name: azurestack-rss
     config:
       platform: linux
       image_resource:
