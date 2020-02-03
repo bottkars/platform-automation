@@ -85,11 +85,15 @@ use_minio-client(){
 
 
 use_flyme(){
-        export_alias flyme "fly -t ${CONCOURSE_TARGET} \$@"
-
-        export_alias destroytilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme destroy-pipeline -p ${PIPELINE}_${TILE} ;done'
-        export_alias unpausetilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme unpause-pipeline -p ${PIPELINE}_${TILE} ;done'
-        export_alias settilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_deploy_${TILE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}_${TILE} ;done'
+        echo "${magenta}Exporting aliases"
+	export_alias flyme "fly -t ${CONCOURSE_TARGET} \$@"
+        echo "${cyan}fly -t ${CONCOURSE_TARGET} exported as ${magenta}flyme" 
+        export_alias destroytilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme destroy-pipeline -p ${PIPELINE}_${TILE} \$@;done'
+        echo "${cyan}fly -t ${CONCOURSE_TARGET} destroy-pipeline is exported as ${magenta}destroytilepipes" 
+        export_alias unpausetilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme unpause-pipeline -p ${PIPELINE}_${TILE} \$@;done'
+        echo "${cyan}fly -t ${CONCOURSE_TARGET} unpause-pipeline is exported as ${magenta}unpausetilepipes" 
+        export_alias settilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_deploy_${TILE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}_${TILE} \$@;done'
+        echo "${cyan}fly -t ${CONCOURSE_TARGET} set-pipeline is exported as ${magenta}settilepipes" 
 
         export_alias setbasepipe 'flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_${BASE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}'
         export_alias unpausebasepipe 'flyme unpause-pipeline -p ${PIPELINE}'
@@ -102,6 +106,7 @@ use_flyme(){
         export_alias pipeline-builds-failed "pipeline-builds --json --count 10 | jq -r '.[] | select(.status==\"failed\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
 
         export_alias expose-pipelines "flyme pipelines --json | jq -r '.[].name' | xargs -n 1 -I {} flyme expose-pipeline --pipeline {}"
+	echo ${reset}
 }
 
 use_azure-env(){
