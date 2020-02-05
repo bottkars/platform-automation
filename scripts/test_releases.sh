@@ -1,6 +1,8 @@
 #!/bin/bash
-set -ueo pipefail
+set -eu
+#set -ueo pipefail
 VERSIONS_FILE="${HOME}/workspace/pcf-controlplane-azurestack/templates/versions.yml"
+echo ${VERSIONS_FILE}
 function get_latest_release() {
 curl -u "${GIT_USERNAME}:${GIT_TOKEN}" --silent "https://api.github.com/repos/$1/tags"  | jq -r '[.[] | select(.name!="v1")] | .[0].name'
 }
@@ -25,16 +27,17 @@ while IFS=", " read -r REPO RELEASE; do
     OLD_VERSION=$(grep -A0 ${RELEASE} $VERSIONS_FILE | cut -d ':' -f2 | tr -d ' "')
     VERSION=$(get_latest_release "${REPO}/${RELEASE}")
     if [[ ${VERSION//v} != $OLD_VERSION ]]
-        then
+    then
         echo "Replacing ${RELEASE} version ${OLD_VERSION} with ${VERSION//v} in $VERSIONS_FILE"
-        sed -i "/${RELEASE}/s/.*/${RELEASE}: \"${VERSION//v}\"/" $VERSIONS_FILE
-    else
+        sed -i.bu "/${RELEASE}/s/.*/${RELEASE}: \"${VERSION//v}\"/" $VERSIONS_FILE 
+    else    
         echo "$RELEASE already at version ${VERSION//v}"
     fi
 done <<< "${RELEASES}"    
 
 VERSION=$(curl -u "${GIT_USERNAME}:${GIT_TOKEN}" --silent "https://api.github.com/repos/cloudfoundry/bosh-linux-stemcell-builder/tags"  | jq -r '[.[] | select(.name | contains("621."))] | .[0].name')
 RELEASE=stemcell-release
+    echo "Checking Stemcell Releases"
     OLD_VERSION=$(grep -A0 ${RELEASE} $VERSIONS_FILE | cut -d ':' -f2 | tr -d ' "')
     if [[ ${VERSION//ubuntu-xenial\/v} != ${OLD_VERSION} ]]
         then
