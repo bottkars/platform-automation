@@ -151,14 +151,27 @@ jobs:
           ls -lisaR
           printenv
 
-- name: deploy-asdk
+
+- name: prepare_asdk_host
   plan:
   - get: azs-concourse
-    tags: ((tags))
-  - task: reboot-host
-    tags: ((tags))
+  - get: asdk-release-file
+  - task: copy_asdk_files_from_s3
+    input_mapping:
+      asdk-release: asdk-release-file
     params:
-      ASDK_HOST: 192.168.1.193
-      ASDK_USERNAME: "Azuerstack\\AzureStackAdmin"
+      <<: *s3_env
+      bucket: ((buckets_asdk_release))
+      ASDK_HOST: ((asdk_host))
+      ASDK_USERNAME: "Azurestack\\AzureStackAdmin"
       ASDK_PASSWORD:  ((cloudadmin_password))
+    file: azs-concourse/ci/tasks/copy-asdk-worker-win-from-s3.yml
+  - task: copy_asdk_files_to_asdk_host
+    params:
+      ASDK_HOST: ((asdk_host))
+      ASDK_USERNAME: "Azurestack\\AzureStackAdmin"
+      ASDK_PASSWORD:  ((cloudadmin_password))
+      ASDK_FILE_DESTINATION: "E:\\ASDK"
     file: azs-concourse/ci/tasks/deploy-asdk.yml
+
+    

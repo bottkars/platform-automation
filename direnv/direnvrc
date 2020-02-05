@@ -74,6 +74,7 @@ use_jumphost(){
         echo "${white}connect to Jumhost ${cyan}${JUMPHOST_NAME}${reset} with commands ${cyan}ssh-jumphost${reset}"
 
 }
+
 use_minio-client(){
         # export minio_dir=.minio
         # mkdir -p ${minio_dir}
@@ -91,8 +92,11 @@ use_minio-client(){
         export MC_HOST_${CONCOURSE_TARGET}="${PROTOCOL}${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@${DOMAIN}"
 }
 
+use_bosh-aliases(){
+        export_alias bosh-releases "bosh deployments --json | jq -r '.Tables[].Rows[].release_s'"
+}
 
-use_flyme(){
+use_fly-aliases(){
         echo "${magenta}Exporting aliases"
 	export_alias flyme "fly -t ${CONCOURSE_TARGET} \$@"
         echo "${cyan}fly -t ${CONCOURSE_TARGET} exported as ${magenta}flyme" 
