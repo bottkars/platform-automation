@@ -10,7 +10,6 @@
 ######################
 
 ######################
-#
 # colors section is mandatory
 ######################
 
@@ -106,6 +105,9 @@ use_fly-aliases(){
         echo "${cyan}fly -t ${CONCOURSE_TARGET} unpause-pipeline is exported as ${magenta}unpausetilepipes" 
         export_alias settilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_deploy_${TILE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}_${TILE} \$@;done'
         echo "${cyan}fly -t ${CONCOURSE_TARGET} set-pipeline is exported as ${magenta}settilepipes" 
+
+        export_alias triggertiledownloads 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("get") ) | .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}_${TILE}/{} \$@;done'
+
 
         export_alias setbasepipe 'flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_${BASE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}'
         export_alias unpausebasepipe 'flyme unpause-pipeline -p ${PIPELINE}'
