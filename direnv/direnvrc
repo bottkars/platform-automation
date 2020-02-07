@@ -43,6 +43,7 @@ use_bosh-env(){
 }
 use_om-env-client(){
         echo "${white}Reading Opsman Settings from lpass${reset}"
+        export OM_SKIP_SSL_VALIDATION=true
         export OM_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
         export OM_DECRYPTION_PASSPHRASE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
