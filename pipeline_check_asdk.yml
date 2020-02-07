@@ -152,7 +152,7 @@ jobs:
           printenv
 
 
-- name: prepare_asdk_host
+- name: prepare_asdk_files
   plan:
   - get: azs-concourse
   - get: asdk-release-file
@@ -163,15 +163,28 @@ jobs:
       <<: *s3_env
       bucket: ((buckets_asdk_release))
       ASDK_HOST: ((asdk_host))
-      ASDK_USERNAME: "Azurestack\\AzureStackAdmin"
+      ASDK_USERNAME: ((cloudadmin_username))
       ASDK_PASSWORD:  ((cloudadmin_password))
     file: azs-concourse/ci/tasks/copy-asdk-worker-win-from-s3.yml
   - task: copy_asdk_files_to_asdk_host
     params:
       ASDK_HOST: ((asdk_host))
-      ASDK_USERNAME: "Azurestack\\AzureStackAdmin"
+      ASDK_USERNAME: ((cloudadmin_username)))
       ASDK_PASSWORD:  ((cloudadmin_password))
       ASDK_FILE_DESTINATION: "E:\\ASDK"
-    file: azs-concourse/ci/tasks/deploy-asdk.yml
+    file: azs-concourse/ci/tasks/copy-asdk-files-to-asdk-host.yml
+
+
+- name: create_cloudbuilder
+  plan:
+  - get: azs-concourse
+  - task: dehydrate_cloudbuilder  
+    params:
+      ASDK_HOST: ((asdk_host))
+      ASDK_USERNAME: ((cloudadmin_username))
+      ASDK_PASSWORD:  ((cloudadmin_password))
+      ASDK_FILE_DESTINATION: "E:\\ASDK"
+    file: azs-concourse/ci/tasks/dehydrate_cloudbuilder.yml
+  
 
     
