@@ -337,8 +337,8 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((pcf_domain_cert.certificate))
-      KEY_PEM: ((pcf_domain_cert.private_key))
+      CERTIFICATE_PEM: ((((foundation))/pks_cert.certificate))
+      KEY_PEM: ((((foundation))/pks_cert.private_key))
 
 ####
 - name: get-platform-automation
