@@ -1147,7 +1147,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-flannel.yml
+      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service((overlay_type)).yml
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       SKIP_MISSING: true    
 - name: test-interpolate-harbor-container-registry
