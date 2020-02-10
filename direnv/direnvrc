@@ -318,4 +318,11 @@ use_check_vpn(){
 		sleep 10
 	done	
 }
+use_control_credhub_alias(){
+        export_alias connect-control-credhub 'export grep "external_url:" plane/vars/bosh-vars.yml | cut -d ':' -f3 | tr -d '"'"' "//'"'"' \
+        credhub get --name="/p-bosh/control-plane/credhub_admin_client_password" -j | jq -r '"'"'.value'"'"'
+'
+}
+
+
 export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
