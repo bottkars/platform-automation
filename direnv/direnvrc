@@ -318,9 +318,20 @@ use_check_vpn(){
 		sleep 10
 	done	
 }
-use_control_credhub_alias(){
-        export_alias connect-control-credhub 'export grep "external_url:" plane/vars/bosh-vars.yml | cut -d ':' -f3 | tr -d '"'"' "//'"'"' \
-        credhub get --name="/p-bosh/control-plane/credhub_admin_client_password" -j | jq -r '"'"'.value'"'"'
+use_control_credhub(){
+
+export CREDHUB_CONTROL_SERVER=$(grep "external_url:" plane/vars/bosh-vars.yml | cut -d ':' -f3 | tr -d ' "//'):8844
+export CREDHUB_CONTROL_SECRET=$(credhub get --name="/p-bosh/control-plane/credhub_admin_client_password" -j | jq -r '.value')
+export CREDHUB_CONTROL_CLIENT=credhub_admin_client
+export CREDHUB_CONTROL_CA_CERT=$(credhub get -n /p-bosh/control-plane/control-plane-tls -k certificate)
+export_alias connect-control-credhub '
+credhub login --server="${CREDHUB_CONTROL_SERVER}" --client-name="${CREDHUB_CONTROL_CLIENT}" --client-secret="${CREDHUB_CONTROL_SECRET}" --ca-cert="${CREDHUB_CONTROL_CA_CERT}"
+credhub api --server="${CREDHUB_CONTROL_SERVER}"  --ca-cert="${CREDHUB_CONTROL_CA_CERT}"
+unset CREDHUB_CLIENT
+unset CREDHUB_CA_CERT
+unset CREDHUB_PROXY
+unset CREDHUB_SERVER
+unset CREDHUB_SECRET
 '
 }
 
