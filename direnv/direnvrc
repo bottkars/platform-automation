@@ -327,12 +327,12 @@ export CREDHUB_CONTROL_CA_CERT=$(credhub get -n /p-bosh/control-plane/control-pl
 export_alias connect-control-credhub '
 credhub login --server="${CREDHUB_CONTROL_SERVER}" --client-name="${CREDHUB_CONTROL_CLIENT}" --client-secret="${CREDHUB_CONTROL_SECRET}" --ca-cert="${CREDHUB_CONTROL_CA_CERT}"
 credhub api --server="${CREDHUB_CONTROL_SERVER}"  --ca-cert="${CREDHUB_CONTROL_CA_CERT}"
+'
 unset CREDHUB_CLIENT
 unset CREDHUB_CA_CERT
 unset CREDHUB_PROXY
 unset CREDHUB_SERVER
 unset CREDHUB_SECRET
-'
 }
 
 
