@@ -306,7 +306,9 @@ use_wsl_dns_fix(){
 		echo "${green}true${reset}"	
 		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/6/pwsh.exe  -Command "Get-NetAdapter | where status -eq up | Get-DnsClientServerAddress -Family IPv4 |Sort-Object -Property InterfaceIndex -Descending | Select-Object ServerAddresses -ExpandProperty ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
 		echo "${magenta}adjusting DNS Order with fix-dns${reset}"
+                export WSL=true
 		fix-dns
+
 	else
 		echo "${green}not running WSL, no DNS Order Fix required${reset}"
 	fi	
@@ -318,6 +320,18 @@ use_check_vpn(){
 		sleep 10
 	done	
 }
+
+use_check_vpn1(){
+        target=$1
+        echo "Testing connection to ${magenta}$target${reset}"
+        while  ! ping -c 1 -W 1 $target &>/dev/null
+        do
+                echo "${red}VPN is down, Please connect first${reset}"
+                sleep 10
+        done
+        echo "Successfully connected to ${green}${target}${reset}"
+}
+
 use_control_credhub(){
 
 export CREDHUB_CONTROL_SERVER=$(grep "external_url:" plane/vars/bosh-vars.yml | cut -d ':' -f3 | tr -d ' "//'):8844
