@@ -346,7 +346,7 @@ jobs:
     params:
       CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
       SOURCE: s3
-    input_mapping:
+    uut_mapping:
       config: interpolated-product-downloads
     output_mapping:
       downloaded-product: p-compliance-scanner-product
