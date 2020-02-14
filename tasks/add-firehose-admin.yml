@@ -28,7 +28,7 @@ run:
   - "-c"
   - |
     cat /var/version && echo ""
-    set -eux
+    set -eu
     # receive client admin
     ADMIN_CLIENT_SECRET=$(om --env env/${ENV_FILE} credentials --product-name cf \
      --credential-reference .uaa.admin_client_credentials \
@@ -82,7 +82,7 @@ run:
     -H "Accept: application/json" \
     -H "Authorization: Bearer ${TOKEN}" | jp.py "resources[?displayName==${QUERY_GROUP_NAME}].id | [0]")
 
-    echo $GROUP_ID
+    echo "Group ID $GROUP_ID"
 
     GROUP_ID=$(echo "${GROUP_ID//\"}")
 
@@ -94,7 +94,6 @@ run:
     }
     EOF
     )
-    echo $DATA     
     echo "-->adding ${FIREHOSE_USERNAME} to ${GROUP_ID} $GROUP_NAME"
     GROUP_NAME="'${GROUP_NAME}'"
 
