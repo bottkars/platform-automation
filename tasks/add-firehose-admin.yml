@@ -75,9 +75,14 @@ run:
     do
     echo
     echo "Getting ID for $GROUP_NAME"
+    QUERY_GROUP_NAME="'${GROUP_NAME}'"
+
+
     GROUP_ID=$(curl -k -s "https://${UAA_ENDPOINT}:443/Groups?scheme=openid&filter=displayName+eq+%${GROUP_NAME}" -X GET \
     -H "Accept: application/json" \
-    -H "Authorization: Bearer ${TOKEN}" | jp.py "resources[?displayName==${GROUP_NAME}].id | [0]")
+    -H "Authorization: Bearer ${TOKEN}" | jp.py "resources[?displayName==${QUERY_GROUP_NAME}].id | [0]")
+
+
 
     GROUP_ID=$(echo "${GROUP_ID//\"}")
 

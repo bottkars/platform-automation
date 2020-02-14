@@ -1339,7 +1339,7 @@ groups:
   jobs:
     - install-opsman
     - upgrade-opsman
-    - upload-and-stage-pivotal-container-service 
+    - upload-and-stage- container-service 
     - upload-and-stage-harbor-container-registry   
     - get-pivotal-container-service
     - get-harbor-container-registry
