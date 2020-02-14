@@ -28,7 +28,7 @@ run:
   - "-c"
   - |
     cat /var/version && echo ""
-    set -eu
+    set -eux
     # receive client admin
     ADMIN_CLIENT_SECRET=$(om --env env/${ENV_FILE} credentials --product-name cf \
      --credential-reference .uaa.admin_client_credentials \
@@ -77,12 +77,12 @@ run:
     echo "Getting ID for $GROUP_NAME"
     QUERY_GROUP_NAME="'${GROUP_NAME}'"
 
-
+    echo "Querying ${QUERY_GROUP_NAME}"
     GROUP_ID=$(curl -k -s "https://${UAA_ENDPOINT}:443/Groups?scheme=openid&filter=displayName+eq+%${GROUP_NAME}" -X GET \
     -H "Accept: application/json" \
     -H "Authorization: Bearer ${TOKEN}" | jp.py "resources[?displayName==${QUERY_GROUP_NAME}].id | [0]")
 
-
+    echo $GROUP_ID
 
     GROUP_ID=$(echo "${GROUP_ID//\"}")
 
@@ -94,7 +94,7 @@ run:
     }
     EOF
     )
-    echo      
+    echo $DATA     
     echo "-->adding ${FIREHOSE_USERNAME} to ${GROUP_ID} $GROUP_NAME"
     GROUP_NAME="'${GROUP_NAME}'"
 
