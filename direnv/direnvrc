@@ -38,7 +38,7 @@ export_alias() {
 }
 
 use_bosh-env(){
-        echo "${white}Reading BoSH Settings from lpass${reset}"
+        echo "${white}Creating  BoSH environment for ${DEPLOYMENT}${reset}"
         eval "$(om bosh-env --ssh-private-key ${DEPLOYMENT}/env/opsman.key)"
 }
 use_om-env-client(){
@@ -97,9 +97,9 @@ use_bosh-aliases(){
 }
 
 use_fly-aliases(){
-        echo "checking connection to concourse target ${green} ${CONCOURSE_TARGET} ${reset}"
+        echo "checking connection to concourse target ${green}${CONCOURSE_TARGET}${reset}"
 	export_alias flyme "fly -t ${CONCOURSE_TARGET} \$@"        
-        if [[ ! $(flyme userinfo 2>&1) ]]
+        if [[ ! $(flyme status) ]]
         then
                 echo ${yellow}
                 flyme login -k
@@ -117,6 +117,8 @@ use_fly-aliases(){
 
         export_alias triggertiledownloads 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("get") ) | .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}_${TILE}/{} \$@;done'
         export_alias triggerfailedbuilds 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | select(.finished_build.status | contains("failed") )| .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}_${TILE}/{} \$@;done'
+        export_alias pipeline-pause-build 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme pause-job --job ${PIPELINE}_${TILE}/{} \$@;done'
+        export_alias pipeline-unpause-build 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme unpause-job --job ${PIPELINE}_${TILE}/{} \$@;done'
 
         export_alias setbasepipe 'flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_${BASE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}'
         export_alias unpausebasepipe 'flyme unpause-pipeline -p ${PIPELINE}'
@@ -125,10 +127,10 @@ use_fly-aliases(){
         export_alias pipeline-jobs "flyme pipelines --json | jq  -r '.[] | select(.name|test('env.PIPELINE')) | .name' |  xargs -n 1 -I {} flyme jobs --pipeline {} \$@"
         export_alias pipeline-builds "flyme pipelines --json | jq  -r '.[] | select(.name|test('env.PIPELINE')) | .name' |  xargs -n 1 -I {} flyme builds --count=1 --pipeline {} \$@"
         export_alias pipeline-builds-succeeded "pipeline-builds --json --count 1 | jq -r '.[] | select(.status==\"succeeded\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
-        export_alias pipeline-builds-started "pipeline-builds --json --count 10 | jq -r '.[] | select(.status==\"started\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
-        export_alias pipeline-builds-failed "pipeline-builds --json --count 10 | jq -r '.[] | select(.status==\"failed\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
-        export_alias pipeline-builds-started "pipeline-builds --json --count 10 | jq -r '.[] | select(.status==\"started\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
-        export_alias pipeline-builds-pending "pipeline-builds --json --count 10 | jq -r '.[] | select(.status==\"pending\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
+        export_alias pipeline-builds-started "pipeline-builds --json --count 1 | jq -r '.[] | select(.status==\"started\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
+        export_alias pipeline-builds-failed "pipeline-builds --json --count 1 | jq -r '.[] | select(.status==\"failed\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
+        export_alias pipeline-builds-started "pipeline-builds --json --count 1 | jq -r '.[] | select(.status==\"started\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
+        export_alias pipeline-builds-pending "pipeline-builds --json --count 1 | jq -r '.[] | select(.status==\"pending\")| [.id,.job_name,.pipeline_name,.status] | @tsv' \$@"
 
         export_alias expose-pipelines "flyme pipelines --json | jq -r '.[].name' | xargs -n 1 -I {} flyme expose-pipeline --pipeline {}"
 	echo ${reset}
