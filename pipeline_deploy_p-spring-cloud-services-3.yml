@@ -354,6 +354,7 @@ jobs:
       downloaded-stemcell: p-spring-cloud-services-3-stemcell
 
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))    
     params:        
       claim: base 

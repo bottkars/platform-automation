@@ -351,6 +351,7 @@ jobs:
       downloaded-product: pas-for-kubernetes-product
       downloaded-stemcell: pas-for-kubernetes-stemcell
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))    
     params:        
       claim: base       

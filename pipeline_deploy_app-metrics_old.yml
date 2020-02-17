@@ -353,6 +353,7 @@ jobs:
       downloaded-stemcell: app-metrics-stemcell
 
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))    
     params:        
       claim: base 

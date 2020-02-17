@@ -351,6 +351,7 @@ jobs:
       downloaded-stemcell: wavefront-nozzle-stemcell
 
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))    
     params:        
       claim: base 

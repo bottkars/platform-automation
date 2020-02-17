@@ -355,6 +355,7 @@ jobs:
       downloaded-stemcell: p-rabbitmq-stemcell
 
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))    
     params:        
       claim: base 
