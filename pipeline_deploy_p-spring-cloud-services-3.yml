@@ -282,6 +282,7 @@ jobs:
     output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
     on_failure:
       put: download-lock
+      attempts: 5
       tags: ((tags))
       params:
         release: download-lock
@@ -295,6 +296,7 @@ jobs:
       params:
         file: p-spring-cloud-services-3-stemcell/*.tgz
   - put: download-lock
+    attempts: 5
     tags: ((tags))
     params:
       release: download-lock     
@@ -490,8 +492,10 @@ jobs:
     params:
       file: installation/installation*.zip
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))
-    params: {release: pipeline-lock}  
+    params:
+      release: pipeline-lock
 
 
 

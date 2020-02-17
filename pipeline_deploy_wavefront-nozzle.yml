@@ -280,6 +280,7 @@ jobs:
     output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
     on_failure:
       put: download-lock
+      attempts: 5
       tags: ((tags))
       params:
         release: download-lock
@@ -293,6 +294,7 @@ jobs:
       params:
         file: wavefront-nozzle-stemcell/*.tgz
   - put: download-lock
+    attempts: 5
     tags: ((tags))
     params:
       release: download-lock
@@ -505,6 +507,7 @@ jobs:
     params:
       file: installation/installation*.zip
   - put: pipeline-lock
-    tags: ((tags))
-    params: {release: pipeline-lock}
     attempts: 5
+    tags: ((tags))
+    params:
+      release: pipeline-lock

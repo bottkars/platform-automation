@@ -283,6 +283,7 @@ jobs:
     output_mapping: {downloaded-stemcell: app-metrics-stemcell}
     on_failure:
       put: download-lock
+      attempts: 5
       tags: ((tags))
       params:
         release: download-lock
@@ -296,6 +297,7 @@ jobs:
       params:
         file: app-metrics-stemcell/*.tgz
   - put: download-lock
+    attempts: 5
     tags: ((tags))
     params:
       release: download-lock      
@@ -491,8 +493,10 @@ jobs:
     params:
       file: installation/installation*.zip
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))
-    params: {release: pipeline-lock}  
+    params:
+      release: pipeline-lock
 
 
 

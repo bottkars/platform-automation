@@ -295,6 +295,7 @@ jobs:
       params:
         file: wavefront-nozzle-stemcell/*.tgz
   - put: download-lock
+    attempts: 5
     tags: ((tags))
     params:
       release: download-lock
@@ -530,8 +531,10 @@ jobs:
     params:
       file: installation/installation*.zip
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))
-    params: {release: pipeline-lock}  
+    params:
+      release: pipeline-lock
 
 
 

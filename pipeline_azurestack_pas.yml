@@ -550,9 +550,10 @@ jobs:
     params:
       file: installation/installation*.zip
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))
-    params: {release: pipeline-lock}
- 
+    params:
+      release: pipeline-lock 
 - name: get-opsman-pivnet
   on_failure:
     put: notify
@@ -649,9 +650,10 @@ jobs:
     params:
       file: installation/installation*.zip
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))
-    params: {release: pipeline-lock}
-- name: upgrade-opsman
+    params:
+      release: pipeline-lock- name: upgrade-opsman
   serial: true
   serial_groups: [ install, get-products, upgrade-opsman, opsman, apply ]
   on_failure:
@@ -759,8 +761,10 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml    
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))
-    params: {release: pipeline-lock}  
+    params:
+      release: pipeline-lock
           
 
 - name: get-platform-automation
@@ -792,6 +796,7 @@ jobs:
       params:
         file: platform-automation-pivnet/*image*.tgz
   - put: download-lock
+    attempts: 5
     tags: ((tags))
     params:
       release: download-lock

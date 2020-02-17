@@ -268,6 +268,7 @@ jobs:
   - get: pipeline-lock
     tags: ((tags)) 
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))
     params: {release: pipeline-lock}      
 
@@ -276,6 +277,7 @@ jobs:
   - get: download-lock
     tags: ((tags)) 
   - put: download-lock
+    attempts: 5
     tags: ((tags))
     params: {release: download-lock}       
 - name: reboot-control
@@ -394,22 +396,22 @@ jobs:
       SSH_BANNER: ((director.ssh_banner))
       UI_BANNER: ((director.ui_banner))
 ##
-name: configure-wavefront-user
-  - task: configure-wavefront-user     
-    tags: ((tags))
-    image: platform-automation-image
-    file: additional-tasks/tasks/add-firehose-admin.yml
-    input_mapping:
-      env: variable
-    params:
-      FIREHOSE_FAMILY_NAME: wavefront
-      FIREHOSE_GIVEN_NAME: nozzle
-      FIREHOSE_USERNAME: wavefront-nozzle
-      FIREHOSE_PASSWORD: Thyph00n#
-      FIREHOSE_USER_EMAIL: email@na
-      UAA_ENDPOINT: ((pas-uaa-endpoint))
-      GROUP_NAMES: "doppler.firehose cloud_controller.admin_read_only"    
-      ENV_FILE: ((foundation))/env/env.yml
+#name: configure-wavefront-user
+#  - task: configure-wavefront-user     
+#    tags: ((tags))
+#    image: platform-automation-image
+#    file: additional-tasks/tasks/add-firehose-admin.yml
+#    input_mapping:
+#      env: variable
+#    params:
+#      FIREHOSE_FAMILY_NAME: wavefront
+#      FIREHOSE_GIVEN_NAME: nozzle
+#      FIREHOSE_USERNAME: wavefront-nozzle
+#      FIREHOSE_PASSWORD: Thyph00n#
+#      FIREHOSE_USER_EMAIL: email@na
+#      UAA_ENDPOINT: ((pas-uaa-endpoint))
+#      GROUP_NAMES: "doppler.firehose cloud_controller.admin_read_only"    
+#      ENV_FILE: ((foundation))/env/env.yml
       
 - name: delete-installation
   serial: true

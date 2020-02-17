@@ -222,8 +222,10 @@ jobs:
   - get: pipeline-lock
     tags: ((tags)) 
   - put: pipeline-lock
+    attempts: 5
     tags: ((tags))
-    params: {release: pipeline-lock}      
+    params:
+      release: pipeline-lock    
 
 - name: clear-download-lock
   plan:
