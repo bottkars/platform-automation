@@ -505,6 +505,6 @@ jobs:
     params:
       file: installation/installation*.zip
   - put: pipeline-lock
-    attempts: 5
     tags: ((tags))
     params: {release: pipeline-lock}
+    attempts: 5
