@@ -202,6 +202,10 @@ resources:
     uri: ((variable-repo))
     private_key: ((variable-deploy-key.private_key))
     branch: master
+    paths:
+    - ((foundation))/vars/pivotal-container-service-vars.yml
+    - ((foundation))/vars/director-vars.yml
+    - ((foundation))/vars/harbor-container-registry-vars.yml
 
 ## product resources
 - name: opsman-product
@@ -601,6 +605,7 @@ jobs:
         tags: ((tags))
       - get: variable
         tags: ((tags))
+        trigger: true
       - get: pivotal-container-service-product
         tags: ((tags))
         trigger: true
@@ -698,6 +703,7 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
+      trigger: true
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads       
   - task: download-harbor-container-registry
