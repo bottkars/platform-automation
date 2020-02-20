@@ -311,6 +311,16 @@ pks_api:
 sys_domain: ${PAS_SYSTEM_DOMAIN}
 EOF
 }
+use_wsl_docker()
+	echo -n "Checking if we run on WSL: "
+        if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
+	then
+        echo "exporting DOCKER_HOST=tcp://localhost:2375"
+        export DOCKER_HOST=tcp://localhost:2375
+	else
+		echo "${green}not running WSL, no need to export Docker Host${reset}"
+	fi	
+	}        
 use_wsl_dns_fix(){
 	echo -n "Checking if we run on WSL: "
         if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
