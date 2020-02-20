@@ -311,7 +311,7 @@ pks_api:
 sys_domain: ${PAS_SYSTEM_DOMAIN}
 EOF
 }
-use_wsl_docker()
+use_wsl_docker(){
 	echo -n "Checking if we run on WSL: "
         if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
 	then
