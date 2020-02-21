@@ -90,7 +90,7 @@ use_minio-client(){
         export AWS_ENDPOINT="${PROTOCOL}${DOMAIN}"
         echo "exporting host ${cyan} ${PROTOCOL}${DOMAIN}${reset} as minio target ${cyan}${CONCOURSE_TARGET}${reset}"
         export MC_HOST_${CONCOURSE_TARGET}="${PROTOCOL}${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@${DOMAIN}"
-        export_alias awss3 "aws --endpoint-url ${AWS_ENDPOINT} \$@"
+        export_alias awss3 "aws --endpoint-url ${AWS_ENDPOINT} s3 \$@"
 }
 
 use_bosh-aliases(){
