@@ -248,7 +248,7 @@ jobs:
 
     - task: configure-authentication
       image: platform-automation-image
-      file: platform-automation-tasks/tasks/configure-saml-authentication.yml
+      file: platform-automation-tasks/tasks/configure-((auth_type))authentication.yml
       attempts: 10
       input_mapping:
         env: variable
@@ -275,7 +275,19 @@ jobs:
       params:
         VARS_FILES: vars/((foundation))/vars/director-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director.yml        
+        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director.yml
+    - task: configure-extensions
+      tags: ((tags))
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/configure-director.yml 
+      input_mapping:
+        config: interpolated-product-templates
+        env: variable
+        vars: variable
+      params:
+        VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+        ENV_FILE: ((foundation))/env/env.yml
+        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions-azure.yml                
     - task: apply-director-changes
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-director-changes.yml
