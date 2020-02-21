@@ -168,7 +168,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: \[ops-manager,(2.8.*)\].*.yml
+    regexp: \[ops-manager,(((pas_version)).*)\].*.yml
 jobs:
 - name: get-platform-automation
   plan:
