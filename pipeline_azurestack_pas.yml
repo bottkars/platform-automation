@@ -527,7 +527,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions-azurestack.yml
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
