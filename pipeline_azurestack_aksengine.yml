@@ -189,13 +189,17 @@ resources:
 - name: aks-engine
   tags: ((tags))
   icon: github-circle
-  type: git
+  type: gh-release
   check_every: 10m  
   source: 
-    uri: https://github.com/Azure/aks-engine
+    owner: Azure
+    repository: aks-engine
+    # uri: https://github.com/Azure/aks-engine
     # private_key: ((template-deploy-key.private_key))
-    branch: master
-    tag_filter: v0.43.[0-9]
+    # branch: master
+    tag_filter: "v0.43.(.*)"
+    globs: aks-engine-v(*.*)-linux-amd64.tar.gz
+
 
 
 
