@@ -254,7 +254,7 @@ jobs:
       tags: ((tags))
       params:
        globs:
-       - aks-engine-v*-linux-amd64.tar.gz
+       - aks-engine-*-linux-amd64.tar.gz
     - get: azs-concourse
       tags: ((tags))
     - get: platform-automation-image
