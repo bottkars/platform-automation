@@ -254,7 +254,6 @@ jobs:
       tags: ((tags))
       params:
        globs:
-       - aks-engine-(.*)-linux-amd64.tar.gz
        - aks-engine-v*-linux-amd64.tar.gz
     - get: azs-concourse
       tags: ((tags))
@@ -270,6 +269,7 @@ jobs:
     image: platform-automation-image
     input_mapping:
       config: variable
+      aks-engine: aks-engine-release
     params:
       <<: *azure_env
 
