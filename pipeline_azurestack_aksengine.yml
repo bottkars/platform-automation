@@ -186,10 +186,10 @@ resources:
     regexp: platform-automation-image-(.*).tgz
 
 
-- name: aks-engine
+- name: aks-engine-release
   tags: ((tags))
   icon: github-circle
-  type: gh-release
+  type: github-release
   check_every: 10m  
   source: 
     owner: Azure
@@ -198,7 +198,8 @@ resources:
     # private_key: ((template-deploy-key.private_key))
     # branch: master
     tag_filter: "v0.43.(.*)"
-    globs: aks-engine-v(*.*)-linux-amd64.tar.gz
+    
+
 
 
 
@@ -224,6 +225,14 @@ resources:
 #    pool: download-lock
 #    private_key: ((((foundation))/variable-deploy-key.private_key))
 #    retry_delay: 300s
+- name: variable
+  tags: ((tags))
+  icon: github-circle
+  type: git  
+  source:
+    uri: ((variable-repo))
+    private_key: ((((foundation))/variable-deploy-key.private_key))
+    branch: master
 
 - name: azs-concourse
   tags: ((tags))
@@ -241,28 +250,28 @@ jobs:
   - in_parallel:
     - get: additional-tasks
       tags: ((tags))
-    - get: aks-engine
+    - get: aks-engine-release
       tags: ((tags))
+      params:
+       globs:
+       - aks-engine-(.*)-linux-amd64.tar.gz
+       - aks-engine-v*-linux-amd64.tar.gz
     - get: azs-concourse
       tags: ((tags))
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
-#    - get: variable
-#      tags: ((tags))
+    - get: variable
+      tags: ((tags))
   - task: configure-aks-engine
     tags: ((tags))
-    file: azs-concourse/ci/tasks/test-task.yml  
+    file: azs-concourse/ci/tasks/deploy-aks.yml  
     image: platform-automation-image
-#    input_mapping:
-#      config: variable
+    input_mapping:
+      config: variable
     params:
       <<: *azure_env
-      ACCOUNT_NAME: ((image_account_name))
-      ACCOUNT_KEY: ((storage_account_key))
-      DESTINATION_CONTAINER: ((destination_container))
-      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
 
 
 
