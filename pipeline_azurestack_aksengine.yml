@@ -251,7 +251,7 @@ jobs:
   - put: installation
     tags: ((tags))
     params:
-      file: aks-installation/installation*.zip
+      file: aks-installation/installation*.tar.gz
   - put: apimodel
     tags: ((tags))
     params:

@@ -99,11 +99,15 @@ use_bosh-aliases(){
 
 use_fly-aliases(){
         echo "checking connection to concourse target ${green}${CONCOURSE_TARGET}${reset}"
-	export_alias flyme "fly -t ${CONCOURSE_TARGET} \$@"        
+	if [[ -z ${TEAM+x} ]]
+        then
+        export TEAM=main
+        fi   
+        export_alias flyme "fly -t ${CONCOURSE_TARGET} \$@"     
         if [[ ! $(flyme status) ]]
         then
                 echo ${yellow}
-                flyme login -k
+                flyme login --team-name ${TEAM} -k 
                 echo ${reset}
         fi 
         echo "${magenta}Exporting aliases"
