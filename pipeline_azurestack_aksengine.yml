@@ -97,12 +97,12 @@ resources:
 #    interval: 24h
 
 
-#- name: one-time-trigger
-#  tags: ((tags))
- # icon: calendar-clock
-#  type: time
-#  source:
-#    interval: 999999h
+- name: one-time-trigger
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
 
 
 #- name: after-midnight
@@ -214,6 +214,8 @@ jobs:
 - name: deploy-aks-cluster
   plan:
   - in_parallel:
+    - get: one-time-trigger
+      trigger: true
     - get: apimodel-json
     - get: aks-engine-release
       tags: ((tags))
@@ -255,6 +257,7 @@ jobs:
   - in_parallel:
     - get: installation
       passed: [ deploy-aks-cluster ]
+      trigger: false
       tags: ((tags))
       params:
         unpack: true
