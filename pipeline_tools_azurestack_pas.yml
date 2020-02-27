@@ -9,8 +9,8 @@ azure_env: &azure_env
   CA_CERT: ((foundation))/cert/root.pem
   AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
   ENDPOINT_RESOURCE_MANAGER: ((((foundation))/endpoint-resource-manager)) 
-  VAULT_DNS:  ((((foundation))/vault-dns))
-  SUFFIX_STORAGE_ENDPOINT: ((((foundation))/suffix-storage-endpoint))
+  VAULT_DNS:  ((vault-dns))
+  SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
   AZURE_TENANT_ID: ((((foundation))/tenant_id))
   AZURE_CLIENT_ID: ((((foundation))/client_id))
   AZURE_CLIENT_SECRET: ((((foundation))/client_secret))

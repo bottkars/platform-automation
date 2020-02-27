@@ -250,5 +250,45 @@ jobs:
       file: kubeconfig/kubeconfig-*.json              
 
 
-
-
+- name: upgrade-aks-cluster
+  plan:
+  - in_parallel:
+    - get: installation
+      passed: [ deploy-akscluster ]
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: aks-engine-release
+      tags: ((tags))
+      params:
+        unpack: true
+        globs:
+        - aks-engine-*-linux-amd64.tar.gz
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+  - task: configure-aks-engine
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/upgrade-aks.yml  
+    image: platform-automation-image
+    input_mapping:
+      aks-engine: aks-engine-release
+      current-installation: installation
+    params:
+      <<: *azure_env
+      <<: *aks_env
+  - put: installation
+    tags: ((tags))
+    params:
+      file: aks-installation/installation-*.zip
+  - put: apimodel
+    tags: ((tags))
+    params:
+      file: apimodel/apimodel-*.json
+  - put: kubeconfig
+    tags: ((tags))
+    params:
+      file: kubeconfig/kubeconfig-*.json          

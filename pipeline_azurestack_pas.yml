@@ -653,7 +653,8 @@ jobs:
     attempts: 5
     tags: ((tags))
     params:
-      release: pipeline-lock- name: upgrade-opsman
+      release: pipeline-lock
+- name: upgrade-opsman
   serial: true
   serial_groups: [ install, get-products, upgrade-opsman, opsman, apply ]
   on_failure:
