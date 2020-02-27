@@ -211,7 +211,7 @@ resources:
 
 
 jobs:
-- name: deploy-akscluster
+- name: deploy-aks-cluster
   plan:
   - in_parallel:
     - get: apimodel-json
@@ -227,7 +227,7 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-  - task: configure-aks-engine
+  - task: deploy-cluster
     tags: ((tags))
     file: azs-concourse/ci/tasks/deploy-aks.yml  
     image: platform-automation-image
@@ -254,7 +254,7 @@ jobs:
   plan:
   - in_parallel:
     - get: installation
-      passed: [ deploy-akscluster ]
+      passed: [ deploy-aks-cluster ]
       tags: ((tags))
       params:
         unpack: true
@@ -270,7 +270,7 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-  - task: configure-aks-engine
+  - task: upgrade-cluster
     tags: ((tags))
     file: azs-concourse/ci/tasks/upgrade-aks.yml  
     image: platform-automation-image
@@ -280,6 +280,7 @@ jobs:
     params:
       <<: *azure_env
       <<: *aks_env
+      AKS_ORCHESTRATOR_VERSION_UPDATE: ((aks.orchestrator_version_update))
   - put: installation
     tags: ((tags))
     params:
