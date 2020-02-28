@@ -23,13 +23,14 @@ aks_env: &aks_env
   AKS_MASTER_VMSIZE: ((aks.master.vmsize))
   AKS_MASTER_NODE_COUNT: ((aks.master.node_count))
   AKS_MASTER_DISTRO: ((aks.master.distro))
-  AKS_AGENT_VMSIZE_0: ((aks.agent.vmsize))
-  AKS_AGENT_NODE_COUNT_0: ((aks.agent.node_count))
-  AKS_AGENT_POOL_NAME_0: ((aks.agent.pool_name))
-  AKS_AGENT_DISTRO_0: ((aks.agent.distro))
+  AKS_AGENT_VMSIZE_0: ((aks.agent.0.vmsize))
+  AKS_AGENT_NODE_COUNT_0: ((aks.agent.0.node_count))
+  AKS_AGENT_POOL_NAME_0: ((aks.agent.0.pool_name))
+  AKS_AGENT_DISTRO_0: ((aks.agent.0.distro))
+  AKS_AGENT_OSTYPE_0: ((aks.agent.0.ostype))
   AKS_RESOURCE_GROUP: ((aks.resource_group))
   SSH_PUBLIC_KEY: ((aks.ssh_public_key))
-  AKS_WINDOWS_ADMIN_PASSWORD: ((aks.agent.windows_admin_password))
+  AKS_WINDOWS_ADMIN_PASSWORD: ((aks.agent.0.windows_admin_password))
 
 credhub_env: &credhub_env
   CREDHUB_CLIENT: ((credhub-client))
@@ -189,7 +190,7 @@ resources:
     # uri: https://github.com/Azure/aks-engine
     # private_key: ((template-deploy-key.private_key))
     # branch: master
-    tag_filter: ((aks.engine_tragfilter))
+    tag_filter: ((aks.engine_tagfilter))
     
 
 
@@ -213,7 +214,7 @@ resources:
 
 
 jobs:
-- name: deploy-aks-cluster
+- name: deploy-aks-cluster-windows
   plan:
   - in_parallel:
     - get: one-time-trigger
@@ -231,7 +232,7 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-  - task: deploy-cluster
+  - task: deploy-windows-cluster
     tags: ((tags))
     file: azs-concourse/ci/tasks/deploy-aks-windows.yml  
     image: platform-automation-image
@@ -258,7 +259,7 @@ jobs:
   plan:
   - in_parallel:
     - get: installation
-      passed: [ deploy-aks-cluster ]
+      passed: [ deploy-aks-cluster-windows ]
       trigger: false
       tags: ((tags))
       params:
@@ -304,7 +305,7 @@ jobs:
   plan:
   - in_parallel:
     - get: installation
-      passed: [ deploy-aks-cluster ]
+      passed: [ deploy-aks-cluster-windows ]
       trigger: false
       tags: ((tags))
       params:
@@ -350,7 +351,7 @@ jobs:
   plan:
   - in_parallel:
     - get: installation
-      passed: [ deploy-aks-cluster ]
+      passed: [ deploy-aks-cluster-windows ]
       trigger: false
       tags: ((tags))
       params:
@@ -377,7 +378,7 @@ jobs:
     params:
       <<: *azure_env
       <<: *aks_env
-      AKS_AGENT_NEW_NODE_COUNT: ((aks.agent.new_node_count))
+      AKS_AGENT_NEW_NODE_COUNT: ((aks.agent.0.new_node_count))
   - put: installation
     tags: ((tags))
     params:

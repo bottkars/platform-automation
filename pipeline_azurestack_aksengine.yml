@@ -26,6 +26,7 @@ aks_env: &aks_env
   AKS_AGENT_VMSIZE_0: ((aks.agent.vmsize))
   AKS_AGENT_NODE_COUNT_0: ((aks.agent.node_count))
   AKS_AGENT_DISTRO_0: ((aks.agent.distro))
+  AKS_AGENT_OSTYPE_0: ((aks.agent.0.ostype))
   AKS_AGENT_POOL_NAME_0: ((aks.agent.pool_name))
   AKS_RESOURCE_GROUP: ((aks.resource_group))
   SSH_PUBLIC_KEY: ((aks.ssh_public_key))
