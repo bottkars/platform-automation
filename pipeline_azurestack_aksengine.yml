@@ -23,11 +23,11 @@ aks_env: &aks_env
   AKS_MASTER_VMSIZE: ((aks.master.vmsize))
   AKS_MASTER_NODE_COUNT: ((aks.master.node_count))
   AKS_MASTER_DISTRO: ((aks.master.distro))
-  AKS_AGENT_VMSIZE_0: ((aks.agent.vmsize))
-  AKS_AGENT_NODE_COUNT_0: ((aks.agent.node_count))
-  AKS_AGENT_DISTRO_0: ((aks.agent.distro))
-  AKS_AGENT_OSTYPE_0: ((aks.agent.0.ostype))
-  AKS_AGENT_POOL_NAME_0: ((aks.agent.pool_name))
+  AKS_AGENT_0_VMSIZE: ((aks.agent.0.vmsize))
+  AKS_AGENT_0_NODE_COUNT: ((aks.agent.0.node_count))
+  AKS_AGENT_0_DISTRO: ((aks.agent.0.distro))
+  AKS_AGENT_0_OSTYPE: ((aks.agent.0.ostype))
+  AKS_AGENT_0_POOL_NAME: ((aks.agent.pool_name))
   AKS_RESOURCE_GROUP: ((aks.resource_group))
   SSH_PUBLIC_KEY: ((aks.ssh_public_key))
 
@@ -189,7 +189,7 @@ resources:
     # uri: https://github.com/Azure/aks-engine
     # private_key: ((template-deploy-key.private_key))
     # branch: master
-    tag_filter: ((aks.engine_tragfilter))
+    tag_filter: ((aks.engine_tagfilter))
     
 
 
