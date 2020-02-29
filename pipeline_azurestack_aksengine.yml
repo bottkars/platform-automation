@@ -377,7 +377,7 @@ jobs:
     params:
       <<: *azure_env
       <<: *aks_env
-      AKS_AGENT_NEW_NODE_COUNT: ((aks.agent.new_node_count))
+      AKS_AGENT_0_NEW_NODE_COUNT: ((aks.agent.0.new_node_count))
   - put: installation
     tags: ((tags))
     params:
