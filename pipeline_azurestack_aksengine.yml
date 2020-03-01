@@ -132,7 +132,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((aks.bucket))
-    regexp: ((aks.resource_group))/(.*)_sonobuoy_*.tar.gz.zip
+    regexp: ((aks.resource_group))/((2[0-9]{3})(0[1-9]|1[012])([123]0|[012][1-9]|31))(([01][0-9]|2[0-3])((([0-5][0-9]))){1,2})_sonobuoy_(.*).tar.gz
 
 - name: installation
   tags: ((tags))
@@ -187,7 +187,7 @@ resources:
     bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 
-#https://github.com/vmware-tanzu/sonobuoy/releases
+
 
 - name: sonobuoy-release
   tags: ((tags))
@@ -197,10 +197,7 @@ resources:
   source: 
     owner: vmware-tanzu
     repository: sonobuoy
-    # uri: https://github.com/Azure/aks-engine
-    # private_key: ((template-deploy-key.private_key))
-    # branch: master
-    # tag_filter: ((aks.engine_tagfilter))
+
     
 
 
@@ -212,9 +209,6 @@ resources:
   source: 
     owner: Azure
     repository: aks-engine
-    # uri: https://github.com/Azure/aks-engine
-    # private_key: ((template-deploy-key.private_key))
-    # branch: master
     tag_filter: ((aks.engine_tagfilter))
     
 
@@ -309,7 +303,6 @@ jobs:
       aks-engine: aks-engine-release
       current-installation: installation
     params:
-    #  <<: *azure_env
       <<: *aks_env
       AKS_AGENT_POOL: linuxpool
 #  - put: installation
@@ -445,14 +438,8 @@ jobs:
     tags: ((tags))
     file: azs-concourse/ci/tasks/validate-kubernetes-cluster.yml  
     image: platform-automation-image
-#    input_mapping:
-#      aks-engine: aks-engine-release
-#      current-installation: installation
     params:
-      SONOBUOY_MODE: quick
-#      <<: *azure_env
-#      <<: *aks_env
-#      AKS_AGENT_0_NEW_NODE_COUNT: ((aks.agent.0.new_node_count))
+      SONOBUOY_MODE: certified-conformance #  Valid modes are non-disruptive-conformance, quick, certified-conformance. (default non-disruptive-conformance)
   - put: sonobuoy-results
     tags: ((tags))
     params:
