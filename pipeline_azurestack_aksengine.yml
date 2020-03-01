@@ -124,6 +124,16 @@ resources:
 #  source:
 #    url: ((slack.webhook))
 #
+
+- name: sonobuoy-results
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/(.*)_sonobuoy_*.tar.gz.zip
+
 - name: installation
   tags: ((tags))
   icon: amazon-drive
@@ -176,6 +186,22 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
+
+#https://github.com/vmware-tanzu/sonobuoy/releases
+
+- name: sonobuoy-release
+  tags: ((tags))
+  icon: github-circle
+  type: github-release
+  check_every: 10m  
+  source: 
+    owner: vmware-tanzu
+    repository: sonobuoy
+    # uri: https://github.com/Azure/aks-engine
+    # private_key: ((template-deploy-key.private_key))
+    # branch: master
+    # tag_filter: ((aks.engine_tagfilter))
+    
 
 
 - name: aks-engine-release
@@ -304,7 +330,8 @@ jobs:
   plan:
   - in_parallel:
     - get: installation
-      passed: [ deploy-aks-cluster ]
+      passed: 
+      - deploy-aks-cluster
       trigger: false
       tags: ((tags))
       params:
@@ -317,6 +344,8 @@ jobs:
         - aks-engine-*-linux-amd64.tar.gz
     - get: azs-concourse
       tags: ((tags))
+      passed:
+      - validate-aks-cluster      
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -350,7 +379,8 @@ jobs:
   plan:
   - in_parallel:
     - get: installation
-      passed: [ deploy-aks-cluster ]
+      passed:
+      - deploy-aks-cluster
       trigger: false
       tags: ((tags))
       params:
@@ -363,6 +393,8 @@ jobs:
         - aks-engine-*-linux-amd64.tar.gz
     - get: azs-concourse
       tags: ((tags))
+      passed:
+      - validate-aks-cluster        
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -391,6 +423,39 @@ jobs:
     params:
       file: kubeconfig/kubeconfig-*.json     
 
+- name: validate-aks-cluster
+  plan:
+  - in_parallel:
+    - get: kubeconfig
+      tags: ((tags))
+      passed: [ deploy-aks-cluster ]
+    - get: sonobuoy-release
+      tags: ((tags))
+      params:
+        unpack: true   
+        globs:
+        - sonobuoy_*_linux_amd64.tar.gz         
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true        
+  - task: validate-cluster
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/validate-kubernetes-cluster.yml  
+    image: platform-automation-image
+    input_mapping:
+      aks-engine: aks-engine-release
+      current-installation: installation
+    params:
+      <<: *azure_env
+      <<: *aks_env
+      AKS_AGENT_0_NEW_NODE_COUNT: ((aks.agent.0.new_node_count))
+  - put: sonobuoy-results
+    tags: ((tags))
+    params:
+      file: validation-report/*_sonobuoy_*.tar.gz   
 
 - name: delete-aks-cluster
   plan:
