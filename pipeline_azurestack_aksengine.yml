@@ -445,13 +445,14 @@ jobs:
     tags: ((tags))
     file: azs-concourse/ci/tasks/validate-kubernetes-cluster.yml  
     image: platform-automation-image
-    input_mapping:
-      aks-engine: aks-engine-release
-      current-installation: installation
+#    input_mapping:
+#      aks-engine: aks-engine-release
+#      current-installation: installation
     params:
-      <<: *azure_env
-      <<: *aks_env
-      AKS_AGENT_0_NEW_NODE_COUNT: ((aks.agent.0.new_node_count))
+      SONOBUOY_MODE: quick
+#      <<: *azure_env
+#      <<: *aks_env
+#      AKS_AGENT_0_NEW_NODE_COUNT: ((aks.agent.0.new_node_count))
   - put: sonobuoy-results
     tags: ((tags))
     params:
