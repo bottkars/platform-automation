@@ -1,0 +1,221 @@
+---
+s3_env: &s3_env
+  access_key_id: ((s3_access_key_id))
+  endpoint:  ((s3_endpoint))
+  region_name: ((s3_region_name))
+  secret_access_key: ((s3_secret_access_key))
+
+aks_env: &aks_env
+  AKS_ORCHESTRATOR_RELEASE: ((aks.orchestrator_release))
+  AKS_MASTER_DNS_PREFIX: ((aks.master.dns_prefix))
+  AKS_MASTER_VMSIZE: ((aks.master.vmsize))
+  AKS_MASTER_NODE_COUNT: ((aks.master.node_count))
+  AKS_MASTER_DISTRO: ((aks.master.distro))
+  AKS_AGENT_0_VMSIZE: ((aks.agent.0.vmsize))
+  AKS_AGENT_0_NODE_COUNT: ((aks.agent.0.node_count))
+  AKS_AGENT_0_DISTRO: ((aks.agent.0.distro))
+  AKS_AGENT_0_OSTYPE: ((aks.agent.0.ostype))
+  AKS_AGENT_0_POOL_NAME: ((aks.agent.0.pool_name))
+  AKS_RESOURCE_GROUP: ((aks.resource_group))
+  SSH_PUBLIC_KEY: ((aks.ssh_public_key))
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((credhub-client))
+  CREDHUB_SECRET: ((credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
+  PREFIX: /concourse/main/((aks.team))
+  CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+
+
+
+slack_start_param: &slack_start_param
+  channel: ((slack.channel))
+  text: |
+    ((aks.team)) Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-started:"
+
+slack_succeeded_param: &slack_succeeded_param
+  channel: ((slack.channel))
+  text: |
+    ((aks.team)) Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME    
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-succeeded:"
+
+slack_failed_param: &slack_failed_param
+  channel: ((slack.channel))
+  text: |
+    ((aks.team)) Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-failed:"
+
+resource_types:
+- name: file-url
+  type: docker-image
+  source:
+    repository: pivotalservices/concourse-curl-resource
+    tag: latest
+
+- name: pivnet
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+
+- name: helm
+  type: docker-image
+  source:
+    repository: linkyard/concourse-helm-resource
+
+- name: slack-notification
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource    
+resources:
+
+# triggers
+#- name: daily-trigger
+#  tags: ((tags))
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    interval: 24h
+
+
+- name: one-time-trigger
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+
+#- name: after-midnight
+#  tags: ((tags))
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    start: 01:00 AM
+#    stop: ((after_midnight_end))
+#    interval: 24h
+#    location: Europe/Berlin 
+# notifications
+#- name: notify
+#  tags: ((tags))
+#  icon: bell
+#  type: slack-notification
+#  source:
+#    url: ((slack.webhook))
+#
+
+
+- name: kubeconfig
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/kubeconfig-(.*).json  
+- name: apimodel
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/apimodel-(.*).json   
+
+
+
+- name: platform-automation-image
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+
+- name: azs-concourse
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/azs-concourse
+    branch: master
+
+resources:
+- name: contour-helm
+  type: helm
+  icon: kubernetes
+  source:
+    kubeconfig_path: kubeconfig/kubeconfig*.json
+    repos:
+      - name: kubeapps
+        url: https://hub.kubeapps.com/charts
+
+
+jobs:
+- name: vdeploy-contour
+  plan:
+  - in_parallel:
+    - get: kubeconfig
+      tags: ((tags))
+#      trigger: true         
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true        
+#  - task: deploy-tiller
+#    tags: ((tags))
+#    file: azs-concourse/ci/tasks/deploy-tiller.yml  
+#    image: platform-automation-image
+#    params:
+#      SONOBUOY_MODE: certified-conformance #  Valid modes are non-disruptive-conformance, quick, certified-conformance. (default non-disruptive-conformance)
+  - put: contour-helm
+    params:
+      chart: source-repo/chart-0.0.1.tgz
+      values: source-repo/values.yaml
+      override_values:
+      - key: replicas
+        value: 2
+      - key: version
+        path: version/number # Read value from version/number
+      - key: secret
+        value: ((my-top-secret-value)) # Pulled from a credentials backend like Vault
+        hide: true # Hides value in output
+      - key: image.tag
+        path: version/image_tag # Read value from version/number
+        type: string            # Make sure it's interpreted as a string by Helm (not a number)   
+
+- name: delete-aks-cluster
+  plan:
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: delete-rg
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
+    params:
+      <<: *azure_env 
+    

@@ -212,6 +212,15 @@ resources:
     tag_filter: ((aks.engine_tagfilter))
     
 
+#- name: kubectl-release
+#  tags: ((tags))
+#  icon: github-circle
+#  type: github-release
+#  check_every: 10m  
+#  source: 
+#    owner: kubernetes
+#    repository: kubectl
+#    tag_filter: "v0.17.3" #v?([0-9.]*)
 
 
 - name: apimodel-json
@@ -422,6 +431,7 @@ jobs:
     - get: kubeconfig
       tags: ((tags))
       passed: [ deploy-aks-cluster ]
+      trigger: true
     - get: sonobuoy-release
       tags: ((tags))
       params:
@@ -444,6 +454,28 @@ jobs:
     tags: ((tags))
     params:
       file: validation-report/*_sonobuoy_*.tar.gz   
+
+
+
+- name: install-bitnami-kubeapps
+  plan:
+  - in_parallel:
+    - get: kubeconfig
+      tags: ((tags))
+      passed: [ validate-aks-cluster ]
+      # trigger: true 
+#    - get: kubectl-release          
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true        
+  - task: install-bitnami-kubeapps
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/install-kubeapps.yml  
+    image: platform-automation-image
+ 
 
 - name: delete-aks-cluster
   plan:
