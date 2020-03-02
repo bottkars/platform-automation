@@ -359,6 +359,9 @@ use_check_vpn1(){
         echo "Successfully connected to ${green}${target}${reset}"
 }
 
+use_kubeapps_secret(){
+        export_alias kubeapps-secret 'printf "Name: KUBEAPPS\nURL: http://localhost:8080\nPassword: %s" "$(kubectl get secret $(kubectl get serviceaccount kubeapps-operator -o jsonpath='"'"'{.secrets[].name}'"'"') -o jsonpath='"'"'{.data.token}'"'"' -o go-template='"'"'{{.data.token | base64decode}}'"'"' && echo)" | lpass edit --sync=auto KUBEAPPS --non-interactive'
+}
 use_control_credhub(){
 
 export CREDHUB_CONTROL_SERVER=$(grep "external_url:" plane/vars/bosh-vars.yml | cut -d ':' -f3 | tr -d ' "//'):8844
