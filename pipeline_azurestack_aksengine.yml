@@ -457,7 +457,7 @@ jobs:
 
 
 
-- name: install-bitnami-kubeapps
+- name: install-kubeapps
   plan:
   - in_parallel:
     - get: kubeconfig
