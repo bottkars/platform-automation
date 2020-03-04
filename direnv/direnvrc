@@ -379,5 +379,7 @@ unset CREDHUB_SERVER
 unset CREDHUB_SECRET
 }
 
-
+use_get-kubeconfig(){
+        export_alias get-kubeconfig 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/kubeconfig | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./kubeconfig.json'
+}
 export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'

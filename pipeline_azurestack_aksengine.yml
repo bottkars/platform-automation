@@ -29,6 +29,7 @@ aks_env: &aks_env
   AKS_AGENT_0_OSTYPE: ((aks.agent.0.ostype))
   AKS_AGENT_0_POOL_NAME: ((aks.agent.0.pool_name))
   AKS_RESOURCE_GROUP: ((aks.resource_group))
+  AKS_ADDITIONAL_APIMODEL: "" # ((aks.additional_apimodel))
   SSH_PUBLIC_KEY: ((aks.ssh_public_key))
 
 credhub_env: &credhub_env
@@ -449,7 +450,7 @@ jobs:
     file: azs-concourse/ci/tasks/validate-kubernetes-cluster.yml  
     image: platform-automation-image
     params:
-      SONOBUOY_MODE: certified-conformance #  Valid modes are non-disruptive-conformance, quick, certified-conformance. (default non-disruptive-conformance)
+      SONOBUOY_MODE: quick #certified-conformance #  Valid modes are non-disruptive-conformance, quick, certified-conformance. (default non-disruptive-conformance)
   - put: sonobuoy-results
     tags: ((tags))
     params:
@@ -463,7 +464,7 @@ jobs:
     - get: kubeconfig
       tags: ((tags))
       passed: [ validate-aks-cluster ]
-      # trigger: true 
+      trigger: true 
 #    - get: kubectl-release          
     - get: azs-concourse
       tags: ((tags))
