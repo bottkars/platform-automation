@@ -384,7 +384,7 @@ use_get-kubeconfig(){
 }
 use_get-cfadmin()
 {
-export_alias get-cfadmin 'export CF_ADMIN_PASSWORD=$(bosh interpolate cf-values.yml --path=/cf_admin_password)'
+export_alias get-cfadmin 'bosh interpolate cf-values.yml --path=/cf_admin_password'
 }
 use_get-cfvalues(){
 export_alias get-cfvalues 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/cf-val | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./cf-values.yml'        
