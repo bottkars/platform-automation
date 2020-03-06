@@ -419,10 +419,14 @@ jobs:
         unpack: true
         globs:
         - aks-engine-*-linux-amd64.tar.gz
+    - get: sonobuoy-results
+      tags: ((tags))
+      trigger: true
+      passed:
+      - validate-aks-cluster          
     - get: azs-concourse
       tags: ((tags))
       passed:
-      - validate-aks-cluster        
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -526,7 +530,7 @@ jobs:
       tags: ((tags))
       passed:
       - scale-aks-cluster
-      trigger: false      
+      trigger: true      
   - get: cf-for-k8s-master
     tags: ((tags))
   - get: azs-concourse
