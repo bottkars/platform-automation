@@ -384,9 +384,7 @@ use_get-kubeconfig(){
 }
 use_get-cf-for-k8s-admin()
 {
-         export_alias get-cfadmin '
-         mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/cf-val | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./cf-values.yml
-         export CF_ADMIN_PASSWORD=$(bosh interpolate cf-values.yml --path=/cf_admin_password)
-         '
+         export_alias get-cfadmin 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/cf-val | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./cf-values.yml
+export CF_ADMIN_PASSWORD=$(bosh interpolate cf-values.yml --path=/cf_admin_password)'
 }
 export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
