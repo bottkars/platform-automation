@@ -178,9 +178,9 @@ resources:
   type: git
   check_every: 10m  
   source: 
-    uri: ((template-repo))
+    uri: ((template.repo))
     private_key: ((((foundation))/template-deploy-key.private_key))
-    branch: master
+    branch: ((template.branch))
 
 - name: variable
   tags: ((tags))
@@ -219,7 +219,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: "download-product-configs/((pas_version))"
+    INTERPOLATION_PATHS: "download-product-configs/((tas_version))"
   input_mapping:
     files: templates
   output_mapping:
@@ -230,7 +230,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pas_version))
+    INTERPOLATION_PATHS: product-configs/((tas_version))
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -281,7 +281,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-wavefront-nozzle.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
@@ -349,7 +349,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-wavefront-nozzle.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
@@ -450,7 +450,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
+      CONFIG_FILE: product-configs/((tas_version))/wavefront-nozzle.yml
       VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
   - task: configure-wavefront-user     

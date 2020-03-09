@@ -57,7 +57,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: download-product-configs/((pas_version))/download-opsman.yml
+    INTERPOLATION_PATHS: download-product-configs/((tas_version))/download-opsman.yml
   input_mapping:
     files: templates
   output_mapping:
@@ -68,7 +68,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pas_version))
+    INTERPOLATION_PATHS: product-configs/((tas_version))
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -168,7 +168,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: \[ops-manager,(((pas_version)).*)\].*.yml
+    regexp: \[ops-manager,(((tas_version)).*)\].*.yml
 jobs:
 - name: get-platform-automation
   plan:
@@ -210,7 +210,7 @@ jobs:
       input_mapping:
         config: interpolated-product-downloads      
       params:
-        CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+        CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
     - in_parallel:
       - put: opsman-product
         params:
@@ -275,7 +275,7 @@ jobs:
       params:
         VARS_FILES: vars/((foundation))/vars/director-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director.yml
+        DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/director.yml
     - task: configure-custom-vmtypes
       tags: ((tags))
       image: platform-automation-image
@@ -287,7 +287,7 @@ jobs:
       params:
         VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
         ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions-azure.yml                        
+        DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/extensions-azure.yml                        
     - task: configure-extensions
       tags: ((tags))
       image: platform-automation-image
@@ -299,7 +299,7 @@ jobs:
       params:
         VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
         ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions-azure.yml                
+        DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/extensions-azure.yml                
     - task: apply-director-changes
       image: platform-automation-image
       file: platform-automation-tasks/tasks/apply-director-changes.yml
@@ -328,7 +328,7 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads      
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
   - in_parallel:
     - put: opsman-product
       params:
@@ -488,7 +488,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/director.yml
+      CONFIG_FILE: product-configs/((tas_version))/director.yml
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       SKIP_MISSING: true
 - name: test-interpolate-srt
@@ -508,7 +508,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/srt.yml
+      CONFIG_FILE: product-configs/((tas_version))/srt.yml
       VARS_FILES: vars/((foundation))/vars/srt-vars.yml
       SKIP_MISSING: true
 - name: test-interpolate-p-event-alerts
@@ -528,7 +528,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-event-alerts.yml
       VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
       SKIP_MISSING: true
 - name: delete-installation

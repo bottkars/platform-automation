@@ -178,9 +178,9 @@ resources:
   type: git
   check_every: 10m  
   source: 
-    uri: ((template-repo))
+    uri: ((template.repo))
     private_key: ((((foundation))/template-deploy-key.private_key))
-    branch: master
+    branch: ((template.branch))
 
 - name: variable
   tags: ((tags))
@@ -222,7 +222,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+    INTERPOLATION_PATHS: download-product-configs/((tas_version))/download-p-spring-cloud-services-3.yml
   input_mapping:
     files: templates
   output_mapping:
@@ -233,7 +233,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pas_version))/p-spring-cloud-services-3.yml
+    INTERPOLATION_PATHS: product-configs/((tas_version))/p-spring-cloud-services-3.yml
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -276,7 +276,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-spring-cloud-services-3.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
@@ -345,7 +345,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-spring-cloud-services-3.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
@@ -434,7 +434,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services-3.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-spring-cloud-services-3.yml
       VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
