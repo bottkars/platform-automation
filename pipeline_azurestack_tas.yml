@@ -411,7 +411,7 @@ jobs:
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
       BOSHSTORAGEACCOUNT: ((azs.boshstorageaccount))
       VM_NAME: ((ops_man_vmname))
-      ADDITIONAL_PARAMS: ((azs.additional_param)))))
+      ADDITIONAL_PARAMETERS: ((azs.additional_parameters))
   - task: deploy-opsman-template 
     tags: ((tags))
     image: platform-automation-image
@@ -430,7 +430,7 @@ jobs:
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
       VM_NAME: ((ops_man_vmname))
       OPSMAN_URL: ((opsman-url))
-
+      ADDITIONAL_PARAMETERS: ((azs.additional_parameters))
     on_success: &make-config-director-commit
       do:
         - task: make-commit
