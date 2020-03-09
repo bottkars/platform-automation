@@ -357,6 +357,7 @@ jobs:
     params:        
       claim: base       
   - task: upload-product
+    attempts: 5
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
