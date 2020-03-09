@@ -308,7 +308,7 @@ jobs:
       ACCOUNT_NAME: ((azs.image_account_name))
       ACCOUNT_KEY: ((azs.storage_account_key))
       DESTINATION_CONTAINER: ((azs.destination_container))
-      OPSMAN_IMAGE_LOCATION: ((azs.destination_container))
+      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
 
 
 
@@ -397,7 +397,7 @@ jobs:
       ACCOUNT_NAME: ((azs.image_account_name))
       ACCOUNT_KEY: ((azs.storage_account_key))
       DESTINATION_CONTAINER: ((azs.destination_container))
-      OPSMAN_IMAGE_LOCATION: ((azs.destination_container))
+      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
   - task: validate-template
     tags: ((tags))
     image: platform-automation-image
@@ -427,8 +427,10 @@ jobs:
       STATE_FILE: director_deployment_vars.yml
       ACCOUNT_NAME: ((azs.image_account_name))
       DESTINATION_CONTAINER: ((azs.destination_container))
-      OPSMAN_IMAGE_LOCATION: ((azs.destination_container))
+      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
       VM_NAME: ((ops_man_vmname))
+      OPSMAN_URL: ((opsman-url))
+
     on_success: &make-config-director-commit
       do:
         - task: make-commit
@@ -818,7 +820,7 @@ jobs:
 ####
 groups:
 
-- name: install-pivotal-platform
+- name: install-tanzu-platform
   jobs:
   - get-opsman-pivnet
   - upgrade-opsman
