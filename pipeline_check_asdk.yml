@@ -84,6 +84,7 @@ jobs:
       asdk-release: asdk-release-file  
     params:
       ASDK_VERSION: ((asdk_version))
+      FROM: ((asdk_minor_version))
     on_success:
       try:    
         put: asdk-release-file
