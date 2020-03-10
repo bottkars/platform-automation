@@ -258,7 +258,11 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((tas_version))/director-azurestack.yml product-configs/((tas_version))/extensions-azurestack.yml product-configs/((tas_version))/extensions-azurestack.yml 
+    INTERPOLATION_PATHS: product-configs/((tas_version))/director-azurestack.yml 
+      product-configs/((tas_version))/extensions-azurestack.yml 
+      product-configs/((tas_version))/extensions-azurestack.yml 
+      product-configs/((tas_version))/extensions-azurestack.yml 
+      product-configs/((tas_version))/custom_vm_types_azurestack.yml 
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -310,13 +314,6 @@ jobs:
       DESTINATION_CONTAINER: ((azs.destination_container))
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
 
-
-
-
-
-
-
-
 - name: install-opsman
   on_failure:
     put: notify
@@ -361,19 +358,19 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-opsman-pivnet
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product.yml
-    input_mapping:
-      config: interpolated-product-downloads      
-    params:
-      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
-  - in_parallel:
-    - put: opsman-product
-      tags: ((tags))
-      params:
-        file: downloaded-product/*     
+#  - task: download-opsman-pivnet
+#    tags: ((tags))
+#    image: platform-automation-image
+#    file: platform-automation-tasks/tasks/download-product.yml
+#    input_mapping:
+#      config: interpolated-product-downloads      
+#    params:
+#      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
+#  - in_parallel:
+#    - put: opsman-product
+#      tags: ((tags))
+#      params:
+#        file: downloaded-product/*     
   - task: download-opsman-s3
     tags: ((tags))
     image: platform-automation-image
@@ -390,7 +387,7 @@ jobs:
     file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
     image: platform-automation-image
     input_mapping:
-      image: opsman-product
+      image: opsman-image
       config: variable
     params:
       <<: *azure_env
@@ -536,13 +533,13 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml 
     input_mapping:
-#      config: interpolated-product-templates
+      config: interpolated-product-templates
       env: variable
       vars: variable
     params:
 #      VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/product-configs/2.9/custom_vm_types_azurestack.yml      
+      DIRECTOR_CONFIG_FILE: product-configs/2.9/custom_vm_types_azurestack.yml      
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image

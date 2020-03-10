@@ -5,18 +5,18 @@ s3_env: &s3_env
   region_name: ((((foundation))/s3_region_name))
   secret_access_key: ((((foundation))/s3_secret_access_key))
 azure_env: &azure_env
-  PROFILE: ((arm_profile))
+  PROFILE: ((azs.arm_profile))
   CA_CERT: ((((foundation))/azs_ca.certificate))
   AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
   ENDPOINT_RESOURCE_MANAGER: ((((foundation))/endpoint-resource-manager)) 
-  VAULT_DNS:  ((vault-dns))
-  SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+  VAULT_DNS:  ((azs.vault_dns))
+  SUFFIX_STORAGE_ENDPOINT: ((azs.suffix_storage_endpoint))
   AZURE_TENANT_ID: ((((foundation))/tenant_id))
   AZURE_CLIENT_ID: ((((foundation))/client_id))
   AZURE_CLIENT_SECRET: ((((foundation))/client_secret))
   AZURE_SUBSCRIPTION_ID: ((((foundation))/subscription_id))
-  RESOURCE_GROUP: ((resource_group))
-  LOCATION: ((azurestack_region))
+  RESOURCE_GROUP: ((azs.resource_group))
+  LOCATION: ((azs.azurestack_region))
 
 
 credhub_env: &credhub_env
