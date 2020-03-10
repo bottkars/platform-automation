@@ -178,9 +178,9 @@ resources:
   type: git
   check_every: 10m  
   source: 
-    uri: ((template.repo))
+    uri: ((templates.repo))
     private_key: ((((foundation))/template-deploy-key.private_key))
-    branch: ((template.branch))
+    branch: ((templates.branch))
 
 - name: variable
   tags: ((tags))
