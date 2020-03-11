@@ -15,22 +15,3 @@ pcf_version: "2.6"
 resource_group: "pcf"
 runtime: srt # pas or srt
 s3_foundation_state_bucket: "pcfdemo.state"
-passed_configs: 
-  - configure-pivotal-mysql
-  - configure-p-spring-cloud-services
-  - configure-p-spring-cloud-services-3
-  - configure-p-rabbitmq
-  - configure-srt
-  - configure-p-healthwatch
- # - configure-wavefront-nozzle
- # - configure-p-event-alerts
-  - configure-pas-windows
-  - configure-p-compliance-scanner
-inactive_get:
-  - get-pas  
-inactive_configure:
-  - configure-pas
-inactive-upload:
-  - upload-and-stage-pas    
-
-
