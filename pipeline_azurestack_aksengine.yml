@@ -237,7 +237,7 @@ resources:
   check_every: 10m  
   source:
     branch: master
-    uri: https://github.com/cloudfoundry/cf-for-k8s
+    uri: https://github.com/cloudfoundry/cf-for-k8s.git
 #- name: kubectl-release
 #  tags: ((tags))
 #  icon: github-circle
@@ -263,7 +263,7 @@ resources:
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/azs-concourse
+    uri: https://github.com/bottkars/azs-concourse.git
     branch: ((azs_concourse_branch))
 
 
@@ -426,7 +426,6 @@ jobs:
       - validate-aks-cluster          
     - get: azs-concourse
       tags: ((tags))
-      passed:
     - get: platform-automation-image
       tags: ((tags))
       params:

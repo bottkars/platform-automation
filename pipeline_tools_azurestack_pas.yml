@@ -204,7 +204,7 @@ resources:
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/azs-concourse
+    uri: https://github.com/bottkars/azs-concourse.git
     branch: master
 
 interpolate-product-downloads: &interpolate-product-downloads
