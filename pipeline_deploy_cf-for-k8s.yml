@@ -5,18 +5,18 @@ s3_env: &s3_env
   region_name: ((s3_region_name))
   secret_access_key: ((s3_secret_access_key))
 azure_env: &azure_env
-  PROFILE: ((arm_profile))
+  PROFILE: ((azs.arm_profile))
   CA_CERT: ((azs_ca.certificate))
   AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
   ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
-  VAULT_DNS:  ((vault-dns))
-  SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+  VAULT_DNS:  ((azs.vault-dns))
+  SUFFIX_STORAGE_ENDPOINT: ((azs.suffix-storage-endpoint))
   AZURE_TENANT_ID: ((tenant_id))
   AZURE_CLIENT_ID: ((client_id))
   AZURE_CLIENT_SECRET: ((client_secret))
   AZURE_SUBSCRIPTION_ID: ((subscription_id))
   RESOURCE_GROUP: ((aks.resource_group))
-  LOCATION: ((azurestack_region))
+  LOCATION: ((azs.azurestack_region))
 aks_env: &aks_env
   AKS_ORCHESTRATOR_RELEASE: ((aks.orchestrator_release))
   AKS_MASTER_DNS_PREFIX: ((aks.master.dns_prefix))
