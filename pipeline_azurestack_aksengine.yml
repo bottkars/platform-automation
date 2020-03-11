@@ -264,7 +264,7 @@ resources:
   check_every: 10m  
   source:  
     uri: https://github.com/bottkars/azs-concourse
-    branch: ((azs_concourse_repo))
+    branch: ((azs_concourse_branch))
 
 
 jobs:
