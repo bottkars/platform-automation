@@ -261,7 +261,7 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-pas-for-kubernetes-product-and-stemcell
+  - task: download-pas-for-kubernetes-product
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -269,7 +269,6 @@ jobs:
       CONFIG_FILE: download-product-configs/((pks_version))/download-pas-for-kubernetes.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: pas-for-kubernetes-stemcell}
     on_failure:
       put: download-lock
       attempts: 5
@@ -280,11 +279,7 @@ jobs:
     - put: pas-for-kubernetes-product
       tags: ((tags))
       params:
-        file: downloaded-product/*.pivotal
-    - put: pas-for-kubernetes-stemcell
-      tags: ((tags))
-      params:
-        file: pas-for-kubernetes-stemcell/*.tgz
+        file: downloaded-product/*.tar
   - put: download-lock
     attempts: 5
     tags: ((tags))
@@ -322,11 +317,7 @@ jobs:
     - get: pas-for-kubernetes-product
       tags: ((tags))
       skip_download: true
-      trigger: true     
-    - get: pas-for-kubernetes-stemcell
-      tags: ((tags))
-      skip_download: true
-      trigger: true    
+      trigger: true        
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -341,7 +332,6 @@ jobs:
       config: interpolated-product-downloads
     output_mapping:
       downloaded-product: pas-for-kubernetes-product
-      downloaded-stemcell: pas-for-kubernetes-stemcell
   - put: pipeline-lock
     attempts: 5
     tags: ((tags))    
@@ -354,15 +344,6 @@ jobs:
     input_mapping:
       product: pas-for-kubernetes-product
       env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-pas-for-kubernetes-stemcell
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      env: variable
-      stemcell: pas-for-kubernetes-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product

@@ -93,7 +93,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: "download-product-configs/((pks_version))"
+    INTERPOLATION_PATHS: "download-product-configs/((pks.version))"
   input_mapping:
     files: templates
   output_mapping:
@@ -105,7 +105,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pks_version))
+    INTERPOLATION_PATHS: product-configs/((pks.version))
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -307,7 +307,7 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads      
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/((iaas))/download-opsman.yml
   - in_parallel:
     - put: opsman-product
       params:
@@ -337,7 +337,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/download-pivotal-container-service.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: pivotal-container-service-stemcell}
@@ -373,7 +373,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service-cli.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/download-pivotal-container-service-cli.yml
     input_mapping:
       config: interpolated-product-downloads
   - in_parallel:
@@ -406,7 +406,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-harbor-container-registry.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/download-harbor-container-registry.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: harbor-container-registry-stemcell}
@@ -622,7 +622,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/download-pivotal-container-service.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -711,7 +711,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-harbor-container-registry.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/download-harbor-container-registry.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -779,7 +779,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
+      DIRECTOR_CONFIG_FILE: product-configs/((pks.version))/((iaas))/director.yml        
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
@@ -825,7 +825,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/((iaas))/download-opsman.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -882,8 +882,8 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((pks_domain_cert.certificate))
-      KEY_PEM: ((pks_domain_cert.private_key))    
+      CERTIFICATE_PEM: ((pks.domain_cert.certificate))
+      KEY_PEM: ((pks.domain_cert.private_key))    
   - task: configure-director
     tags: ((tags))
     attempts: 3    
@@ -896,7 +896,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director((overlay_type)).yml        
+      DIRECTOR_CONFIG_FILE: product-configs/((pks.version))/((iaas))/director((overlay_type)).yml        
   - task: apply-director-changes
     tags: ((tags))
     attempts: 3    
@@ -1016,7 +1016,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service((overlay_type)).yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/pivotal-container-service((overlay_type)).yml
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
   - task: assign-multi-stemcell
@@ -1029,7 +1029,7 @@ jobs:
       vars: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-multi-stemcell.yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/pivotal-container-service-multi-stemcell.yml
 
 - name: configure-harbor-container-registry
   serial_groups:
@@ -1070,7 +1070,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/harbor-container-registry.yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/harbor-container-registry.yml
       VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
         
@@ -1132,7 +1132,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/director((overlay_type)).yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/director((overlay_type)).yml
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       SKIP_MISSING: true    
 
@@ -1158,7 +1158,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service((overlay_type)).yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/pivotal-container-service((overlay_type)).yml
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       SKIP_MISSING: true    
 - name: test-interpolate-harbor-container-registry
@@ -1182,7 +1182,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/harbor-container-registry.yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/harbor-container-registry.yml
       VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
       SKIP_MISSING: true    
 - name: delete-installation
@@ -1264,17 +1264,17 @@ jobs:
     - task: create-pks-admin
       tags: ((tags))
       image: platform-automation-image
-      file: additional-tasks/tasks/create_pks_admin.yml
+      file: additional-tasks/tasks/create_pks.admin.yml
       input_mapping:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
         KEY_FILE: ((foundation))/env/opsman.key
         # conatins the opsman private key
-        PKS_USERNAME: ((pks_username))
-        PKS_PASSWORD: ((pks_password))
-        PKS_API_ENDPOINT: ((pks_api_endpoint))
-        PKS_USER_EMAIL: ((pks_user_email))          
+        PKS_USERNAME: ((pks.username))
+        PKS_PASSWORD: ((pks.password))
+        PKS_API_ENDPOINT: ((pks.api_endpoint))
+        PKS_USER_EMAIL: ((pks.user_email))          
 
 
 - name: create-pks-cluster
@@ -1303,17 +1303,17 @@ jobs:
     - task: create-pks-cluster
       tags: ((tags))
       image: platform-automation-image
-      file: additional-tasks/tasks/create_pks_cluster.yml
+      file: additional-tasks/tasks/create_pks.cluster.yml
       input_mapping:
         env: variable
       params:
         ENV_FILE: ((foundation))/env/env.yml
         KEY_FILE: ((foundation))/env/opsman.key
-        PKS_API_ENDPOINT: ((pks_api_endpoint))
-        PKS_CLUSTERNAME: ((pks_clustername))
-        PKS_MASTER_FQDN: ((pks_master_fqdn))
-        WORKER_INSTANCES: ((worker_instances))
-        PKS_PLAN_NAME: ((pks_plan_name))
+        PKS_API_ENDPOINT: ((pks.api_endpoint))
+        PKS_CLUSTERNAME: ((pks.clustername))
+        PKS_MASTER_FQDN: ((pks.master_fqdn))
+        WORKER_INSTANCES: ((pks.worker_instances))
+        PKS_PLAN_NAME: ((pks.plan_name))
 ## service
 - name: update-om-certificates
   serial: true
@@ -1343,8 +1343,8 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((pks_domain_cert.certificate))
-      KEY_PEM: ((pks_domain_cert.private_key))
+      CERTIFICATE_PEM: ((pks.domain_cert.certificate))
+      KEY_PEM: ((pks.domain_cert.private_key))
 groups:
 - name: full
   jobs:
