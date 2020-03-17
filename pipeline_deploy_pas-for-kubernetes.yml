@@ -156,16 +156,8 @@ resources:
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: pas-for-kubernetes-product/\[pas-for-kubernetes,(.*)\]pas-for-kubernetes-.*.pivotal
+    regexp: pas-for-kubernetes-product/\[pas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
 
-- name: pas-for-kubernetes-stemcell
-  tags: ((tags))
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: pas-for-kubernetes-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
 
 #############################
 ###### Products end here ####

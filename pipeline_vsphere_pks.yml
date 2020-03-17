@@ -379,7 +379,7 @@ jobs:
   - in_parallel:
     - put: pivotal-container-service-cli
       params:
-        file: downloaded-product/pks-linux-amd64*
+        file: downloaded-product/*pks-linux-amd64*
 
 
 - name: get-harbor-container-registry
@@ -1003,7 +1003,8 @@ jobs:
       - get: templates
         tags: ((tags))      
       - get: variable
-        tags: ((tags))      
+        tags: ((tags))    
+        trigger: true  
   - task: interpolate-product-templates
     <<: *interpolate-product-templates
   - task: configure-pivotal-container-service-cloud-provider
@@ -1096,7 +1097,11 @@ jobs:
           - configure-harbor-container-registry
         trigger: true
       - get: variable
-        tags: ((tags))      
+        tags: ((tags))
+        passed: # ((passed_configs))
+          - configure-pivotal-container-service
+          - configure-harbor-container-registry          
+        trigger: true      
   - task: apply-product-changes
     tags: ((tags))      
     image: platform-automation-image
