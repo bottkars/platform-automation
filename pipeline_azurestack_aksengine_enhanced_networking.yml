@@ -20,13 +20,13 @@ azure_env: &azure_env
 aks_env: &aks_env
   AKS_ORCHESTRATOR_RELEASE: ((aks.orchestrator_release))
   AKS_VNET_RG: ((aks.vnet.rg))
-  AKS_VNET_NAME: ((aks.vnet.name)
+  AKS_VNET_NAME: ((aks.vnet.name))
   AKS_MASTER_DNS_PREFIX: ((aks.master.dns_prefix))
   AKS_MASTER_VMSIZE: ((aks.master.vmsize))
   AKS_MASTER_NODE_COUNT: ((aks.master.node_count))
   AKS_MASTER_DISTRO: ((aks.master.distro))
   AKS_MASTER_SUBNET_NAME: ((aks.master.subnet_name))
-  AKS_MASETR_ADDRESS_PREFIX: ((aks.master.0.address_prefix))  
+  AKS_MASETR_ADDRESS_PREFIX: ((aks.master.address_prefix))  
   AKS_AGENT_0_VMSIZE: ((aks.agent.0.vmsize))
   AKS_AGENT_0_NODE_COUNT: ((aks.agent.0.node_count))
   AKS_AGENT_0_DISTRO: ((aks.agent.0.distro))
@@ -35,8 +35,8 @@ aks_env: &aks_env
   AKS_AGENT_0_SUBNET_NAME: ((aks.agent.0.subnet_name))
   AKS_AGENT_0_ADDRESS_PREFIX: ((aks.agent.0.address_prefix))
   AKS_RESOURCE_GROUP: ((aks.resource_group))
-  AKS_ADDITIONAL_APIMODEL: "" # ((aks.additional_apimodel))
-  AKS_SUBNET_ID:
+  AKS_ADDITIONAL_APIMODEL: ((aks.additional_apimodel))
+#  AKS_SUBNET_ID:
   SSH_PUBLIC_KEY: ((aks.ssh_public_key))
 
 credhub_env: &credhub_env
@@ -291,15 +291,13 @@ jobs:
     image: platform-automation-image
     file: azs-concourse/ci/tasks/deploy-template.yml  
     input_mapping:
-      config: variable
-      image: opsman-image
+      config: azs-concourse
     params:
       <<: *azure_env
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azs-concourse/tanzu/templates/aks-network-azuredeploy-vnetadd.json"
-      PARAMETER_FILE: azs-concourse/templates/azuredeploy-parameters.json
-      BOSHSTORAGEACCOUNT: ((azs.boshstorageaccount))
-      ADDITIONAL_PARAMETERS: "VNETName=((aks.vnet.name)) MasterSubnet=((aks.master.subnet)) AgentSubnet=((aks.agent.0.subnet)) AgentAddressPrefix=((aks.agent.0.address.prefix)) MasterAddressPrefix=((aks.master.sddress.prefix))"
-
+      PARAMETER_FILE: templates/azuredeploy-parameters.json
+      ADDITIONAL_PARAMETERS: 'VNETName=((aks.vnet.name)) MasterSubnet=((aks.master.subnet_name)) AgentSubnet=((aks.agent.0.subnet_name)) AgentAddressPrefix=((aks.agent.0.address_prefix)) MasterAddressPrefix=((aks.master.address_prefix))'
+      RESOURCE_GROUP: ((aks.vnet.rg))
 
 - name: deploy-aks-cluster
   plan:
@@ -329,6 +327,7 @@ jobs:
     params:
       <<: *azure_env
       <<: *aks_env
+      # AKS_ADDITIONAL_APIMODEL: masterProfile.firstConsecutiveStaticIP=10.100.10.5,masterProfile.vnetSubnetId=/subscriptions/((subscription_id))/resourceGroups/((aks.vnet.rg))/providers/Microsoft.Network/virtualNetworks/((aks.vnet.name))/subnets/((aks.master.subnet_name))
   - put: installation
     tags: ((tags))
     params:
@@ -342,7 +341,24 @@ jobs:
     params:
       file: kubeconfig/kubeconfig-*.json              
 
-
+- name: update-routing-table
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+  - task: update-routingtable 
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/update-aks-routingtable.yml  
+    params:
+      <<: *azure_env
+      <<: *aks_env
 - name: query-aks-agent-pool
   plan:
   - in_parallel:
