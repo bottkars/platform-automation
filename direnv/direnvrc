@@ -40,7 +40,7 @@ export_alias() {
   chmod +x "$target"
   #echo $target
 }
-export_alias update-direnv "wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc"
+# export_alias updirenv "wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc"
 
 use_bosh-env(){
         echo "${white}Creating  BoSH environment for ${DEPLOYMENT}${reset}"
