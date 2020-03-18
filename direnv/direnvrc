@@ -9,7 +9,10 @@
 # need to be escaped in \"type-with-dash\"
 ######################
 
-######################
+####
+echo "starting direnv"
+rm -rf .direnv
+##################
 # colors section is mandatory
 ######################
 
@@ -24,18 +27,20 @@ export cyan=`tput setaf 6`
 export white=`tput setaf 7`
 ######################
 
-
 export_alias() {
   local name=$1
   shift
   local alias_dir=$PWD/.direnv/aliases
+  # echo "creating alias for $name"
   local target="$alias_dir/$name"
   mkdir -p "$alias_dir"
   PATH_add "$alias_dir"
   echo "#!/usr/bin/env bash" > "$target"
   echo "$@" >> "$target"
   chmod +x "$target"
+  #echo $target
 }
+export_alias update-direnv "wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc"
 
 use_bosh-env(){
         echo "${white}Creating  BoSH environment for ${DEPLOYMENT}${reset}"
@@ -310,21 +315,22 @@ use_vsphere-env(){
                 (.elements[].Object | [.Name, .Guest.HostName, .Guest.IpAddress, .Runtime.PowerState, .Config.Hardware.NumCPU,. .Config.Hardware.MemoryMB]) | @tsv '"'"''
 }
 
-use_hammer(){
-export HAMMER_TARGET_CONFIG=.direnv/hammer.yml
-cat <<EOF > ${HAMMER_TARGET_CONFIG}
-name: ${DEPLOYMENT}
-ops_manager:
-  password: ${OM_USERNAME}
-  url: ${OM_TARGET}
-  username: ${OM_PASSWORD}
-ops_manager_private_key: OPSMAN-RSA-PRIVATE-KEY
-ops_manager_public_ip: 172.16.100.8
-pks_api:
-  url: ${PKS_API_ENDPOINT}
-sys_domain: ${PAS_SYSTEM_DOMAIN}
-EOF
-}
+#use_hammer(){
+#export HAMMER_TARGET_CONFIG=.direnv/hammer.yml
+#cat <<EOF > ${HAMMER_TARGET_CONFIG}
+#name: ${DEPLOYMENT}
+#ops_manager:
+#  password: ${OM_USERNAME}
+#  url: ${OM_TARGET}
+#  username: ${OM_PASSWORD}
+#ops_manager_private_key: OPSMAN-RSA-PRIVATE-KEY
+#ops_manager_public_ip: 172.16.100.8
+#pks_api:
+#  url: ${PKS_API_ENDPOINT}
+#sys_domain: ${PAS_SYSTEM_DOMAIN}
+#EOF
+#}
+
 use_wsl_docker(){
 	echo -n "Checking if we run on WSL: "
         if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
@@ -356,23 +362,22 @@ use_check_vpn(){
 		sleep 10
 	done	
 }
-
 use_check_vpn1(){
-        target=$1
-        echo "Testing connection to ${magenta}$target${reset}"
-        while  ! ping -c 1 -W 1 $target &>/dev/null
+        vpn_target=$1
+        echo "Testing connection to ${magenta}$vpn_target${reset}"
+        while  ! ping -c 1 -W 1 $vpn_target &>/dev/null
         do
                 echo "${red}VPN is down, Please connect first${reset}"
                 sleep 10
         done
-        echo "Successfully connected to ${green}${target}${reset}"
+        echo "Successfully connected to ${green}${vpn_target}${reset}"
 }
 
 use_kubeapps_secret(){
-        export_alias kubeapps-secret 'printf "Name: KUBEAPPS\nURL: http://localhost:8080\nPassword: %s" "$(kubectl get secret $(kubectl get serviceaccount kubeapps-operator -o jsonpath='"'"'{.secrets[].name}'"'"') -o jsonpath='"'"'{.data.token}'"'"' -o go-template='"'"'{{.data.token | base64decode}}'"'"' && echo)" | lpass edit --sync=auto KUBEAPPS --non-interactive'
+      export_alias kubeapps-secret 'printf "Name: KUBEAPPS\nURL: http://localhost:8080\nPassword: %s" "$(kubectl get secret $(kubectl get serviceaccount kubeapps-operator -o jsonpath='"'"'{.secrets[].name}'"'"') -o jsonpath='"'"'{.data.token}'"'"' -o go-template='"'"'{{.data.token | base64decode}}'"'"' && echo)" | lpass edit --sync=auto KUBEAPPS --non-interactive'
 }
+##
 use_control_credhub(){
-
 export CREDHUB_CONTROL_SERVER=$(grep "external_url:" plane/vars/bosh-vars.yml | cut -d ':' -f3 | tr -d ' "//'):8844
 export CREDHUB_CONTROL_SECRET=$(credhub get --name="/p-bosh/control-plane/credhub_admin_client_password" -j | jq -r '.value')
 export CREDHUB_CONTROL_CLIENT=credhub_admin_client
@@ -389,14 +394,13 @@ unset CREDHUB_SECRET
 }
 
 use_get-kubeconfig(){
-        export_alias get-kubeconfig 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/kubeconfig | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./kubeconfig.json'
+export_alias get-kubeconfig 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/kubeconfig | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./kubeconfig.json'
 }
-use_get-cfadmin()
-{
+
+use_get-cfadmin(){
 export_alias get-cfadmin 'bosh interpolate ${PWD}/cf-values.yml --path=/cf_admin_password'
 }
+
 use_get-cfvalues(){
 export_alias get-cfvalues 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/cf-val | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./cf-values.yml'        
 }
-
-export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
