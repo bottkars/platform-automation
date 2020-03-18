@@ -205,10 +205,7 @@ resources:
   source: 
     owner: vmware-tanzu
     repository: sonobuoy
-
     
-
-
 - name: aks-engine-release
   tags: ((tags))
   icon: github-circle
@@ -245,16 +242,6 @@ resources:
   source:
     branch: master
     uri: https://github.com/cloudfoundry/cf-for-k8s.git
-#- name: kubectl-release
-#  tags: ((tags))
-#  icon: github-circle
-#  type: github-release
-#  check_every: 10m  
-#  source: 
-#    owner: kubernetes
-#    repository: kubectl
-#    tag_filter: "v0.17.3" #v?([0-9.]*)
-
 
 - name: apimodel-json
   check_every: 10m  
@@ -345,7 +332,9 @@ jobs:
   plan:
   - in_parallel:
     - get: one-time-trigger
-      trigger: true
+      tags: ((tags))
+      passed: [ deploy-aks-cluster ]  
+      trigger: true    
     - get: azs-concourse
       tags: ((tags))
     - get: platform-automation-image
@@ -507,10 +496,13 @@ jobs:
 - name: validate-aks-cluster
   plan:
   - in_parallel:
+    - get: one-time-trigger
+      tags: ((tags))
+      passed:  
+      - update-routing-table 
+      trigger: true
     - get: kubeconfig
       tags: ((tags))
-      passed: [ deploy-aks-cluster ]
-      trigger: true
     - get: sonobuoy-release
       tags: ((tags))
       params:
