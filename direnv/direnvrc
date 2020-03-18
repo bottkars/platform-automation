@@ -24,6 +24,7 @@ export cyan=`tput setaf 6`
 export white=`tput setaf 7`
 ######################
 
+export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
 
 export_alias() {
   local name=$1
@@ -43,6 +44,7 @@ use_bosh-env(){
 }
 use_om-env-client(){
         echo "${white}Reading Opsman Settings from lpass${reset}"
+        lpass status --quiet || :
         export OM_SKIP_SSL_VALIDATION=true
         export OM_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
@@ -53,6 +55,7 @@ use_om-env-client(){
 } 
 use_om-env-user(){
         echo "${white}Reading Opsman Settings from lpass${reset}"
+        lpass status --quiet || :
         export OM_SKIP_SSL_VALIDATION=true
 	export OM_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_PASSWORD=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
@@ -63,11 +66,14 @@ use_om-env-user(){
 }
 
 use_git-token(){
+        echo "${white}Reading GITHUB Settings from lpass${reset}"
+        lpass status --quiet || :
 	export GIT_USERNAME=$(lpass show ${CONCOURSE_TARGET}/GIT_TOKEN --username)
         export GIT_TOKEN=$(lpass show ${CONCOURSE_TARGET}/GIT_TOKEN --password)
 }
 use_jumphost(){
         echo "${white}Reading Jumpost config from lpass${reset}"
+         lpass status --quiet || :
         export JUMPHOST_NAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/jumphost --field=Hostname)
         export JUMPHOST_PRIVATE_KEY=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/jumphost --field="Private Key" | awk '{gsub(/\\r\\n/,"\n")}1')
         export_alias ssh-jumphost 'eval `ssh-agent`; ssh-add - <<< "$JUMPHOST_PRIVATE_KEY"; ssh $JUMPHOST_NAME;kill $SSH_AGENT_PID'
@@ -80,6 +86,7 @@ use_minio-client(){
         # mkdir -p ${minio_dir}
         # export_alias mc "mc --config-dir ${minio_dir} \$@" 
         echo "Getting minio settings from lpass"
+        lpass status --quiet || :
         export AWS_DEFAULT_REGION=region
 	export AWS_ACCESS_KEY_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --username)
         export AWS_SECRET_ACCESS_KEY=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --password)
@@ -150,6 +157,7 @@ use_azure-env(){
         export AZURE_CONFIG_DIR=$(pwd)/.azure
         mkdir -p ${AZURE_CONFIG_DIR}
         echo "Reading Azure Settings from lpass"
+         lpass status --quiet || :
         export PROFILE="2019-03-01-hybrid"
         export CLOUDPROFILE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=ENDPOINT)
         export AZURE_TENANT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=TENANT_ID)
@@ -185,6 +193,7 @@ use_azurestack-env(){
         export AZURE_CONFIG_DIR=$(pwd)/.azure
         mkdir -p ${AZURE_CONFIG_DIR}
         echo "Reading Azurestack Settings from lpass"
+        lpass status --quiet || :
         export PROFILE="2019-03-01-hybrid"
         export ENDPOINT=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURESTACK_ENV --field=ENDPOINT)
         # CA_CERT: cert/root.pem
@@ -284,6 +293,7 @@ use_vsphere-env(){
         # need to be escaped in \"type-with-dash\"
         ######################
         echo "Reading vSphere Settings from lpass"
+        lpass status --quiet || :
         export GOVC_INSECURE=1
         export GOVC_URL=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_URL)
         export GOVC_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_USERNAME)
@@ -390,4 +400,3 @@ use_get-cfvalues(){
 export_alias get-cfvalues 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/cf-val | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./cf-values.yml'        
 }
 
-export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
