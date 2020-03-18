@@ -24,7 +24,6 @@ export cyan=`tput setaf 6`
 export white=`tput setaf 7`
 ######################
 
-export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
 
 export_alias() {
   local name=$1
@@ -400,3 +399,4 @@ use_get-cfvalues(){
 export_alias get-cfvalues 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/cf-val | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./cf-values.yml'        
 }
 
+export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'
