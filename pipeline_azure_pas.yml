@@ -489,7 +489,7 @@ jobs:
       vars: variable
     params:
       CONFIG_FILE: product-configs/((pas_version))/director.yml
-      VARS_FILES: vars/((foundation))/vars/director-vars.yml
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/zones-vars.yml
       SKIP_MISSING: true
 - name: test-interpolate-srt
   plan:
@@ -508,8 +508,8 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/srt.yml
-      VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+      CONFIG_FILE: product-configs/((pas_version))/srt.yml 
+      VARS_FILES: vars/((foundation))/vars/srt-vars.yml vars/((foundation))/vars/zones-vars.yml
       SKIP_MISSING: true
 - name: test-interpolate-p-event-alerts
   plan:
@@ -529,7 +529,7 @@ jobs:
       vars: variable
     params:
       CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
-      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
+      VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml vars/((foundation))/vars/zones-vars.yml
       SKIP_MISSING: true
 - name: delete-installation
   serial: true
