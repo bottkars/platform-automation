@@ -85,6 +85,7 @@ resources:
 # triggers
 - name: daily-trigger
   icon: calendar-clock
+  check_every: 10m  
   type: time
   source:
     interval: 24h
@@ -92,12 +93,14 @@ resources:
 
 - name: one-time-trigger
   icon: calendar-clock
+  check_every: 10m  
   type: time
   source:
     interval: 999999h
 
 - name: after-midnight
   type: time
+  check_every: 10m  
   source:
     start: 01:00 PM
     stop: 6:00 PM
@@ -120,6 +123,7 @@ resources:
     regexp: additional-tasks-(.*).zip
 - name: platform-automation-pivnet
   type: pivnet
+  check_every: 10m  
   source:
     api_token: ((pivnet-token))
     product_slug: platform-automation
@@ -149,6 +153,7 @@ resources:
 ## core resources
 - name: templates
   icon: github-circle
+  check_every: 10m  
   type: git  
   source:
     uri: ((template-repo))
@@ -157,6 +162,7 @@ resources:
 - name: variable
   icon: github-circle
   type: git  
+  check_every: 10m  
   source:
     uri: ((variable-repo))
     private_key: ((variable-deploy-key.private_key))
@@ -285,9 +291,8 @@ jobs:
         env: variable
         vars: variable
       params:
-        VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
         ENV_FILE: ((foundation))/env/env.yml
-        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions-azure.yml                        
+        DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/custom_vm_types_azure.yml                     
     - task: configure-extensions
       tags: ((tags))
       image: platform-automation-image
