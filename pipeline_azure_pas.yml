@@ -273,7 +273,7 @@ jobs:
         env: variable
         vars: variable
       params:
-        VARS_FILES: vars/((foundation))/vars/director-vars.yml
+        VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/zones-vars.yml
         ENV_FILE: ((foundation))/env/env.yml
         DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director.yml
     - task: configure-custom-vmtypes
