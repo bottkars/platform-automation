@@ -531,6 +531,7 @@ jobs:
       <<: *azure_env 
     
 
+        
 - name: deploy-cf-for-k8s
   plan:
   - in_parallel:
@@ -556,7 +557,7 @@ jobs:
     tags: ((tags))
     params:
       globs:
-      - "*_linux_amd64"          
+      - *_linux_amd64          
   - task: deploy-cf-for-k8s-master
     tags: ((tags))
     file: azs-concourse/ci/tasks/deploy-cf-for-k8s.yml  
@@ -564,6 +565,7 @@ jobs:
     params:
       <<: *azure_env
       DNS_DOMAIN: ((cf_k8s_domain))
+      GCR_CRED: ((gcr_cred))
   - put: cf-values
     tags: ((tags))
     params:
