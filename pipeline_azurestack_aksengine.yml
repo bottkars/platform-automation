@@ -557,7 +557,7 @@ jobs:
     tags: ((tags))
     params:
       globs:
-      - *_linux_amd64          
+      - "*_linux_amd64"        
   - task: deploy-cf-for-k8s-master
     tags: ((tags))
     file: azs-concourse/ci/tasks/deploy-cf-for-k8s.yml  
