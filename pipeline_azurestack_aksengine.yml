@@ -188,6 +188,15 @@ resources:
     bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 
+- name: yaml2json-release
+  tags: ((tags))
+  icon: github-circle
+  type: github-release
+  check_every: 10m  
+  source: 
+    owner: bronze1man
+    repository: yaml2json
+
 
 
 - name: sonobuoy-release
@@ -542,7 +551,12 @@ jobs:
     tags: ((tags))
     params:
       globs:
-      - bosh-cli-*-linux-amd64   
+      - bosh-cli-*-linux-amd64
+  - get: yaml2json-release
+    tags: ((tags))
+    params:
+      globs:
+      - *_linux_amd64             
   - task: deploy-cf-for-k8s-master
     tags: ((tags))
     file: azs-concourse/ci/tasks/deploy-cf-for-k8s.yml  
