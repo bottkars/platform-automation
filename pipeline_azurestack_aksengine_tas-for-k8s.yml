@@ -216,7 +216,7 @@ resources:
     bucket: ((aks.bucket))
     regexp: ((aks.resource_group))/cf-values-(.*).yml  
 
-- name: pas-for-kubernetes-product
+- name: tas-for-kubernetes-product
   tags: ((tags))
   icon: amazon-drive
   type: s3
@@ -457,7 +457,7 @@ jobs:
     
 
         
-- name: deploy-pas-for-kubernetes-product
+- name: deploy-tas-for-kubernetes-product
   plan:
   - in_parallel:
     - get: kubeconfig
@@ -465,7 +465,7 @@ jobs:
       passed:
       - scale-aks-cluster
       trigger: true      
-  - get: pas-for-kubernetes-product
+  - get: tas-for-kubernetes-product
     tags: ((tags))
   - get: azs-concourse
     tags: ((tags))
@@ -483,9 +483,9 @@ jobs:
     params:
       globs:
       - "*_linux_amd64"        
-  - task: deploy-pas-for-kubernetes-product
+  - task: deploy-tas-for-kubernetes-product
     tags: ((tags))
-    file: azs-concourse/ci/tasks/deploy-pas-for-kubernetes-product.yml  
+    file: azs-concourse/ci/tasks/deploy-tas-for-kubernetes-product.yml  
     image: platform-automation-image
     params:
       <<: *azure_env
