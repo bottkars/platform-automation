@@ -1,0 +1,497 @@
+---
+s3_env: &s3_env
+  access_key_id: ((s3_access_key_id))
+  endpoint:  ((s3_endpoint))
+  region_name: ((s3_region_name))
+  secret_access_key: ((s3_secret_access_key))
+azure_env: &azure_env
+  PROFILE: ((azs.arm_profile))
+  CA_CERT: ((azs_ca.certificate))
+  AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
+  ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+  VAULT_DNS:  ((azs.vault_dns))
+  SUFFIX_STORAGE_ENDPOINT: ((azs.suffix_storage_endpoint))
+  AZURE_TENANT_ID: ((tenant_id))
+  AZURE_CLIENT_ID: ((client_id))
+  AZURE_CLIENT_SECRET: ((client_secret))
+  AZURE_SUBSCRIPTION_ID: ((subscription_id))
+  RESOURCE_GROUP: ((aks.resource_group))
+  LOCATION: ((azs.azurestack_region))
+aks_env: &aks_env
+  AKS_ORCHESTRATOR_RELEASE: ((aks.orchestrator_release))
+  AKS_MASTER_DNS_PREFIX: ((aks.master.dns_prefix))
+  AKS_MASTER_VMSIZE: ((aks.master.vmsize))
+  AKS_MASTER_NODE_COUNT: ((aks.master.node_count))
+  AKS_MASTER_DISTRO: ((aks.master.distro))
+  AKS_AGENT_0_VMSIZE: ((aks.agent.0.vmsize))
+  AKS_AGENT_0_NODE_COUNT: ((aks.agent.0.node_count))
+  AKS_AGENT_0_DISTRO: ((aks.agent.0.distro))
+  AKS_AGENT_0_OSTYPE: ((aks.agent.0.ostype))
+  AKS_AGENT_0_POOL_NAME: ((aks.agent.0.pool_name))
+  AKS_RESOURCE_GROUP: ((aks.resource_group))
+  AKS_ADDITIONAL_APIMODEL: "" # ((aks.additional_apimodel))
+  SSH_PUBLIC_KEY: ((aks.ssh_public_key))
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((credhub-client))
+  CREDHUB_SECRET: ((credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
+  PREFIX: /concourse/main/((aks.team))
+  CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+
+slack_start_param: &slack_start_param
+  channel: ((slack.channel))
+  text: |
+    ((aks.team)) Job $BUILD_JOB_NAME started with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-started:"
+
+slack_succeeded_param: &slack_succeeded_param
+  channel: ((slack.channel))
+  text: |
+    ((aks.team)) Job $BUILD_JOB_NAME succeeded with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME    
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-succeeded:"
+
+slack_failed_param: &slack_failed_param
+  channel: ((slack.channel))
+  text: |
+    ((aks.team)) Job $BUILD_JOB_NAME failed with ID $BUILD_ID for 
+    build $BUILD_NAME for team $BUILD_TEAM_NAME at
+    $ATC_EXTERNAL_URL using pipeline  $BUILD_PIPELINE_NAME
+    see $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+    for details
+  icon_emoji: ":concourse-failed:"
+
+resource_types:
+- name: file-url
+  type: docker-image
+  source:
+    repository: pivotalservices/concourse-curl-resource
+    tag: latest
+
+- name: pivnet
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+- name: slack-notification
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource    
+resources:
+
+# triggers
+#- name: daily-trigger
+#  tags: ((tags))
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    interval: 24h
+
+
+- name: one-time-trigger
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+
+#- name: after-midnight
+#  tags: ((tags))
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    start: 01:00 AM
+#    stop: ((after_midnight_end))
+#    interval: 24h
+#    location: Europe/Berlin 
+# notifications
+#- name: notify
+#  tags: ((tags))
+#  icon: bell
+#  type: slack-notification
+#  source:
+#    url: ((slack.webhook))
+#
+
+- name: installation
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/installation-(.*).zip    
+- name: kubeconfig
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/kubeconfig-(.*).json  
+- name: apimodel
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/apimodel-(.*).json   
+
+#- name: platform-automation-pivnet
+#  tags: ((tags))
+#  icon: cloudfoundry
+#  type: pivnet
+#  source:
+#    api_token: ((pivnet-token))
+#    product_slug: platform-automation
+#    product_version: 4\.(.*)
+#    sort_by: semver
+
+#- name: platform-automation-tasks
+#  tags: ((tags))
+#  icon: amazon-drive
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets_pivnet_tasks))
+#    regexp: platform-automation-tasks-(.*).zip
+
+- name: platform-automation-image
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+- name: yaml2json-release
+  tags: ((tags))
+  icon: github-circle
+  type: github-release
+  check_every: 10m  
+  source: 
+    owner: bronze1man
+    repository: yaml2json
+
+
+
+- name: aks-engine-release
+  tags: ((tags))
+  icon: github-circle
+  type: github-release
+  check_every: 10m  
+  source: 
+    owner: Azure
+    repository: aks-engine
+    tag_filter: ((aks.engine_tagfilter))
+
+- name: bosh-cli-release
+  tags: ((tags))
+  icon: github-circle
+  type: github-release
+  check_every: 10m  
+  source: 
+    owner: cloudfoundry
+    repository: bosh-cli  
+
+- name: cf-values
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/cf-values-(.*).yml  
+
+- name: pas-for-kubernetes-product
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_products))
+    regexp: pas-for-kubernetes-product/\[pas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
+#- name: kubectl-release
+#  tags: ((tags))
+#  icon: github-circle
+#  type: github-release
+#  check_every: 10m  
+#  source: 
+#    owner: kubernetes
+#    repository: kubectl
+#    tag_filter: "v0.17.3" #v?([0-9.]*)
+
+
+- name: apimodel-json
+  check_every: 10m  
+  icon: cloud-braces
+  type: file-url
+  source:
+    url: https://raw.githubusercontent.com/Azure/aks-engine/master/examples/azure-stack/kubernetes-azurestack.json  
+    filename: kubernetes-azurestack.json 
+
+- name: azs-concourse
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/azs-concourse.git
+    branch: ((azs_concourse_branch))
+
+
+jobs:
+- name: deploy-aks-cluster
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+    - get: apimodel-json
+    - get: aks-engine-release
+      tags: ((tags))
+      params:
+        unpack: true
+        globs:
+        - aks-engine-*-linux-amd64.tar.gz
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+  - task: deploy-cluster
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/deploy-aks.yml  
+    image: platform-automation-image
+    input_mapping:
+      aks-engine: aks-engine-release
+    params:
+      <<: *azure_env
+      <<: *aks_env
+  - put: installation
+    tags: ((tags))
+    params:
+      file: aks-installation/installation-*.zip
+  - put: apimodel
+    tags: ((tags))
+    params:
+      file: apimodel/apimodel-*.json
+  - put: kubeconfig
+    tags: ((tags))
+    params:
+      file: kubeconfig/kubeconfig-*.json              
+
+
+- name: query-aks-agent-pool
+  plan:
+  - in_parallel:
+    - get: installation
+      passed: [ deploy-aks-cluster ]
+      trigger: false
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: aks-engine-release
+      tags: ((tags))
+      params:
+        unpack: true
+        globs:
+        - aks-engine-*-linux-amd64.tar.gz
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+  - task: query-aks-agent-pool
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/query-aks-agent-pool.yml  
+    image: platform-automation-image
+    input_mapping:
+      aks-engine: aks-engine-release
+      current-installation: installation
+    params:
+      <<: *aks_env
+      AKS_AGENT_POOL: linuxpool
+#  - put: installation
+#    tags: ((tags))
+#    params:
+#      file: aks-installation/installation-*.zip
+#  - put: apimodel
+#    tags: ((tags))
+#    params:
+#      file: apimodel/apimodel-*.json
+#  - put: kubeconfig
+#    tags: ((tags))
+#    params:
+#      file: kubeconfig/kubeconfig-*.json         
+
+
+- name: upgrade-aks-cluster
+  plan:
+  - in_parallel:
+    - get: installation
+      passed: 
+      - deploy-aks-cluster
+      trigger: false
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: aks-engine-release
+      tags: ((tags))
+      params:
+        unpack: true
+        globs:
+        - aks-engine-*-linux-amd64.tar.gz
+    - get: azs-concourse
+      tags: ((tags))
+      passed:
+      - validate-aks-cluster      
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+  - task: upgrade-cluster
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/upgrade-aks.yml  
+    image: platform-automation-image
+    input_mapping:
+      aks-engine: aks-engine-release
+      current-installation: installation
+    params:
+      <<: *azure_env
+      <<: *aks_env
+      AKS_ORCHESTRATOR_VERSION_UPDATE: ((aks.orchestrator_version_update))
+  - put: installation
+    tags: ((tags))
+    params:
+      file: aks-installation/installation-*.zip
+  - put: apimodel
+    tags: ((tags))
+    params:
+      file: apimodel/apimodel-*.json
+  - put: kubeconfig
+    tags: ((tags))
+    params:
+      file: kubeconfig/kubeconfig-*.json         
+
+
+- name: scale-aks-cluster
+  plan:
+  - in_parallel:
+    - get: installation
+      passed:
+      - deploy-aks-cluster
+      trigger: false
+      tags: ((tags))
+      params:
+        unpack: true
+      trigger: true  
+    - get: aks-engine-release
+      tags: ((tags))
+      params:
+        unpack: true
+        globs:
+        - aks-engine-*-linux-amd64.tar.gz  
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+  - task: scale-cluster
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/scale-aks.yml  
+    image: platform-automation-image
+    input_mapping:
+      aks-engine: aks-engine-release
+      current-installation: installation
+    params:
+      <<: *azure_env
+      <<: *aks_env
+      AKS_AGENT_0_NEW_NODE_COUNT: ((aks.agent.0.new_node_count))
+  - put: installation
+    tags: ((tags))
+    params:
+      file: aks-installation/installation-*.zip
+  - put: apimodel
+    tags: ((tags))
+    params:
+      file: apimodel/apimodel-*.json
+  - put: kubeconfig
+    tags: ((tags))
+    params:
+      file: kubeconfig/kubeconfig-*.json     
+
+
+
+
+
+- name: delete-aks-cluster
+  plan:
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: delete-rg
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
+    params:
+      <<: *azure_env 
+    
+
+        
+- name: deploy-pas-for-kubernetes-product
+  plan:
+  - in_parallel:
+    - get: kubeconfig
+      tags: ((tags))
+      passed:
+      - scale-aks-cluster
+      trigger: true      
+  - get: pas-for-kubernetes-product
+    tags: ((tags))
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - get: bosh-cli-release
+    tags: ((tags))
+    params:
+      globs:
+      - bosh-cli-*-linux-amd64
+  - get: yaml2json-release
+    tags: ((tags))
+    params:
+      globs:
+      - "*_linux_amd64"        
+  - task: deploy-pas-for-kubernetes-product
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/deploy-pas-for-kubernetes-product.yml  
+    image: platform-automation-image
+    params:
+      <<: *azure_env
+      DNS_DOMAIN: ((cf_k8s_domain))
+      GCR_CRED: ((gcr_cred))
+  - put: cf-values
+    tags: ((tags))
+    params:
+      file: cf-values/cf-values-*.yml 
