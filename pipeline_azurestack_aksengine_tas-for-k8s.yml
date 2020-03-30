@@ -359,7 +359,7 @@ jobs:
     - get: azs-concourse
       tags: ((tags))
       passed:
-      - validate-aks-cluster      
+      - deploy-aks-cluster      
     - get: platform-automation-image
       tags: ((tags))
       params:
