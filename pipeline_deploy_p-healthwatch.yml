@@ -156,7 +156,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]p-healthwatch-.*.pivotal
+    regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]healthwatch-.*.pivotal
 
 - name: p-healthwatch-stemcell
   tags: ((tags))

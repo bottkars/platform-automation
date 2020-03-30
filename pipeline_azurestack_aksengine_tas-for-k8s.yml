@@ -177,15 +177,15 @@ resources:
     bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 
-- name: yaml2json-release
-  tags: ((tags))
-  icon: github-circle
-  type: github-release
-  check_every: 10m  
-  source: 
-    owner: bronze1man
-    repository: yaml2json
-
+#- name: yaml2json-release
+#  tags: ((tags))
+#  icon: github-circle
+#  type: github-release
+#  check_every: 10m  
+#  source: 
+#    owner: bronze1man
+#    repository: yaml2json
+#
 
 
 - name: aks-engine-release
@@ -222,7 +222,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_products))
+    bucket: ((aks.buckets_pivnet_products))
     regexp: pas-for-kubernetes-product/\[pas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
 #- name: kubectl-release
 #  tags: ((tags))
@@ -467,6 +467,8 @@ jobs:
       trigger: true      
   - get: tas-for-kubernetes-product
     tags: ((tags))
+    params:
+      unpack: true
   - get: azs-concourse
     tags: ((tags))
   - get: platform-automation-image
@@ -478,11 +480,11 @@ jobs:
     params:
       globs:
       - bosh-cli-*-linux-amd64
-  - get: yaml2json-release
-    tags: ((tags))
-    params:
-      globs:
-      - "*_linux_amd64"        
+#  - get: yaml2json-release
+#    tags: ((tags))
+#    params:
+#      globs:
+#      - "*_linux_amd64"        
   - task: deploy-tas-for-kubernetes-product
     tags: ((tags))
     file: azs-concourse/ci/tasks/deploy-tas-for-kubernetes-product.yml  
@@ -491,6 +493,9 @@ jobs:
       <<: *azure_env
       DNS_DOMAIN: ((tas_k8s_domain))
       GCR_CRED: ((gcr_cred))
+      YTT_TAS_registry__username: ((registry.username))
+      YTT_TAS_registry__password: ((registry.password))
+      YTT_TAS_registry__server: ((registry.server))
   - put: cf-values
     tags: ((tags))
     params:
