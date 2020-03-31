@@ -259,9 +259,7 @@ interpolate-product-templates: &interpolate-product-templates
   params:
     <<: *credhub_env
     INTERPOLATION_PATHS: product-configs/((tas_version))/director-azurestack.yml 
-      product-configs/((tas_version))/extensions-azurestack.yml 
-      product-configs/((tas_version))/extensions-azurestack.yml 
-      product-configs/((tas_version))/extensions-azurestack.yml 
+      product-configs/((tas_version))/extensions-azurestack.yml
       product-configs/((tas_version))/custom_vm_types_azurestack.yml 
     SKIP_MISSING: true
   input_mapping:
