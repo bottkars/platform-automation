@@ -614,6 +614,7 @@ jobs:
       tags: ((tags))
       params:
         file: platform-automation-pivnet/*image*.tgz
+
 - name: test-interpolate
   plan:
   - get: variable
@@ -642,7 +643,62 @@ jobs:
 #      VARS_FILES: vars/((foundation))/vars/pas_certs-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
 
-####
+
+- name: test-interpolate-director-extensions
+  plan:
+  - get: variable
+    tags: ((tags))
+  - get: templates
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: interpolate
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((tas_version))/extensions-azurestack.yml
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml
+                  vars/((foundation))/vars/director_deployment_vars.yml
+      SKIP_MISSING: true    
+      ENV_FILE: ((foundation))/env/env.yml
+
+- name: test-interpolate-director
+  plan:
+  - get: variable
+    tags: ((tags))
+  - get: templates
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: interpolate
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((tas_version))/director-azurestack.yml
+      VARS_FILES: vars/((foundation))/vars/director-vars.yml
+                  vars/((foundation))/vars/director_deployment_vars.yml
+      SKIP_MISSING: true    
+      ENV_FILE: ((foundation))/env/env.yml
 groups:
 
 
@@ -669,6 +725,7 @@ groups:
   - reboot-control
   - set-opsman-banner
   - test-interpolate
+  - test-interpolate-director
 
 
 
