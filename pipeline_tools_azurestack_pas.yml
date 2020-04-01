@@ -699,11 +699,38 @@ jobs:
                   vars/((foundation))/vars/director_deployment_vars.yml
       SKIP_MISSING: true    
       ENV_FILE: ((foundation))/env/env.yml
+
+- name: test-interpolate-srt
+  plan:
+  - get: variable
+    tags: ((tags))
+  - get: templates
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - get: platform-automation-tasks
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: interpolate
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/test-interpolate.yml
+    input_mapping:
+      config: templates
+      vars: variable
+    params:
+      CONFIG_FILE: product-configs/((tas_version))/srt.yml
+      VARS_FILES: vars/((foundation))/vars/srt-vars.yml
+                  vars/((foundation))/vars/director_deployment_vars.yml
+      SKIP_MISSING: true    
+      ENV_FILE: ((foundation))/env/env.yml
+
+
+
 groups:
-
-
-
-
 - name: service-jobs
   jobs:
   - clear-pipeline-lock
@@ -727,6 +754,4 @@ groups:
   - test-interpolate
   - test-interpolate-director
   - test-interpolate-director-extensions
-
-
-
+  - test-interpolate-srt
