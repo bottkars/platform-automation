@@ -149,23 +149,23 @@ resources:
 ###### Products go here #####
 #############################    
 
-- name: p-healthwatch-product
+- name: p-healthwatch2-product
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]healthwatch-.*.pivotal
+    regexp: p-healthwatch2-product/\[p-healthwatch,(.*)\]healthwatch-.*.pivotal
 
-- name: p-healthwatch-stemcell
+- name: p-healthwatch2-stemcell
   tags: ((tags))
   icon: amazon-drive
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: p-healthwatch-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
+    regexp: p-healthwatch2-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
 
 
 #############################
@@ -192,7 +192,7 @@ resources:
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
     paths:
-    - ((foundation))/vars/p-healthwatch-vars.yml
+    - ((foundation))/vars/p-healthwatch2-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
@@ -220,7 +220,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: download-product-configs/((tas_version))/download-p-healthwatch.yml
+    INTERPOLATION_PATHS: download-product-configs/((tas_version))/download-p-healthwatch2.yml
   input_mapping:
     files: templates
   output_mapping:
@@ -231,7 +231,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((tas_version))/p-healthwatch.yml
+    INTERPOLATION_PATHS: product-configs/((tas_version))/p-healthwatch2.yml
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -242,7 +242,7 @@ jobs:
 ## opsman starts here
 
 ## 
-- name: get-p-healthwatch
+- name: get-p-healthwatch2
   on_failure:
     put: notify
     tags: ((tags))
@@ -272,15 +272,15 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-p-healthwatch-product-and-stemcell
+  - task: download-p-healthwatch2-product-and-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((tas_version))/download-p-healthwatch.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-healthwatch2.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: p-healthwatch-stemcell}
+    output_mapping: {downloaded-stemcell: p-healthwatch2-stemcell}
     on_failure:
       put: download-lock
       attempts: 5
@@ -288,14 +288,14 @@ jobs:
       params:
         release: download-lock
   - in_parallel:
-    - put: p-healthwatch-product
+    - put: p-healthwatch2-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: p-healthwatch-stemcell
+    - put: p-healthwatch2-stemcell
       tags: ((tags))
       params:
-        file: p-healthwatch-stemcell/*.tgz
+        file: p-healthwatch2-stemcell/*.tgz
   - put: download-lock
     attempts: 5
     tags: ((tags))
@@ -303,7 +303,7 @@ jobs:
       release: download-lock      
 
 ##
-- name: upload-and-stage-p-healthwatch
+- name: upload-and-stage-p-healthwatch2
   on_failure:
     put: notify
     tags: ((tags))
@@ -330,29 +330,29 @@ jobs:
     - get: variable
       tags: ((tags))
       trigger: true
-    - get: p-healthwatch-product
+    - get: p-healthwatch2-product
       tags: ((tags))
       skip_download: true
       trigger: true
-    - get: p-healthwatch-stemcell
+    - get: p-healthwatch2-stemcell
       tags: ((tags))
       skip_download: true
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
-  - task: download-p-healthwatch
+  - task: download-p-healthwatch2
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((tas_version))/download-p-healthwatch.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-healthwatch2.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: p-healthwatch-product
-      downloaded-stemcell: p-healthwatch-stemcell
+      downloaded-product: p-healthwatch2-product
+      downloaded-stemcell: p-healthwatch2-stemcell
 
   - put: pipeline-lock
     attempts: 5
@@ -365,17 +365,17 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: p-healthwatch-product
+      product: p-healthwatch2-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
-  - task: upload-p-healthwatch-stemcell
+  - task: upload-p-healthwatch2-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: p-healthwatch-stemcell
+      stemcell: p-healthwatch2-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
@@ -383,7 +383,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: p-healthwatch-product
+      product: p-healthwatch2-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
@@ -391,7 +391,7 @@ jobs:
 
 ##
 
-- name: configure-p-healthwatch
+- name: configure-p-healthwatch2
   on_failure:
     put: notify
     tags: ((tags))
@@ -407,14 +407,14 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))  
       passed:
-        - upload-and-stage-p-healthwatch
+        - upload-and-stage-p-healthwatch2
       trigger: true    
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
       passed:
-        - upload-and-stage-p-healthwatch
+        - upload-and-stage-p-healthwatch2
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -426,7 +426,7 @@ jobs:
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
-  - task: configure-p-healthwatch
+  - task: configure-p-healthwatch2
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -435,8 +435,8 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((tas_version))/p-healthwatch.yml
-      VARS_FILES: vars/((foundation))/vars/p-healthwatch-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-healthwatch2.yml
+      VARS_FILES: vars/((foundation))/vars/p-healthwatch2-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 ##
@@ -467,7 +467,7 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))
       passed: 
-      - configure-p-healthwatch 
+      - configure-p-healthwatch2 
       trigger: true   
     - get: variable
       tags: ((tags))
@@ -478,7 +478,7 @@ jobs:
     input_mapping:
       env: variable
     params:
-      PRODUCT_NAME: p-healthwatch
+      PRODUCT_NAME: p-healthwatch2
       ENV_FILE: ((foundation))/env/env.yml
   - task: export-installation
     tags: ((tags))
