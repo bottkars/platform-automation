@@ -726,6 +726,7 @@ groups:
   - set-opsman-banner
   - test-interpolate
   - test-interpolate-director
+  - test-interpolate-director-extensions
 
 
 
