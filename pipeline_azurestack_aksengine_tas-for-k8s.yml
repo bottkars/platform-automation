@@ -491,11 +491,16 @@ jobs:
     image: platform-automation-image
     params:
       <<: *azure_env
-      DNS_DOMAIN: ((tas_k8s_domain))
+      SYSTEM_DOMAIN: ((tas_k8s_domain))
       GCR_CRED: ((gcr_cred))
-      YTT_TAS_registry__username: ((registry.username))
-      YTT_TAS_registry__password: ((registry.password))
-      YTT_TAS_registry__server: ((registry.server))
+      YTT_TAS_system_registry__hostname: ((registry.hostname))
+      YTT_TAS_system_registry__username: ((registry.username))
+      YTT_TAS_system_registry__password: ((registry.password))
+      YTT_TAS_app_registry__hostname: ((app_registry.hostname))
+      YTT_TAS_app_registry__repository: ((app_registry.repository))
+      YTT_TAS_app_registry__username: ((app_registry.username))
+      YTT_TAS_app_registry__password: ((app_registry.password))
+      YTT_TAS_app_registry__ca: ((app_registry.ca))     
   - put: cf-values
     tags: ((tags))
     params:
