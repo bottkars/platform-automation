@@ -505,3 +505,25 @@ jobs:
     tags: ((tags))
     params:
       file: cf-values/cf-values-*.yml 
+
+- name: deploy-docker-ca-cert
+  plan:
+  - in_parallel:
+    - get: kubeconfig
+      tags: ((tags))
+      passed:
+      - deploy-aks-cluster
+      trigger: true      
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true    
+  - task: deploy-tas-for-kubernetes-product
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/deploy-docker-ca-k8s.yml  
+    image: platform-automation-image
+    params:
+      REGISTRY_HOSTNAME: ((registry.hostname))
+      CA_CERT: ((app_registry.ca))     
