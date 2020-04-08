@@ -520,7 +520,7 @@ jobs:
     tags: ((tags))
     params:
       unpack: true    
-  - task: deploy-tas-for-kubernetes-product
+  - task: deploy-docker-ca-cert
     tags: ((tags))
     file: azs-concourse/ci/tasks/deploy-docker-ca-k8s.yml  
     image: platform-automation-image
