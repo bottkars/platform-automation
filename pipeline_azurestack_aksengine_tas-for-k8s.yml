@@ -497,7 +497,7 @@ jobs:
       YTT_TAS_system_registry__username: ((registry.username))
       YTT_TAS_system_registry__password: ((registry.password))
       YTT_TAS_app_registry__hostname: ((app_registry.hostname))
-      YTT_TAS_app_registry__repository: ((app_registry.repository))
+      YTT_TAS_app_registry__repository: ((app_registry.hostname))/((app_registry.repository))
       YTT_TAS_app_registry__username: ((app_registry.username))
       YTT_TAS_app_registry__password: ((app_registry.password))
       YTT_TAS_app_registry__ca: ((app_registry.ca))     
