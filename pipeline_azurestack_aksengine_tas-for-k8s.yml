@@ -224,6 +224,7 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
+
 - name: boshcli-product
   tags: ((tags))
   icon: amazon-drive
@@ -231,7 +232,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]bosh*
+    regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]bosh.*
 - name: kbld-product
   tags: ((tags))
   icon: amazon-drive
@@ -239,7 +240,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: tas-for-kubernetes-product/\[kbld,(.*)\]kbld*
+    regexp: tas-for-kubernetes-product/\[kbld,(.*)\]kbld.*
 - name: kapp-product
   tags: ((tags))
   icon: amazon-drive
@@ -247,7 +248,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: tas-for-kubernetes-product/\[kapp,(.*)\]kapp*    
+    regexp: tas-for-kubernetes-product/\[kapp,(.*)\]kapp.*    
 - name: ytt-product
   tags: ((tags))
   icon: amazon-drive
@@ -255,7 +256,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: tas-for-kubernetes-product/\[ytt,(.*)\]ytt*    
+    regexp: tas-for-kubernetes-product/\[ytt,(.*)\]ytt.*    
 #############################  
 #- name: kubectl-release
 #  tags: ((tags))
