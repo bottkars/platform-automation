@@ -1,16 +1,16 @@
 ---
 s3_env: &s3_env
-  access_key_id: ((((foundation))/s3_access_key_id))
-  endpoint:  ((((foundation))/s3_endpoint))
-  region_name: ((((foundation))/s3_region_name))
-  secret_access_key: ((((foundation))/s3_secret_access_key))
+  access_key_id: ((s3_access_key_id))
+  endpoint:  ((s3_endpoint))
+  region_name: ((s3_region_name))
+  secret_access_key: ((s3_secret_access_key))
 
 credhub_env: &credhub_env
-  CREDHUB_CLIENT: ((((foundation))/credhub-client))
-  CREDHUB_SECRET: ((((foundation))/credhub-secret))
-  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  CREDHUB_CLIENT: ((credhub-client))
+  CREDHUB_SECRET: ((credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
   PREFIX: /concourse/main/((foundation))
-  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+  CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
 
 stage_steps: &stage_steps
   steps:
@@ -94,13 +94,7 @@ resource_types:
   source:
     repository: cfcommunity/slack-notification-resource    
 resources:
-- name: additional-tasks
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_tasks))
-    regexp: additional-tasks-(.*).zip
+
 # triggers
 
 - name: after-midnight
@@ -119,14 +113,7 @@ resources:
   type: slack-notification
   source:
     url: ((slack.webhook))
-- name: installation
-  tags: ((tags))
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((((foundation))/buckets_installation))
-    regexp: ((foundation))/installation-(.*).zip    
+
 
 - name: platform-automation-tasks
   tags: ((tags))
@@ -134,7 +121,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_tasks))
+    bucket: ((buckets_pivnet_tasks))
     regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
@@ -143,7 +130,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_image))
+    bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 #############################
 ###### Products go here #####
@@ -155,7 +142,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_products))
+    bucket: ((buckets_pivnet_products))
     regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
 - name: boshcli-product
   tags: ((tags))
@@ -163,7 +150,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_products))
+    bucket: ((buckets_pivnet_products))
     regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]bosh*
 - name: kbld-product
   tags: ((tags))
@@ -171,7 +158,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_products))
+    bucket: ((buckets_pivnet_products))
     regexp: tas-for-kubernetes-product/\[kbld,(.*)\]kbld*
 - name: kapp-product
   tags: ((tags))
@@ -179,7 +166,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_products))
+    bucket: ((buckets_pivnet_products))
     regexp: tas-for-kubernetes-product/\[kapp,(.*)\]kapp*    
 - name: ytt-product
   tags: ((tags))
@@ -187,7 +174,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_products))
+    bucket: ((buckets_pivnet_products))
     regexp: tas-for-kubernetes-product/\[ytt,(.*)\]ytt*    
 #############################
 ###### Products end here ####
@@ -203,50 +190,28 @@ resources:
     private_key: ((((foundation))/template-deploy-key.private_key))
     branch: ((templates.branch))
 
-- name: variable
-  tags: ((tags))
-  icon: github-circle
-  type: git
-  check_every: 10m  
-  source: 
-    uri: ((variable-repo))
-    private_key: ((((foundation))/variable-deploy-key.private_key))
-    branch: master
-    paths:
-    - ((foundation))/vars/tas-for-kubernetes-vars.yml
 
-- name: pipeline-lock
-  icon: cloud-lock
-  type: pool
-  check_every: 10m
-  source:
-    uri: ((variable-repo))
-    branch: master
-    pool: pks
-    private_key: ((((foundation))/variable-deploy-key.private_key))
-    retry_delay: 300s
-
-- name: download-lock
-  icon: cloud-lock-outline
-  type: pool
-  check_every: 10m
-  source:
-    uri: ((variable-repo))
-    branch: master
-    pool: download-lock
-    private_key: ((((foundation))/variable-deploy-key.private_key))
-    retry_delay: 300s
+#- name: download-lock
+#  icon: cloud-lock-outline
+#  type: pool
+#  check_every: 10m
+#  source:
+#    uri: ((variable-repo))
+#    branch: master
+#    pool: download-lock
+#    private_key: ((((foundation))/variable-deploy-key.private_key))
+#    retry_delay: 300s
 
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS:  download-product-configs/((tas_for_k8s_version))/download-tas-for-kubernetes.yml
-                          download-product-configs/((tas_for_k8s_version))/download-kbld.yml
-                          download-product-configs/((tas_for_k8s_version))/download-kapp.yml
-                          download-product-configs/((tas_for_k8s_version))/download-ytt.yml
-                          download-product-configs/((tas_for_k8s_version))/download-boshcli.yml                          
+    INTERPOLATION_PATHS:  download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-tas-for-kubernetes.yml
+                          download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kbld.yml
+                          download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kapp.yml
+                          download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-ytt.yml
+                          download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-boshcli.yml                          
   input_mapping:
     files: templates
   output_mapping:
@@ -257,7 +222,7 @@ interpolate-product-downloads: &interpolate-product-downloads
 #  file: platform-automation-tasks/tasks/credhub-interpolate.yml
 #  params:
 #    <<: *credhub_env
-#    INTERPOLATION_PATHS: product-configs/((tas_for_k8s_version))/tas-for-kubernetes.yml
+#    INTERPOLATION_PATHS: product-configs/((tas_for_k8s_version))/tas-for-k8s/tas-for-kubernetes.yml
 #    SKIP_MISSING: true
 #  input_mapping:
 #    files: templates
@@ -274,10 +239,10 @@ jobs:
   serial: true
   serial_groups: [ get-products ]
   plan:
-  - put: download-lock
-    tags: ((tags))
-    params:
-      acquire: true   
+#  - put: download-lock
+#    tags: ((tags))
+#    params:
+#      acquire: true   
   - in_parallel:
     - get: after-midnight
       tags: ((tags))
@@ -300,15 +265,15 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/download-tas-for-kubernetes.yml
+      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-tas-for-kubernetes.yml
     input_mapping:
       config: interpolated-product-downloads
-    on_failure:
-      put: download-lock
-      attempts: 5
-      tags: ((tags))
-      params:
-        release: download-lock
+#    on_failure:
+#      put: download-lock
+#      attempts: 5
+#      tags: ((tags))
+#      params:
+#        release: download-lock
   - in_parallel:
     - put: tas-for-kubernetes-product
       tags: ((tags))
@@ -320,15 +285,15 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/download-kapp.yml
+      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kapp.yml
     input_mapping:
       config: interpolated-product-downloads
-    on_failure:
-      put: download-lock
-      attempts: 5
-      tags: ((tags))
-      params:
-        release: download-lock
+#    on_failure:
+#      put: download-lock
+#      attempts: 5
+#      tags: ((tags))
+#      params:
+#        release: download-lock
   - in_parallel:
     - put: kapp-product
       tags: ((tags))
@@ -340,15 +305,15 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/download-kbld.yml
+      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kbld.yml
     input_mapping:
       config: interpolated-product-downloads
-    on_failure:
-      put: download-lock
-      attempts: 5
-      tags: ((tags))
-      params:
-        release: download-lock
+#    on_failure:
+#      put: download-lock
+#      attempts: 5
+#      tags: ((tags))
+#      params:
+#        release: download-lock
   - in_parallel:
     - put: kbld-product
       tags: ((tags))
@@ -360,15 +325,15 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/download-ytt.yml
+      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-ytt.yml
     input_mapping:
       config: interpolated-product-downloads
-    on_failure:
-      put: download-lock
-      attempts: 5
-      tags: ((tags))
-      params:
-        release: download-lock
+#    on_failure:
+#      put: download-lock
+#      attempts: 5
+#      tags: ((tags))
+#      params:
+#        release: download-lock
   - in_parallel:
     - put: ytt-product
       tags: ((tags))
@@ -380,26 +345,26 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/download-boshcli.yml
+      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-boshcli.yml
     input_mapping:
       config: interpolated-product-downloads
-    on_failure:
-      put: download-lock
-      attempts: 5
-      tags: ((tags))
-      params:
-        release: download-lock
+#    on_failure:
+#      put: download-lock
+#      attempts: 5
+#      tags: ((tags))
+#      params:
+#        release: download-lock
   - in_parallel:
     - put: boshcli-product
       tags: ((tags))
       params:
         file: downloaded-product/bosh*
 
-  - put: download-lock
-    attempts: 5
-    tags: ((tags))
-    params:
-      release: download-lock
+#  - put: download-lock
+#    attempts: 5
+#    tags: ((tags))
+#    params:
+#      release: download-lock
 
 ##
 
