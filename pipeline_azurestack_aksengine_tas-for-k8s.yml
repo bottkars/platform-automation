@@ -224,7 +224,14 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
-
+- name: kubectl-product
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: tas-for-kubernetes-product/\[pivotal-container-service,(.*)\]kubectl-linux-amd64-.*
 - name: boshcli-product
   tags: ((tags))
   icon: amazon-drive
@@ -503,6 +510,8 @@ jobs:
     tags: ((tags))
     params:
       unpack: true
+  - get: kubectl-product
+    tags: ((tags))      
   - get: kbld-product
     tags: ((tags))
   - get: ytt-product

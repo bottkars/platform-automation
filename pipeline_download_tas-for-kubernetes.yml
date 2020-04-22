@@ -190,7 +190,9 @@ interpolate-product-downloads: &interpolate-product-downloads
                           download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kbld.yml
                           download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kapp.yml
                           download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-ytt.yml
-                          download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-boshcli.yml                          
+                          download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-boshcli.yml
+                          download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kubectl.yml                          
+
   input_mapping:
     files: templates
   output_mapping:
@@ -304,7 +306,7 @@ jobs:
       config: interpolated-product-downloads
 
   - in_parallel:
-    - put: boshcli-product
+    - put: kubectl-product
       tags: ((tags))
       params:
         file: downloaded-product/*kubectl*
