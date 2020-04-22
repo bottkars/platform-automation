@@ -88,15 +88,8 @@ resource_types:
   source:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
-#- name: slack-notification
-#  tags: ((tags))
-#  type: docker-image
-#  source:
-#    repository: cfcommunity/slack-notification-resource    
+
 resources:
-
-# triggers
-
 - name: after-midnight
   tags: ((tags))
   icon: calendar-clock
@@ -106,13 +99,7 @@ resources:
     stop: ((after_midnight_end))
     interval: 24h
     location: Europe/Berlin 
-# notifications
-#- name: notify
-#  tags: ((tags))
-#  icon: bell
-#  type: slack-notification
-#  source:
-#    url: ((slack.webhook))
+
 
 
 - name: platform-automation-tasks
@@ -132,9 +119,6 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
-#############################
-###### Products go here #####
-#############################    
 
 - name: tas-for-kubernetes-product
   tags: ((tags))
@@ -144,6 +128,14 @@ resources:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
     regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
+- name: kubectl-product
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: tas-for-kubernetes-product/\[pivotal-container-service,(.*)\]kubectl-linux-amd64-.*
 - name: boshcli-product
   tags: ((tags))
   icon: amazon-drive
@@ -151,7 +143,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]bosh*
+    regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]bosh.*
 - name: kbld-product
   tags: ((tags))
   icon: amazon-drive
@@ -159,7 +151,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: tas-for-kubernetes-product/\[kbld,(.*)\]kbld*
+    regexp: tas-for-kubernetes-product/\[kbld,(.*)\]kbld.*
 - name: kapp-product
   tags: ((tags))
   icon: amazon-drive
@@ -167,7 +159,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: tas-for-kubernetes-product/\[kapp,(.*)\]kapp*    
+    regexp: tas-for-kubernetes-product/\[kapp,(.*)\]kapp.*    
 - name: ytt-product
   tags: ((tags))
   icon: amazon-drive
@@ -175,10 +167,8 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: tas-for-kubernetes-product/\[ytt,(.*)\]ytt*    
-#############################
-###### Products end here ####
-############################# 
+    regexp: tas-for-kubernetes-product/\[ytt,(.*)\]ytt*   
+
 
 - name: templates
   tags: ((tags))
@@ -190,17 +180,6 @@ resources:
     private_key: ((((foundation))/template-deploy-key.private_key))
     branch: ((templates.branch))
 
-
-#- name: download-lock
-#  icon: cloud-lock-outline
-#  type: pool
-#  check_every: 10m
-#  source:
-#    uri: ((variable-repo))
-#    branch: master
-#    pool: download-lock
-#    private_key: ((((foundation))/variable-deploy-key.private_key))
-#    retry_delay: 300s
 
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
@@ -217,32 +196,12 @@ interpolate-product-downloads: &interpolate-product-downloads
   output_mapping:
     interpolated-files: interpolated-product-downloads
 
-#interpolate-product-templates: &interpolate-product-templates
-#  image: platform-automation-image
-#  file: platform-automation-tasks/tasks/credhub-interpolate.yml
-#  params:
-#    <<: *credhub_env
-#    INTERPOLATION_PATHS: product-configs/((tas_for_k8s_version))/tas-for-k8s/tas-for-kubernetes.yml
-#    SKIP_MISSING: true
-#  input_mapping:
-#    files: templates
-#  output_mapping:
-#    interpolated-files: interpolated-product-templates
 
 jobs:
 - name: get-tas-for-kubernetes-artifacts
-  #on_failure:
-  #  put: notify
-  #  tags: ((tags))
-  #  params:
-  #    <<: *slack_failed_param
   serial: true
   serial_groups: [ get-products ]
   plan:
-#  - put: download-lock
-#    tags: ((tags))
-#    params:
-#      acquire: true   
   - in_parallel:
     - get: after-midnight
       tags: ((tags))
@@ -268,12 +227,7 @@ jobs:
       CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-tas-for-kubernetes.yml
     input_mapping:
       config: interpolated-product-downloads
-#    on_failure:
-#      put: download-lock
-#      attempts: 5
-#      tags: ((tags))
-#      params:
-#        release: download-lock
+
   - in_parallel:
     - put: tas-for-kubernetes-product
       tags: ((tags))
@@ -288,12 +242,7 @@ jobs:
       CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kapp.yml
     input_mapping:
       config: interpolated-product-downloads
-#    on_failure:
-#      put: download-lock
-#      attempts: 5
-#      tags: ((tags))
-#      params:
-#        release: download-lock
+
   - in_parallel:
     - put: kapp-product
       tags: ((tags))
@@ -308,12 +257,7 @@ jobs:
       CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kbld.yml
     input_mapping:
       config: interpolated-product-downloads
-#    on_failure:
-#      put: download-lock
-#      attempts: 5
-#      tags: ((tags))
-#      params:
-#        release: download-lock
+
   - in_parallel:
     - put: kbld-product
       tags: ((tags))
@@ -328,12 +272,7 @@ jobs:
       CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-ytt.yml
     input_mapping:
       config: interpolated-product-downloads
-#    on_failure:
-#      put: download-lock
-#      attempts: 5
-#      tags: ((tags))
-#      params:
-#        release: download-lock
+
   - in_parallel:
     - put: ytt-product
       tags: ((tags))
@@ -348,23 +287,24 @@ jobs:
       CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-boshcli.yml
     input_mapping:
       config: interpolated-product-downloads
-#    on_failure:
-#      put: download-lock
-#      attempts: 5
-#      tags: ((tags))
-#      params:
-#        release: download-lock
+
   - in_parallel:
     - put: boshcli-product
       tags: ((tags))
       params:
         file: downloaded-product/*bosh*
 
-#  - put: download-lock
-#    attempts: 5
-#    tags: ((tags))
-#    params:
-#      release: download-lock
+  - task: download-kubectl
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    params:
+      CONFIG_FILE: download-product-configs/((tas_for_k8s_version))/tas-for-k8s/download-kubectl.yml
+    input_mapping:
+      config: interpolated-product-downloads
 
-##
-
+  - in_parallel:
+    - put: boshcli-product
+      tags: ((tags))
+      params:
+        file: downloaded-product/*kubectl*
