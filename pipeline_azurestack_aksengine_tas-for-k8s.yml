@@ -198,14 +198,14 @@ resources:
     repository: aks-engine
     tag_filter: ((aks.engine_tagfilter))
 
-- name: bosh-cli-release
-  tags: ((tags))
-  icon: github-circle
-  type: github-release
-  check_every: 10m  
-  source: 
-    owner: cloudfoundry
-    repository: bosh-cli  
+#- name: bosh-cli-release
+#  tags: ((tags))
+#  icon: github-circle
+#  type: github-release
+#  check_every: 10m  
+#  source: 
+#    owner: cloudfoundry
+#    repository: bosh-cli  
 
 - name: cf-values
   tags: ((tags))
@@ -222,8 +222,41 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((aks.buckets_pivnet_products))
-    regexp: pas-for-kubernetes-product/\[pas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
+    bucket: ((buckets_pivnet_products))
+    regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
+- name: boshcli-product
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: tas-for-kubernetes-product/\[tas-for-kubernetes,(.*)\]bosh*
+- name: kbld-product
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: tas-for-kubernetes-product/\[kbld,(.*)\]kbld*
+- name: kapp-product
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: tas-for-kubernetes-product/\[kapp,(.*)\]kapp*    
+- name: ytt-product
+  tags: ((tags))
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_products))
+    regexp: tas-for-kubernetes-product/\[ytt,(.*)\]ytt*    
+#############################  
 #- name: kubectl-release
 #  tags: ((tags))
 #  icon: github-circle
@@ -469,17 +502,25 @@ jobs:
     tags: ((tags))
     params:
       unpack: true
+  - get: kbld-product
+    tags: ((tags))
+  - get: ytt-product
+    tags: ((tags))
+  - get: kapp-product
+    tags: ((tags))
+  - get: boshcli-product
+    tags: ((tags))                  
   - get: azs-concourse
     tags: ((tags))
   - get: platform-automation-image
     tags: ((tags))
     params:
       unpack: true
-  - get: bosh-cli-release
-    tags: ((tags))
-    params:
-      globs:
-      - bosh-cli-*-linux-amd64
+#  - get: bosh-cli-release
+#    tags: ((tags))
+#    params:
+#      globs:
+#      - bosh-cli-*-linux-amd64
 #  - get: yaml2json-release
 #    tags: ((tags))
 #    params:
