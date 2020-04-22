@@ -9,7 +9,7 @@ credhub_env: &credhub_env
   CREDHUB_CLIENT: ((credhub-client))
   CREDHUB_SECRET: ((credhub-secret))
   CREDHUB_SERVER: ((credhub-server))
-  PREFIX: /concourse/main/((foundation))
+  PREFIX: /concourse/aks
   CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
 
 stage_steps: &stage_steps
@@ -88,11 +88,11 @@ resource_types:
   source:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
-- name: slack-notification
-  tags: ((tags))
-  type: docker-image
-  source:
-    repository: cfcommunity/slack-notification-resource    
+#- name: slack-notification
+#  tags: ((tags))
+#  type: docker-image
+#  source:
+#    repository: cfcommunity/slack-notification-resource    
 resources:
 
 # triggers
@@ -107,12 +107,12 @@ resources:
     interval: 24h
     location: Europe/Berlin 
 # notifications
-- name: notify
-  tags: ((tags))
-  icon: bell
-  type: slack-notification
-  source:
-    url: ((slack.webhook))
+#- name: notify
+#  tags: ((tags))
+#  icon: bell
+#  type: slack-notification
+#  source:
+#    url: ((slack.webhook))
 
 
 - name: platform-automation-tasks
@@ -231,11 +231,11 @@ interpolate-product-downloads: &interpolate-product-downloads
 
 jobs:
 - name: get-tas-for-kubernetes-artifacts
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
+  #on_failure:
+  #  put: notify
+  #  tags: ((tags))
+  #  params:
+  #    <<: *slack_failed_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -298,7 +298,7 @@ jobs:
     - put: kapp-product
       tags: ((tags))
       params:
-        file: downloaded-product/kapp*
+        file: downloaded-product/*kapp-linux-amd64
 
   - task: download-kbld
     tags: ((tags))
@@ -318,7 +318,7 @@ jobs:
     - put: kbld-product
       tags: ((tags))
       params:
-        file: downloaded-product/kbld*
+        file: downloaded-product/*kbld-linux-amd64
 
   - task: download-ytt
     tags: ((tags))
@@ -338,7 +338,7 @@ jobs:
     - put: ytt-product
       tags: ((tags))
       params:
-        file: downloaded-product/ytt*
+        file: downloaded-product/*ytt-linux-amd64
 
   - task: download-boshcli
     tags: ((tags))
@@ -358,7 +358,7 @@ jobs:
     - put: boshcli-product
       tags: ((tags))
       params:
-        file: downloaded-product/bosh*
+        file: downloaded-product/*bosh*
 
 #  - put: download-lock
 #    attempts: 5
