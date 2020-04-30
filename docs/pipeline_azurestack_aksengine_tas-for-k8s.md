@@ -43,5 +43,5 @@ git clone https://github.com/cloudfoundry-samples/cf-sample-app-nodejs
 
 ### Push the app
 ```bash
-cf enable-feature-flag diego_docker
+cf push cf-nodejs-demo -p ~/workspace/cf-sample-app-nodejs
 ```
