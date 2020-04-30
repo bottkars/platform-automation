@@ -1,7 +1,8 @@
 # Readme for pipeline_azurestack_aksengine_tas-for-k8s.yml
 
 ## getting started
-i assume 
+assuming to set variables for pipeline:
+tbd
 
 ### setting the pipeline
 ```bash
@@ -41,3 +42,6 @@ git clone https://github.com/cloudfoundry-samples/cf-sample-app-nodejs
 
 
 ### Push the app
+```bash
+cf enable-feature-flag diego_docker
+```
