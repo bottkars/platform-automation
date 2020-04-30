@@ -13,3 +13,15 @@ flyme set-pipeline -c ${AKS_PIPELINE}  -l ${PLATFORM_VARS} -l ${AKS_VARS} -p ${A
 
 https://github.com/bottkars/azs-concourse/blob/cb255d5812b59da3115cc218d71b7ed9232e5b0a/ci/scripts/deploy-aks.sh#L10-L31
 
+### login
+
+
+### create orgs and spaces
+
+
+
+### clone source app
+
+```bash
+git clone https://github.com/cloudfoundry-samples/cf-sample-app-nodejs
+```
