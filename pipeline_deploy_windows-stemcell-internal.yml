@@ -176,7 +176,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: download-product-configs/((pks_version))/download-stemcells-windows-server-internal.yml
+    INTERPOLATION_PATHS: download-product-configs/((pks.version))/download-stemcells-windows-server-internal.yml
   input_mapping:
     files: templates
   output_mapping:
@@ -187,7 +187,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pks_version))
+    INTERPOLATION_PATHS: product-configs/((pks.version))
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -230,7 +230,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-stemcells-windows-server-internal.yml 
+      CONFIG_FILE: download-product-configs/((pks.version))/download-stemcells-windows-server-internal.yml 
     input_mapping:
       config: interpolated-product-downloads
 #    on_failure:

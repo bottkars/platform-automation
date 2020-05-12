@@ -1,0 +1,194 @@
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+
+
+
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+   
+
+resources:
+# triggers
+#- name: daily-trigger
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    interval: 24h
+
+
+- name: one-time-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+- name: after-midnight
+  type: time
+  source:
+    start: 01:00 AM
+    stop: ((after_midnight_end))
+    interval: 24h
+    location: Europe/Berlin 
+
+#- name: installation
+#  icon: amazon-drive
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.installation))
+#    regexp: ((foundation))/installation-(.*).zip    
+- name: platform-automation-pivnet
+  type: pivnet
+  source:
+    api_token: ((((foundation))/pivnet-token))
+    product_slug: platform-automation
+    product_version: 4\.*\.(.*)
+    sort_by: semver
+
+- name: platform-automation-tasks
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets.pivnet_tasks))
+    regexp: platform-automation-tasks-(.*).zip
+
+- name: platform-automation-image
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets.pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+
+- name: azs-concourse
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/azs-concourse.git
+    branch: ((azs_concourse_branch))
+
+## product resources
+- name: powerprotect
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: powerprotect/dellemc-ppdm-sw-(.*).ova
+
+
+jobs:
+- name: get-platform-automation
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      trigger: true
+    - get: platform-automation-pivnet
+      trigger: true
+  - in_parallel:
+    - put: platform-automation-tasks
+      params:
+        file: platform-automation-pivnet/*tasks*.zip
+    - put: platform-automation-image
+      params:
+        file: platform-automation-pivnet/*image*.tgz
+
+- name: deploy-ppdm
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+    - get: powerprotect
+      tags: ((tags))
+      params:
+        unpack: true
+      params:
+        unpack: false
+    - get: platform-automation-image
+      params:
+        unpack: true
+      tags: ((tags))        
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: azs-concourse
+      tags: ((tags))
+  - task: deploy-ppdm
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/deploy-ppdm.yml
+    input_mapping:
+      azs-concourse: azs-concourse
+      powerprotect: powerprotect
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
+      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
+      GOVC_NETWORK: ((GOVC.NETWORK))
+      PPDM_NETWORK: ((PPDM.NETWORK))
+      PPDM_ADDRESS: ((PPDM.ADDRESS))
+      PPDM_GATEWAY: ((PPDM.GATEWAY))
+      PPDM_NETMASK: ((PPDM.NETMASK))
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_VMNAME: ((PPDM.VMNAME))
+      PPDM_DNS: ((PPDM.DNS))       
+
+- name: delete-ppdm
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        unpack: true
+      tags: ((tags))
+      passed: [ deploy-ppdm ]              
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: azs-concourse
+      tags: ((tags))
+  - task: delete-ppdm
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-ppdm.yml
+    input_mapping:
+      azs-concourse: azs-concourse
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
+      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
+      GOVC_NETWORK: ((GOVC.NETWORK))
+      PPDM_VMNAME: ((PPDM.VMNAME))
+       
+
