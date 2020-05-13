@@ -37,13 +37,13 @@ resources:
   source:
     interval: 999999h
 
-- name: after-midnight
-  type: time
-  source:
-    start: 01:00 AM
-    stop: ((after_midnight_end))
-    interval: 24h
-    location: Europe/Berlin 
+#- name: after-midnight
+#  type: time
+#  source:
+#    start: 01:00 AM
+#    stop: ((after_midnight_end))
+#    interval: 24h
+#    location: Europe/Berlin 
 
 #- name: installation
 #  icon: amazon-drive
@@ -52,16 +52,16 @@ resources:
 #    <<: *s3_env
 #    bucket: ((buckets.installation))
 #    regexp: ((foundation))/installation-(.*).zip    
-- name: platform-automation-pivnet
-  type: pivnet
-  source:
-    api_token: ((((foundation))/pivnet-token))
-    product_slug: platform-automation
-    product_version: 4\.*\.(.*)
-    sort_by: semver
+#- name: platform-automation-pivnet
+#  type: pivnet
+#  source:
+#    api_token: ((((foundation))/pivnet-token))
+#    product_slug: platform-automation
+#    product_version: 4\.*\.(.*)
+#    sort_by: semver
 
 
-- name: platform-automation-image
+- name: dps-automation-image
   icon: amazon-drive
   type: s3
   source:
@@ -89,16 +89,16 @@ resources:
 
 
 jobs:
-- name: get-platform-automation
-  plan:
-  - in_parallel:
-    - get: after-midnight
-      trigger: true
-    - get: platform-automation-pivnet
-      trigger: true
-    - put: platform-automation-image
-      params:
-        file: platform-automation-pivnet/*image*.tgz
+#- name: get-platform-automation
+#  plan:
+#  - in_parallel:
+#    - get: after-midnight
+#      trigger: true
+#    - get: platform-automation-pivnet
+#      trigger: true
+#    - put: dps-automation-image
+#      params:
+#        file: platform-automation-pivnet/*image*.tgz
 
 - name: deploy-ppdm
   plan:
@@ -111,7 +111,7 @@ jobs:
         unpack: true
       params:
         unpack: false
-    - get: platform-automation-image
+    - get: dps-automation-image
       params:
         unpack: true
       tags: ((tags))        
@@ -119,7 +119,7 @@ jobs:
       tags: ((tags))
   - task: deploy-ppdm
     tags: ((tags))
-    image: platform-automation-image
+    image: dps-automation-image
     file: azs-concourse/ci/tasks/deploy-ppdm.yml
     input_mapping:
       azs-concourse: azs-concourse
@@ -146,7 +146,7 @@ jobs:
     - get: one-time-trigger
       trigger: true
       passed: [ deploy-ppdm ]
-    - get: platform-automation-image
+    - get: dps-automation-image
       params:
         unpack: true
       tags: ((tags))        
@@ -154,7 +154,7 @@ jobs:
       tags: ((tags))
   - task: configure-ppdm
     tags: ((tags))
-    image: platform-automation-image
+    image: dps-automation-image
     file: azs-concourse/ci/tasks/configure-ppdm.yml
     input_mapping:
       azs-concourse: azs-concourse
@@ -172,7 +172,7 @@ jobs:
 - name: delete-ppdm
   plan:
   - in_parallel:
-    - get: platform-automation-image
+    - get: dps-automation-image
       params:
         unpack: true
       tags: ((tags))
@@ -181,7 +181,7 @@ jobs:
       tags: ((tags))
   - task: delete-ppdm
     tags: ((tags))
-    image: platform-automation-image
+    image: dps-automation-image
     file: azs-concourse/ci/tasks/delete-ppdm.yml
     input_mapping:
       azs-concourse: azs-concourse
