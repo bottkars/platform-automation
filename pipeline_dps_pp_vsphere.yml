@@ -60,13 +60,6 @@ resources:
     product_version: 4\.*\.(.*)
     sort_by: semver
 
-- name: platform-automation-tasks
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets.pivnet_tasks))
-    regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
   icon: amazon-drive
@@ -103,10 +96,6 @@ jobs:
       trigger: true
     - get: platform-automation-pivnet
       trigger: true
-  - in_parallel:
-    - put: platform-automation-tasks
-      params:
-        file: platform-automation-pivnet/*tasks*.zip
     - put: platform-automation-image
       params:
         file: platform-automation-pivnet/*image*.tgz
@@ -126,12 +115,6 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-      tags: ((tags))
-      params:
-        unpack: true
     - get: azs-concourse
       tags: ((tags))
   - task: deploy-ppdm
@@ -167,12 +150,6 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-      tags: ((tags))
-      params:
-        unpack: true
     - get: azs-concourse
       tags: ((tags))
   - task: configure-ppdm
@@ -200,12 +177,6 @@ jobs:
         unpack: true
       tags: ((tags))
       passed: [ deploy-ppdm ]              
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-      tags: ((tags))
-      params:
-        unpack: true
     - get: azs-concourse
       tags: ((tags))
   - task: delete-ppdm
