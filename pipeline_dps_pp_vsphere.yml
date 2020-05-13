@@ -157,7 +157,41 @@ jobs:
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_VMNAME: ((PPDM.VMNAME))
       PPDM_DNS: ((PPDM.DNS))       
-
+- name: configure-ppdm
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+      passed: [ deploy-ppdm ]
+    - get: platform-automation-image
+      params:
+        unpack: true
+      tags: ((tags))        
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: azs-concourse
+      tags: ((tags))
+  - task: configure-ppdm
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/configure-ppdm.yml
+    input_mapping:
+      azs-concourse: azs-concourse
+    params:
+      PPDM_NETWORK: ((PPDM.NETWORK))
+      PPDM_ADDRESS: ((PPDM.ADDRESS))
+      PPDM_GATEWAY: ((PPDM.GATEWAY))
+      PPDM_NETMASK: ((PPDM.NETMASK))
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_VMNAME: ((PPDM.VMNAME))
+      PPDM_DNS: ((PPDM.DNS))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PPDM_SETUP_PASSWORD: ((PPDM.SETUP_PASSWORD))  
+           
 - name: delete-ppdm
   plan:
   - in_parallel:
@@ -190,5 +224,3 @@ jobs:
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
       PPDM_VMNAME: ((PPDM.VMNAME))
-       
-
