@@ -82,6 +82,7 @@ resources:
 ## product resources
 - name: powerprotect
   type: s3
+  icon: file-download
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
