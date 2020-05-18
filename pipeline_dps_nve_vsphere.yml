@@ -80,13 +80,13 @@ resources:
     branch: ((azs_concourse_branch))
 
 ## product resources
-- name: powerprotect
+- name: networker
   type: s3
   icon: folder-move
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: powerprotect/dellemc-ppdm-sw-(.*).ova
+    regexp: networker/.*/NVE-(.*).ova
 
 
 jobs:
@@ -101,12 +101,12 @@ jobs:
 #      params:
 #        file: platform-automation-pivnet/*image*.tgz
 
-- name: deploy-powerprotect-ova
+- name: deploy-networker-ova
   plan:
   - in_parallel:
     - get: one-time-trigger
       trigger: true
-    - get: powerprotect
+    - get: networker
       tags: ((tags))
       params:
         unpack: true
@@ -121,10 +121,10 @@ jobs:
   - task: deploy-ova
     tags: ((tags))
     image: dps-automation-image
-    file: azs-concourse/ci/tasks/deploy-ppdm.yml
+    file: azs-concourse/ci/tasks/deploy-nve.yml
     input_mapping:
       azs-concourse: azs-concourse
-      powerprotect: powerprotect
+      networker: networker
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
@@ -134,56 +134,67 @@ jobs:
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
-      PPDM_NETWORK: ((PPDM.NETWORK))
-      PPDM_ADDRESS: ((PPDM.ADDRESS))
-      PPDM_GATEWAY: ((PPDM.GATEWAY))
-      PPDM_NETMASK: ((PPDM.NETMASK))
-      PPDM_FQDN: ((PPDM.FQDN))
-      PPDM_VMNAME: ((PPDM.VMNAME))
-      PPDM_DNS: ((PPDM.DNS))       
-- name: configure-ppdm
+      NVE_NETWORK: ((NVE.NETWORK))
+      NVE_ADDRESS: ((NVE.ADDRESS))
+      NVE_GATEWAY: ((NVE.GATEWAY))
+      NVE_NETMASK: ((NVE.NETMASK))
+      NVE_FQDN: ((NVE.FQDN))
+      NVE_VMNAME: ((NVE.VMNAME))
+      NVE_DNS: ((NVE.DNS))       
+- name: configure-nve
   plan:
   - in_parallel:
     - get: one-time-trigger
       trigger: true
     - get: dps-automation-image
-      passed: [ deploy-powerprotect-ova ]
+      passed: [ deploy-networker-ova ]
       params:
         unpack: true
       tags: ((tags))        
     - get: azs-concourse
       tags: ((tags))
-  - task: configure-ppdm
+  - task: configure-nve
     tags: ((tags))
     image: dps-automation-image
-    file: azs-concourse/ci/tasks/configure-ppdm.yml
+    file: azs-concourse/ci/tasks/configure-nve.yml
     input_mapping:
       azs-concourse: azs-concourse
     params:
-      PPDM_NETWORK: ((PPDM.NETWORK))
-      PPDM_ADDRESS: ((PPDM.ADDRESS))
-      PPDM_GATEWAY: ((PPDM.GATEWAY))
-      PPDM_NETMASK: ((PPDM.NETMASK))
-      PPDM_FQDN: ((PPDM.FQDN))
-      PPDM_VMNAME: ((PPDM.VMNAME))
-      PPDM_DNS: ((PPDM.DNS))
-      PPDM_PASSWORD: ((PPDM.PASSWORD))
-      PPDM_SETUP_PASSWORD: ((PPDM.SETUP_PASSWORD))  
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((NVE.VMNAME))     
+      NVE_FQDN: ((NVE.FQDN))
+      NVE_SETUP_PASSWORD: ((NVE.PASSWORD))  
+      NVE_TIMEZONE: "Europe/Berlin"
+      NVE_ADMIN_PASSWORD_OS: ((NVE.PASSWORD)) 
+      NVE_ROOT_PASSWORD_OS: ((NVE.PASSWORD)) 
+      NVE_SNMP_STRING: public
+      NVE_DATADOMAIN_HOST:
+      NVE_STORAGE_PATH:
+      NVE_DDBOOST_USER:
+      NVE_DDBOOST_USER_PWD: 
+      NVE_DDBOOST_USER_PWD_CF: 
+      NVE_DATADOMAIN_SYSADMIN: 
+      NVE_DATADOMAIN_SYSADMIN_PWD: 
+      NVE_TOMCAT_KEYSTORE_PASSWORD: ((NVE.PASSWORD)) 
+      NVE_AUTHC_ADMIN_PASSWORD: ((NVE.PASSWORD))      
            
-- name: delete-ppdm
+- name: delete-nve
   plan:
   - in_parallel:
     - get: dps-automation-image
       params:
         unpack: true
       tags: ((tags))
-      passed: [ deploy-powerprotect-ova ]              
+      passed: [ deploy-networker-ova ]              
     - get: azs-concourse
       tags: ((tags))
-  - task: delete-ppdm
+  - task: delete-nve
     tags: ((tags))
     image: dps-automation-image
-    file: azs-concourse/ci/tasks/delete-ppdm.yml
+    file: azs-concourse/ci/tasks/delete-nve.yml
     input_mapping:
       azs-concourse: azs-concourse
     params:
@@ -195,4 +206,4 @@ jobs:
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
-      PPDM_VMNAME: ((PPDM.VMNAME))
+      NVE_VMNAME: ((NVE.VMNAME))

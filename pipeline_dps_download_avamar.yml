@@ -1,0 +1,207 @@
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+
+
+
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+   
+
+resources:
+# triggers
+#- name: daily-trigger
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    interval: 24h
+
+
+- name: one-time-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+#- name: after-midnight
+#  type: time
+#  source:
+#    start: 01:00 AM
+#    stop: ((after_midnight_end))
+#    interval: 24h
+#    location: Europe/Berlin 
+
+#- name: installation
+#  icon: amazon-drive
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.installation))
+#    regexp: ((foundation))/installation-(.*).zip    
+#- name: platform-automation-pivnet
+#  type: pivnet
+#  source:
+#    api_token: ((((foundation))/pivnet-token))
+#    product_slug: platform-automation
+#    product_version: 4\.*\.(.*)
+#    sort_by: semver
+
+
+- name: dps-automation-image
+  icon: amazon-drive
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets.pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+
+- name: azs-concourse
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/azs-concourse.git
+    branch: ((azs_concourse_branch))
+
+## product resources
+- name: AvamarUpgrade
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((avamar.version))/AvamarUpgrade-(.*).avp
+- name: UpgradeAvinstaller
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((avamar.version))/UpgradeAvinstaller-(.*).avp
+- name: UpgradeClientDownloads
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((avamar.version))/UpgradeClientDownloads-(.*).avp
+- name: UpgradeClientPluginCatalog
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((avamar.version))/UpgradeClientPluginCatalog-(.*).avp
+- name: ChangeNetworkSettings
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((avamar.version))/ChangeNetworkSettings-(.*).avp
+- name: AVE
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((avamar.version))/AVE-(.*).ova
+
+jobs:
+
+- name: get-avupdate
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: false
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))        
+    - get: azs-concourse
+      tags: ((tags))
+  - task: download-avp
+    tags: ((tags))
+    image: dps-automation-image
+    file: azs-concourse/ci/tasks/download-avamar-upgrade.yml
+    input_mapping:
+      azs-concourse: azs-concourse
+    params:
+      AV_RELEASE: ((avamar.upgrade_release))
+      AV_LOCATION: ((avamar.upgrade))
+      avamar: ((avamar))
+      packages: AvamarUpgrade UpgradeAvinstaller UpgradeClientDownloads UpgradeClientPluginCatalog ChangeNetworkSettings
+    output_mapping: 
+      AvamarUpgrade: AvamarUpgrade
+      UpgradeAvinstaller: UpgradeAvinstaller
+      UpgradeClientDownloads: UpgradeClientDownloads
+      UpgradeClientPluginCatalog: UpgradeClientPluginCatalog
+      ChangeNetworkSettings: ChangeNetworkSettings
+  - in_parallel:
+    - put: AvamarUpgrade
+      tags: ((tags))
+      params:
+        file: AvamarUpgrade/*.avp
+    - put: UpgradeAvinstaller
+      tags: ((tags))
+      params:
+        file: UpgradeAvinstaller/*.avp
+    - put: UpgradeClientDownloads
+      tags: ((tags))
+      params:
+        file: UpgradeClientDownloads/*.avp
+    - put: UpgradeClientPluginCatalog
+      tags: ((tags))
+      params:
+        file: UpgradeClientPluginCatalog/*.avp 
+    - put: ChangeNetworkSettings
+      tags: ((tags))
+      params:
+        file: ChangeNetworkSettings/*.avp                  
+
+- name: get-ave-ova
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: false
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))        
+    - get: azs-concourse
+      tags: ((tags))
+  - task: download-ave
+    tags: ((tags))
+    image: dps-automation-image
+    file: azs-concourse/ci/tasks/download-avamar-packages.yml
+    input_mapping:
+      azs-concourse: azs-concourse
+    params:
+      avamar: ((avamar))
+      packages: AVE
+      extension: ova
+      AV_LOCATION: ((avamar.package))
+      AV_RELEASE: ((avamar.ova_release))
+    output_mapping: 
+      AVE: AVE
+  - in_parallel:
+    - put: AVE
+      tags: ((tags))
+      params:
+        file: AVE/AVE*.ova

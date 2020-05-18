@@ -26,6 +26,7 @@ set -u
 while IFS=", " read -r REPO RELEASE; do
     OLD_VERSION=$(grep -A0 ${RELEASE} $VERSIONS_FILE | cut -d ':' -f2 | tr -d ' "')
     VERSION=$(get_latest_release "${REPO}/${RELEASE}")
+    VERSION=${VERSION//RELEASE.}
     if [[ ${VERSION//v} != $OLD_VERSION ]]
     then
         echo "Replacing ${RELEASE} version ${OLD_VERSION} with ${VERSION//v} in $VERSIONS_FILE"
