@@ -167,7 +167,7 @@ jobs:
       GOVC_VM: ((NVE.VMNAME))     
       NVE_FQDN: ((NVE.FQDN))
       NVE_SETUP_PASSWORD: ((NVE.PASSWORD))  
-      NVE_TIMEZONE: "Europe/Berlin"
+      NVE_TIMEZONE: "((NVE.TIMEZONE))"
       NVE_ADMIN_PASSWORD_OS: ((NVE.PASSWORD)) 
       NVE_ROOT_PASSWORD_OS: ((NVE.PASSWORD)) 
       NVE_SNMP_STRING: public
