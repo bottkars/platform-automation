@@ -118,10 +118,10 @@ resource_types:
   source:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
-- name: slack-notification
-  type: docker-image
-  source:
-    repository: cfcommunity/slack-notification-resource    
+#- name: slack-notification
+#  type: docker-image
+#  source:
+#    repository: cfcommunity/slack-notification-resource    
 
 resources:
 # triggers
@@ -145,10 +145,10 @@ resources:
     stop: ((after_midnight_end))
     interval: 24h
     location: Europe/Berlin 
-- name: notify
-  type: slack-notification
-  source:
-    url: ((slack-webhook))
+#- name: notify
+#  type: slack-notification
+#  source:
+#    url: ((slack-webhook))
 - name: installation
   icon: amazon-drive
   type: s3
@@ -265,10 +265,6 @@ resources:
 
 jobs:
 - name: get-platform-automation
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -284,10 +280,6 @@ jobs:
         file: platform-automation-pivnet/*image*.tgz
 - name: get-opsman
   serial_groups: [ get-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -316,10 +308,6 @@ jobs:
 - name: get-pivotal-container-service
   serial: true
   serial_groups: [ get-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -352,10 +340,6 @@ jobs:
 - name: get-pivotal-container-service-cli
   serial: true
   serial_groups: [ get-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     # - get: after-midnight
@@ -385,10 +369,6 @@ jobs:
 - name: get-harbor-container-registry
   serial: true
   serial_groups: [ get-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -422,10 +402,6 @@ jobs:
 - name: staged-pivotal-container-service-config
   serial_groups:
   - staged-configs
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
       <<: *stage_steps
@@ -451,10 +427,6 @@ jobs:
 - name: staged-pas-for-kubernetes-config
   serial_groups:
   - staged-configs
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
       <<: *stage_steps
@@ -480,10 +452,6 @@ jobs:
 - name: staged-harbor-container-registry-config
   serial_groups:
   - staged-configs
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
      <<: *stage_steps
@@ -509,10 +477,6 @@ jobs:
 - name: staged-director-config
   serial: true
   serial_groups: [ staged-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
      <<: *stage_steps
@@ -539,10 +503,6 @@ jobs:
               
 - name: export-installation
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
       - get: daily-trigger
@@ -583,10 +543,6 @@ jobs:
   serial_groups:
   - upload-and-stage
   - install
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
       - get: platform-automation-image
@@ -671,15 +627,7 @@ jobs:
   serial_groups:
   - upload-and-stage
   - install
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       tags: ((tags))
@@ -748,10 +696,6 @@ jobs:
 - name: configure-director
   serial: true
   serial_groups: [ install ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: platform-automation-image
@@ -793,14 +737,10 @@ jobs:
 - name: install-opsman
   serial: true
   serial_groups: [ install ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
-    - get: opsman-product
-      tags: ((tags))
+#    - get: opsman-product
+ #     tags: ((tags))
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -910,15 +850,8 @@ jobs:
 - name: upgrade-opsman
   serial: true
   serial_groups: [ install ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
-  - put: notify
-    tags: ((tags))      
-    params:
-     <<: *slack_start_param
+
   - in_parallel:
     - get: one-time-trigger
       tags: ((tags))      
@@ -983,10 +916,6 @@ jobs:
   serial_groups:
   - configure-products
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
       - get: platform-automation-image
@@ -1035,10 +964,6 @@ jobs:
   serial_groups:
   - configure-products
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: platform-automation-image
@@ -1078,10 +1003,6 @@ jobs:
   serial_groups:
   - install
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
       - get: platform-automation-tasks
@@ -1112,10 +1033,6 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
 
 - name: test-interpolate-director
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - get: variable
   - get: templates
@@ -1138,10 +1055,6 @@ jobs:
 
         
 - name: test-interpolate-pivotal-container-service
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - get: variable
   - get: templates
@@ -1162,10 +1075,6 @@ jobs:
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       SKIP_MISSING: true    
 - name: test-interpolate-harbor-container-registry
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - get: variable
   - get: templates
@@ -1187,10 +1096,6 @@ jobs:
       SKIP_MISSING: true    
 - name: delete-installation
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: platform-automation-image

@@ -123,6 +123,15 @@ resources:
     bucket: ((buckets.dps_products))
     regexp: avamar/((avamar.version))/AVE-(.*).ova
 
+- name: AZURE-AVE
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((avamar.version))/AZURE-AVE-(.*).vhd.7z
+
+
 jobs:
 
 - name: get-avupdate
@@ -174,6 +183,38 @@ jobs:
       tags: ((tags))
       params:
         file: ChangeNetworkSettings/*.avp                  
+
+- name: get-azure-ave
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: false
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))        
+    - get: azs-concourse
+      tags: ((tags))
+  - task: download-ave
+    tags: ((tags))
+    image: dps-automation-image
+    file: azs-concourse/ci/tasks/download-avamar-packages.yml
+    input_mapping:
+      azs-concourse: azs-concourse
+    params:
+      avamar: ((avamar))
+      packages: AZURE-AVE
+      extension: vhd.7z
+      AV_LOCATION: ((avamar.package))
+      AV_RELEASE: ((avamar.ova_release))
+    output_mapping: 
+      AZURE-AVE: AZURE-AVE
+  - in_parallel:
+    - put: AZURE-AVE
+      tags: ((tags))
+      params:
+        file: AZURE-AVE/AZURE-AVE-*.vhd.7z
+
 
 - name: get-ave-ova
   plan:
