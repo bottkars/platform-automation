@@ -206,6 +206,7 @@ resources:
     - ((foundation))/vars/pivotal-container-service-vars.yml
     - ((foundation))/vars/director-vars.yml
     - ((foundation))/vars/harbor-container-registry-vars.yml
+    - ((foundation))/state/state.yml
 
 ## product resources
 - name: opsman-product
