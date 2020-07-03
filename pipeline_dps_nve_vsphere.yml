@@ -46,7 +46,7 @@ resources:
 #    location: Europe/Berlin 
 
 #- name: installation
-#  icon: amazon-drive
+#  icon: cloud-download
 #  type: s3
 #  source:
 #    <<: *s3_env
@@ -62,7 +62,7 @@ resources:
 
 
 - name: dps-automation-image
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env

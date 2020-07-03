@@ -19,7 +19,7 @@ resource_types:
 resources:
 - name: asdk-release-file
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -49,11 +49,11 @@ resources:
     location: Europe/Berlin 
 
 - name: platform-automation-image
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
-    bucket: ((buckets_pivnet_image))
+    bucket: ((((foundation))/buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 
 - name: azs-concourse
@@ -83,8 +83,8 @@ jobs:
     output_mapping:
       asdk-release: asdk-release-file  
     params:
-      ASDK_VERSION: ((asdk_version))
-      FROM: ((asdk_minor_version))
+      ASDK_VERSION: ((asdk.version))
+      FROM: ((asdk.minor_version))
     on_success:
       try:    
         put: asdk-release-file
@@ -96,7 +96,7 @@ jobs:
             media:
             - azs-concourse/media/avatar.jpg
             status: >
-              OMG! #AzureStackHub ASDK ((asdk_version)) is now live deployed
+              OMG! #AzureStackHub ASDK ((asdk.version)) is now live deployed
               from my custom @concourseci pipeline in our PeZ environment!  
 
 - name: download-asdk
@@ -117,7 +117,7 @@ jobs:
 #      media:
 #      - azs-concourse/media/avatar.jpg
 #      status: >
-#        OMG! Apparently, I strongly believe that #AzureStackHub #ASDK ((asdk_version)) 
+#        OMG! Apparently, I strongly believe that #AzureStackHub #ASDK ((asdk.version)) 
 #        is soon available !! (indicated by my Harddrive LED))
 #        from my custom @concourseci pipeline in my Homelab  
 

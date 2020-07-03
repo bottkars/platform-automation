@@ -110,7 +110,7 @@ resource_types:
     repository: cfcommunity/slack-notification-resource    
 resources:
 - name: additional-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -151,7 +151,7 @@ resources:
     url: ((slack.webhook))
 - name: installation
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -169,7 +169,7 @@ resources:
 
 - name: platform-automation-tasks
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -178,7 +178,7 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env

@@ -150,7 +150,7 @@ resources:
 #  source:
 #    url: ((slack-webhook))
 - name: installation
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -165,7 +165,7 @@ resources:
     sort_by: semver
 
 - name: platform-automation-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -173,7 +173,7 @@ resources:
     regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -181,7 +181,7 @@ resources:
     regexp: platform-automation-image-(.*).tgz
 
 - name: additional-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -189,14 +189,14 @@ resources:
     regexp: additional-tasks-(.*).zip
 ## core resources
 - name: templates
-  icon: github-circle
+  icon: github
   type: git  
   source:
     uri: ((template-repo))
     private_key: ((template-deploy-key.private_key))
     branch: master
 - name: variable
-  icon: github-circle
+  icon: github
   type: git  
   source:
     uri: ((variable-repo))
@@ -217,7 +217,7 @@ resources:
     regexp: \[ops-manager,(.*)\].*.ova
 
 - name: pivotal-container-service-stemcell
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -225,7 +225,7 @@ resources:
     regexp: pivotal-container-service-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
 
 - name: pivotal-container-service-stemcell-windows
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -233,7 +233,7 @@ resources:
     regexp: stemcells/\[stemcells-windows-server-internal,(.*)\]bosh-stemcell-.*-vsphere-esxi-windows2019-go_agent.tgz
 
 - name: pivotal-container-service-product
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -241,7 +241,7 @@ resources:
     regexp: pivotal-container-service-product/\[pivotal-container-service,(.*)\]pivotal-container-service-.*.pivotal
 
 - name: pivotal-container-service-cli
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -249,7 +249,7 @@ resources:
     regexp: pivotal-container-service-product/\[pivotal-container-service,(.*)\]pks-linux-amd64*
 # pks-linux-amd64-1.4.0-build.230
 - name: harbor-container-registry-stemcell
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -257,7 +257,7 @@ resources:
     regexp: harbor-container-registry-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
 
 - name: harbor-container-registry-product
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env

@@ -135,7 +135,7 @@ resources:
 
 - name: sonobuoy-results
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -144,7 +144,7 @@ resources:
 
 - name: installation
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -152,7 +152,7 @@ resources:
     regexp: ((aks.resource_group))/installation-(.*).zip    
 - name: kubeconfig
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -160,7 +160,7 @@ resources:
     regexp: ((aks.resource_group))/kubeconfig-(.*).json  
 - name: apimodel
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -179,7 +179,7 @@ resources:
 
 #- name: platform-automation-tasks
 #  tags: ((tags))
-#  icon: amazon-drive
+#  icon: cloud-download
 #  type: s3
 #  source:
 #    <<: *s3_env
@@ -188,7 +188,7 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -234,7 +234,7 @@ resources:
 
 - name: cf-values
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env

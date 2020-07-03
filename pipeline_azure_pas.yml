@@ -105,14 +105,14 @@ resources:
     location: Europe/Berlin 
 
 - name: installation
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
     bucket: ((buckets_installation))
     regexp: ((foundation))/installation-(.*).zip    
 - name: additional-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -128,7 +128,7 @@ resources:
 
 
 - name: platform-automation-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -136,7 +136,7 @@ resources:
     regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
