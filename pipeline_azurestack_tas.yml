@@ -222,16 +222,16 @@ resources:
     private_key: ((((foundation))/variable-deploy-key.private_key))
     retry_delay: 300s
 
-- name: download-lock
-  icon: cloud-lock-outline
-  type: pool
-  check_every: 10m
-  source:
-    uri: ((variable-repo))
-    branch: master
-    pool: download-lock
-    private_key: ((((foundation))/variable-deploy-key.private_key))
-    retry_delay: 300s
+#- name: download-lock
+#  icon: cloud-lock-outline
+#  type: pool
+#  check_every: 10m
+#  source:
+#    uri: ((variable-repo))
+#    branch: master
+#    pool: download-lock
+ #   private_key: ((((foundation))/variable-deploy-key.private_key))
+#    retry_delay: 300s
 
 - name: azs-concourse
   tags: ((tags))
@@ -784,12 +784,11 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: download-lock
-    tags: ((tags))
-    params:
-      acquire: true    
+#  - put: download-lock
+#    tags: ((tags))
+#    params:
+#      acquire: true    
   - in_parallel:
     - get: after-midnight
       tags: ((tags))
@@ -806,11 +805,11 @@ jobs:
       tags: ((tags))
       params:
         file: platform-automation-pivnet/*image*.tgz
-  - put: download-lock
-    attempts: 5
-    tags: ((tags))
-    params:
-      release: download-lock
+#  - put: download-lock
+#    attempts: 5
+#    tags: ((tags))
+#    params:
+#      release: download-lock
 
 ####
 groups:

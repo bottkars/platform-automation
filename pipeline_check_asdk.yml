@@ -42,10 +42,11 @@ resources:
 
 - name: after-midnight
   type: time
+  icon: calendar-clock
   source:
-    start: 01:00 AM
-    stop: ((after_midnight_end))
-    interval: 24h
+#    start: 01:00 AM
+#    stop: ((after_midnight_end))
+    interval: 1h
     location: Europe/Berlin 
 
 - name: platform-automation-image
@@ -58,7 +59,7 @@ resources:
 
 - name: azs-concourse
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git  
   source: 
     uri: https://github.com/bottkars/azs-concourse.git
