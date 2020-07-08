@@ -127,6 +127,7 @@ jobs:
       dps_modules: dps_modules
       powerprotect: powerprotect
     params:
+      DEBUG: "TRUE"
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
@@ -161,6 +162,7 @@ jobs:
     input_mapping:
       dps_modules: dps_modules
     params:
+      DEBUG: "TRUE"
       PPDM_NETWORK: ((PPDM.NETWORK))
       PPDM_ADDRESS: ((PPDM.ADDRESS))
       PPDM_GATEWAY: ((PPDM.GATEWAY))
@@ -189,7 +191,7 @@ jobs:
     input_mapping:
       dps_modules: dps_modules
     params:
-      DEBUG: "true"
+      DEBUG: "TRUE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       INVENTORY_USERNAME: ((DDVE.USERNAME))
@@ -218,7 +220,7 @@ jobs:
     input_mapping:
       dps_modules: dps_modules
     params:
-      DEBUG: "true"
+      DEBUG: "TRUE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       INVENTORY_USERNAME: ((GOVC.USERNAME))
@@ -245,7 +247,7 @@ jobs:
     input_mapping:
       dps_modules: dps_modules
     params:
-      DEBUG: "true"
+      DEBUG: "TRUE"
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
