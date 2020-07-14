@@ -161,7 +161,7 @@ jobs:
     input_mapping:
       dps_modules: dps_modules
     params:
-      DEBUG: "TRUE"
+      DEBUG: "FALSE"
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
