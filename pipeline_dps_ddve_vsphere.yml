@@ -80,14 +80,13 @@ resources:
     branch: master
 
 ## product resources
-- name: powerprotect
+- name: ddve
   type: s3
   icon: folder-move
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: powerprotect/dellemc-ppdm-sw-(([1-9]{0,2})\.([4567]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).ova #only release builds
-#    regexp: powerprotect/dellemc-ppdm-sw-(.*).ova   # any build
+    regexp: ddve/ddve-(([78])\.([234567]{1,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{5,6})).ova #only release builds
 
 
 jobs:
@@ -102,15 +101,13 @@ jobs:
 #      params:
 #        file: platform-automation-pivnet/*image*.tgz
 
-- name: deploy-powerprotect-ova
+- name: deploy-ddve-ova
   plan:
   - in_parallel:
     - get: one-time-trigger
       trigger: true
-    - get: powerprotect
+    - get: ddve
       tags: ((tags))
-      params:
-        unpack: true
       params:
         unpack: false
     - get: dps-automation-image
@@ -122,12 +119,12 @@ jobs:
   - task: deploy-ova
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/deploy-ppdm.yml
+    file: dps_modules/ci/tasks/deploy-ppdd.yml
     input_mapping:
       dps_modules: dps_modules
-      powerprotect: powerprotect
+      ddve: ddve
     params:
-      DEBUG: "FALSE"
+      DEBUG: "TRUE"
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
@@ -136,138 +133,60 @@ jobs:
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
-      PPDM_NETWORK: ((PPDM.NETWORK))
-      PPDM_ADDRESS: ((PPDM.ADDRESS))
-      PPDM_GATEWAY: ((PPDM.GATEWAY))
-      PPDM_NETMASK: ((PPDM.NETMASK))
-      PPDM_FQDN: ((PPDM.FQDN))
-      PPDM_VMNAME: ((PPDM.VMNAME))
-      PPDM_DNS: ((PPDM.DNS))       
-- name: configure-ppdm
+      DDVE_NETWORK: ((DDVE.NETWORK))
+      DDVE_ADDRESS: ((DDVE.ADDRESS))
+      DDVE_GATEWAY: ((DDVE.GATEWAY))
+      DDVE_NETMASK: ((DDVE.NETMASK))
+      DDVE_FQDN: ((DDVE.FQDN))
+      DDVE_VMNAME: ((DDVE.VMNAME))
+      DDVE_DNS: ((DDVE.DNS))
+      DDVE_TYPE: ((DDVE.TYPE))    
+- name: configure-ppdd
   plan:
   - in_parallel:
     - get: one-time-trigger
-      trigger: true
+      trigger: false
     - get: dps-automation-image
-      passed: [ deploy-powerprotect-ova ]
+      passed: [ deploy-ddve-ova ]
       params:
         unpack: true
       tags: ((tags))        
     - get: dps_modules
       tags: ((tags))
-  - task: configure-ppdm
+  - task: configure-ppdd
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/configure-ppdm.yml
+    file: dps_modules/ci/tasks/configure-ppdd.yml
     input_mapping:
       dps_modules: dps_modules
     params:
-      DEBUG: "FALSE"
-      PPDM_NETWORK: ((PPDM.NETWORK))
-      PPDM_ADDRESS: ((PPDM.ADDRESS))
-      PPDM_GATEWAY: ((PPDM.GATEWAY))
-      PPDM_NETMASK: ((PPDM.NETMASK))
-      PPDM_FQDN: ((PPDM.FQDN))
-      PPDM_VMNAME: ((PPDM.VMNAME))
-      PPDM_DNS: ((PPDM.DNS))
-      PPDM_PASSWORD: ((PPDM.PASSWORD))
-      PPDM_SETUP_PASSWORD: ((PPDM.SETUP_PASSWORD))  
-- name: set-ddve-inventory
-  plan:
-  - in_parallel:
-    - get: one-time-trigger
-      trigger: true
-    - get: dps-automation-image
-      params:
-        unpack: true
-      tags: ((tags))
-      passed: [ configure-ppdm ]              
-    - get: dps_modules
-      tags: ((tags))
-  - task: set-inventory
-    tags: ((tags))
-    image: dps-automation-image
-    file: dps_modules/ci/tasks/set-ppdm-inventory.yml
-    input_mapping:
-      dps_modules: dps_modules
-    params:
-      DEBUG: "FALSE"
-      PPDM_FQDN: ((PPDM.FQDN))
-      PPDM_PASSWORD: ((PPDM.PASSWORD))
-      INVENTORY_USERNAME: ((DDVE.USERNAME))
-      INVENTORY_PASSWORD: ((DDVE.PASSWORD))
-      INVENTORY_FQDN: ((DDVE.FQDN))
-      INVENTORY_CREDENTIAL_TYPE: DATADOMAIN
-      INVENTORY_TYPE: EXTERNALDATADOMAIN
-      INVENTORY_PORT: 3009
-- name: set-ppdm-sdr
-  plan:
-  - in_parallel:
-    - get: one-time-trigger
-      trigger: true
-    - get: dps-automation-image
-      params:
-        unpack: true
-      tags: ((tags))
-      passed: [ set-ddve-inventory]              
-    - get: dps_modules
-      tags: ((tags))
-  - task: set-sdr-configuration
-    tags: ((tags))
-    image: dps-automation-image
-    file: dps_modules/ci/tasks/set-ppdm-sdr.yml
-    input_mapping:
-      dps_modules: dps_modules
-    params:
-      DEBUG: "FALSE"
-      PPDM_FQDN: ((PPDM.FQDN))
-      PPDM_PASSWORD: ((PPDM.PASSWORD))
-      DDVE_PATH: ((DDVE.PATH.PATH_1))
+      DEBUG: "TRUE"
+      DDVE_NETWORK: ((DDVE.NETWORK))
+      DDVE_ADDRESS: ((DDVE.ADDRESS))
+      DDVE_GATEWAY: ((DDVE.GATEWAY))
+      DDVE_NETMASK: ((DDVE.NETMASK))
       DDVE_FQDN: ((DDVE.FQDN))
+      DDVE_VMNAME: ((DDVE.VMNAME))
+      DDVE_DNS: ((DDVE.DNS))
+      DDVE_PASSWORD: ((DDVE.SETUP_PASSWORD))
+      DDVE_USERNAME: ((DDVE.USERNAME))
+      DDVE_FOLDER: ((DDVE.FOLDER))
+      DDVE_INTERFACE: ((DDVE.INTERFACE)) 
 
-- name: set-vsphere-inventory
-  plan:
-  - in_parallel:
-    - get: one-time-trigger
-      trigger: true
-    - get: dps-automation-image
-      params:
-        unpack: true
-      tags: ((tags))
-      passed: [ configure-ppdm ]              
-    - get: dps_modules
-      tags: ((tags))
-  - task: set-inventory
-    tags: ((tags))
-    image: dps-automation-image
-    file: dps_modules/ci/tasks/set-ppdm-inventory.yml
-    input_mapping:
-      dps_modules: dps_modules
-    params:
-      DEBUG: "FALSE"
-      PPDM_FQDN: ((PPDM.FQDN))
-      PPDM_PASSWORD: ((PPDM.PASSWORD))
-      INVENTORY_USERNAME: ((GOVC.USERNAME))
-      INVENTORY_PASSWORD: ((GOVC.PASSWORD))
-      INVENTORY_FQDN: ((GOVC.URL))
-      INVENTORY_CREDENTIAL_TYPE: VCENTER
-      INVENTORY_TYPE: VCENTER
-      INVENTORY_PORT: 443
-
-- name: delete-ppdm
+- name: delete-ppdd
   plan:
   - in_parallel:
     - get: dps-automation-image
       params:
         unpack: true
       tags: ((tags))
-      passed: [ deploy-powerprotect-ova ]              
+      passed: [ deploy-ddve-ova ]              
     - get: dps_modules
       tags: ((tags))
-  - task: delete-ppdm
+  - task: delete-ddve
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/delete-ppdm.yml
+    file: dps_modules/ci/tasks/delete-ddve.yml
     input_mapping:
       dps_modules: dps_modules
     params:
@@ -280,4 +199,4 @@ jobs:
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
-      PPDM_VMNAME: ((PPDM.VMNAME))
+      DDVE_VMNAME: ((DDVE.VMNAME))
