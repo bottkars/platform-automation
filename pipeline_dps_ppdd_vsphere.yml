@@ -145,13 +145,37 @@ jobs:
       PPDD_VMNAME: ((PPDD.VMNAME))
       PPDD_DNS: ((PPDD.DNS))
       PPDD_SETUP_PASSWORD: ((PPDD.SETUP_PASSWORD))
-      PPDD_PASSWORD: ((PPDD.PASSWORD))
+      PPDD_PASSWORD: ((PPDD.SETUP_PASSWORD))
       PPDD_USERNAME: ((PPDD.USERNAME))
       PPDD_FOLDER: ((PPDD.FOLDER))
       PPDD_INTERFACE: ((PPDD.INTERFACE))
       PPDD_NFS_PATH: ((PPDD.PATH.PATH_1)) 
       PPDD_NFS_CLIENT: ((PPDM.FQDN))
       GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((PPDD.FOLDER))/((PPDD.VMNAME))
+- name: change-ppdd-password
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+    - get: dps-automation-image
+      passed: [ configure-ppdd ]
+      params:
+        unpack: true
+      tags: ((tags))        
+    - get: dps_modules
+      tags: ((tags))
+  - task: change-ppdd-password
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps_modules/ci/tasks/change-ppdd-password.yml
+    input_mapping:
+      dps_modules: dps_modules
+    params:
+      DEBUG: "FALSE"
+      PPDD_FQDN: ((PPDD.FQDN))
+      PPDD_SETUP_PASSWORD: ((PPDD.SETUP_PASSWORD))
+      PPDD_PASSWORD: ((PPDD.PASSWORD))
+      PPDD_USERNAME: ((PPDD.USERNAME))
 - name: delete-ppdd
   plan:
   - in_parallel:
