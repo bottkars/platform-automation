@@ -37,28 +37,6 @@ resources:
   source:
     interval: 999999h
 
-#- name: after-midnight
-#  type: time
-#  source:
-#    start: 01:00 AM
-#    stop: ((after_midnight_end))
-#    interval: 24h
-#    location: Europe/Berlin 
-
-#- name: installation
-#  icon: cloud-download
-#  type: s3
-#  source:
-#    <<: *s3_env
-#    bucket: ((buckets.installation))
-#    regexp: ((foundation))/installation-(.*).zip    
-#- name: platform-automation-pivnet
-#  type: pivnet
-#  source:
-#    api_token: ((((foundation))/pivnet-token))
-#    product_slug: platform-automation
-#    product_version: 4\.*\.(.*)
-#    sort_by: semver
 
 
 - name: dps-automation-image
@@ -90,17 +68,6 @@ resources:
 
 
 jobs:
-#- name: get-platform-automation
-#  plan:
-#  - in_parallel:
-#    - get: after-midnight
-#      trigger: true
-#    - get: platform-automation-pivnet
-#      trigger: true
-#    - put: dps-automation-image
-#      params:
-#        file: platform-automation-pivnet/*image*.tgz
-
 - name: deploy-ddve-ova
   plan:
   - in_parallel:
@@ -124,7 +91,7 @@ jobs:
       dps_modules: dps_modules
       ddve: ddve
     params:
-      DEBUG: "TRUE"
+      DEBUG: "FALSE"
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
@@ -133,20 +100,21 @@ jobs:
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
-      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((DDVE.FOLDER))/((DDVE.VMNAME))
-      DDVE_NETWORK: ((DDVE.NETWORK))
-      DDVE_ADDRESS: ((DDVE.ADDRESS))
-      DDVE_GATEWAY: ((DDVE.GATEWAY))
-      DDVE_NETMASK: ((DDVE.NETMASK))
-      DDVE_FQDN: ((DDVE.FQDN))
-      DDVE_VMNAME: ((DDVE.VMNAME))
-      DDVE_DNS: ((DDVE.DNS))
-      DDVE_TYPE: ((DDVE.TYPE))    
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((PPDD.FOLDER))/((PPDD.VMNAME))
+      PPDD_NETWORK: ((PPDD.NETWORK))
+      PPDD_ADDRESS: ((PPDD.ADDRESS))
+      PPDD_GATEWAY: ((PPDD.GATEWAY))
+      PPDD_NETMASK: ((PPDD.NETMASK))
+      PPDD_FQDN: ((PPDD.FQDN))
+      PPDD_VMNAME: ((PPDD.VMNAME))
+      PPDD_DNS: ((PPDD.DNS))
+      PPDD_TYPE: ((PPDD.TYPE)) 
+      PPDD_FOLDER: ((PPDD.FOLDER))   
 - name: configure-ppdd
   plan:
   - in_parallel:
     - get: one-time-trigger
-      trigger: false
+      trigger: true
     - get: dps-automation-image
       passed: [ deploy-ddve-ova ]
       params:
@@ -169,18 +137,21 @@ jobs:
       GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER))       
-      DDVE_NETWORK: ((DDVE.NETWORK))
-      DDVE_ADDRESS: ((DDVE.ADDRESS))
-      DDVE_GATEWAY: ((DDVE.GATEWAY))
-      DDVE_NETMASK: ((DDVE.NETMASK))
-      DDVE_FQDN: ((DDVE.FQDN))
-      DDVE_VMNAME: ((DDVE.VMNAME))
-      DDVE_DNS: ((DDVE.DNS))
-      DDVE_PASSWORD: ((DDVE.SETUP_PASSWORD))
-      DDVE_USERNAME: ((DDVE.USERNAME))
-      DDVE_FOLDER: ((DDVE.FOLDER))
-      DDVE_INTERFACE: ((DDVE.INTERFACE)) 
-      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((DDVE.FOLDER))/((DDVE.VMNAME))
+      PPDD_NETWORK: ((PPDD.NETWORK))
+      PPDD_ADDRESS: ((PPDD.ADDRESS))
+      PPDD_GATEWAY: ((PPDD.GATEWAY))
+      PPDD_NETMASK: ((PPDD.NETMASK))
+      PPDD_FQDN: ((PPDD.FQDN))
+      PPDD_VMNAME: ((PPDD.VMNAME))
+      PPDD_DNS: ((PPDD.DNS))
+      PPDD_SETUP_PASSWORD: ((PPDD.SETUP_PASSWORD))
+      PPDD_PASSWORD: ((PPDD.PASSWORD))
+      PPDD_USERNAME: ((PPDD.USERNAME))
+      PPDD_FOLDER: ((PPDD.FOLDER))
+      PPDD_INTERFACE: ((PPDD.INTERFACE))
+      PPDD_NFS_PATH: ((PPDD.PATH.PATH_1)) 
+      PPDD_NFS_CLIENT: ((PPDM.FQDN))
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((PPDD.FOLDER))/((PPDD.VMNAME))
 - name: delete-ppdd
   plan:
   - in_parallel:
@@ -194,7 +165,7 @@ jobs:
   - task: delete-ddve
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/delete-ddve.yml
+    file: dps_modules/ci/tasks/delete-ppdd.yml
     input_mapping:
       dps_modules: dps_modules
     params:
@@ -207,4 +178,4 @@ jobs:
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
-      DDVE_VMNAME: ((DDVE.VMNAME))
+      PPDD_VMNAME: ((PPDD.VMNAME))

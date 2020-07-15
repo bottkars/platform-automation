@@ -91,16 +91,6 @@ resources:
 
 
 jobs:
-#- name: get-platform-automation
-#  plan:
-#  - in_parallel:
-#    - get: after-midnight
-#      trigger: true
-#    - get: platform-automation-pivnet
-#      trigger: true
-#    - put: dps-automation-image
-#      params:
-#        file: platform-automation-pivnet/*image*.tgz
 
 - name: deploy-powerprotect-ova
   plan:
@@ -109,8 +99,6 @@ jobs:
       trigger: true
     - get: powerprotect
       tags: ((tags))
-      params:
-        unpack: true
       params:
         unpack: false
     - get: dps-automation-image
@@ -133,6 +121,7 @@ jobs:
       GOVC_URL: ((GOVC.URL))
       GOVC_USERNAME: ((GOVC.USERNAME))
       GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((PPDM.FOLDER))/((PPDM.VMNAME))
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
@@ -142,7 +131,9 @@ jobs:
       PPDM_NETMASK: ((PPDM.NETMASK))
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_VMNAME: ((PPDM.VMNAME))
-      PPDM_DNS: ((PPDM.DNS))       
+      PPDM_DNS: ((PPDM.DNS))
+      PPDM_FOLDER: ((PPDM.FOLDER))
+       
 - name: configure-ppdm
   plan:
   - in_parallel:
@@ -171,7 +162,9 @@ jobs:
       PPDM_VMNAME: ((PPDM.VMNAME))
       PPDM_DNS: ((PPDM.DNS))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
-      PPDM_SETUP_PASSWORD: ((PPDM.SETUP_PASSWORD))  
+      PPDM_SETUP_PASSWORD: ((PPDM.SETUP_PASSWORD)) 
+      PPDM_FOLDER: ((PPDM.FOLDER))
+ 
 - name: set-ddve-inventory
   plan:
   - in_parallel:
@@ -194,9 +187,9 @@ jobs:
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
-      INVENTORY_USERNAME: ((DDVE.USERNAME))
-      INVENTORY_PASSWORD: ((DDVE.PASSWORD))
-      INVENTORY_FQDN: ((DDVE.FQDN))
+      INVENTORY_USERNAME: ((PPDD.USERNAME))
+      INVENTORY_PASSWORD: ((PPDD.PASSWORD))
+      INVENTORY_FQDN: ((PPDD.FQDN))
       INVENTORY_CREDENTIAL_TYPE: DATADOMAIN
       INVENTORY_TYPE: EXTERNALDATADOMAIN
       INVENTORY_PORT: 3009
@@ -222,8 +215,8 @@ jobs:
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
-      DDVE_PATH: ((DDVE.PATH.PATH_1))
-      DDVE_FQDN: ((DDVE.FQDN))
+      PPDD_PATH: ((PPDD.PATH.PATH_1))
+      PPDD_FQDN: ((PPDD.FQDN))
 
 - name: set-vsphere-inventory
   plan:

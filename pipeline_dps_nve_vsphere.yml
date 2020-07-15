@@ -70,14 +70,14 @@ resources:
     regexp: platform-automation-image-(.*).tgz
 
 
-- name: azs-concourse
+- name: dps_modules
   tags: ((tags))
   icon: git
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/azs-concourse.git
-    branch: ((azs_concourse_branch))
+    uri: https://github.com/bottkars/dps_modules.git
+    branch: master
 
 ## product resources
 - name: networker
@@ -109,21 +109,19 @@ jobs:
     - get: networker
       tags: ((tags))
       params:
-        unpack: true
-      params:
         unpack: false
     - get: dps-automation-image
       params:
         unpack: true
       tags: ((tags))        
-    - get: azs-concourse
+    - get: dps_modules
       tags: ((tags))
   - task: deploy-ova
     tags: ((tags))
     image: dps-automation-image
-    file: azs-concourse/ci/tasks/deploy-nve.yml
+    file: dps_modules/ci/tasks/deploy-nve.yml
     input_mapping:
-      azs-concourse: azs-concourse
+      dps_modules: dps_modules
       networker: networker
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
@@ -132,8 +130,10 @@ jobs:
       GOVC_USERNAME: ((GOVC.USERNAME))
       GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
-      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER))
       GOVC_NETWORK: ((GOVC.NETWORK))
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
+      NVE_FOLDER: ((NVE.FOLDER))
       NVE_NETWORK: ((NVE.NETWORK))
       NVE_ADDRESS: ((NVE.ADDRESS))
       NVE_GATEWAY: ((NVE.GATEWAY))
@@ -151,20 +151,21 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: azs-concourse
+    - get: dps_modules
       tags: ((tags))
   - task: configure-nve
     tags: ((tags))
     image: dps-automation-image
-    file: azs-concourse/ci/tasks/configure-nve.yml
+    file: dps_modules/ci/tasks/configure-nve.yml
     input_mapping:
-      azs-concourse: azs-concourse
+      dps_modules: dps_modules
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
       GOVC_USERNAME: ((GOVC.USERNAME))
-      GOVC_VM: ((NVE.VMNAME))     
+      GOVC_VM: ((NVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
       NVE_FQDN: ((NVE.FQDN))
       NVE_SETUP_PASSWORD: ((NVE.PASSWORD))  
       NVE_TIMEZONE: "((NVE.TIMEZONE))"
@@ -180,7 +181,8 @@ jobs:
       NVE_DATADOMAIN_SYSADMIN: ((NVE.DATADOMAIN_SYSADMIN))
       NVE_DATADOMAIN_SYSADMIN_PWD: ((NVE.DATADOMAIN_SYSADMIN_PWD))
       NVE_TOMCAT_KEYSTORE_PASSWORD: ((NVE.PASSWORD)) 
-      NVE_AUTHC_ADMIN_PASSWORD: ((NVE.PASSWORD))      
+      NVE_AUTHC_ADMIN_PASSWORD: ((NVE.PASSWORD))
+            
            
 - name: delete-nve
   plan:
@@ -190,14 +192,14 @@ jobs:
         unpack: true
       tags: ((tags))
       passed: [ deploy-networker-ova ]              
-    - get: azs-concourse
+    - get: dps_modules
       tags: ((tags))
   - task: delete-nve
     tags: ((tags))
     image: dps-automation-image
-    file: azs-concourse/ci/tasks/delete-nve.yml
+    file: dps_modules/ci/tasks/delete-nve.yml
     input_mapping:
-      azs-concourse: azs-concourse
+      dps_modules: dps_modules
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
