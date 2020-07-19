@@ -923,9 +923,6 @@ jobs:
         tags: ((tags))      
         params:
           unpack: true
-        passed:
-         - upload-and-stage-pivotal-container-service
-        trigger: true
       - get: platform-automation-tasks
         tags: ((tags))      
         params:
@@ -934,7 +931,12 @@ jobs:
         tags: ((tags))      
       - get: variable
         tags: ((tags))    
-        trigger: true  
+        trigger: true
+      - get: pivotal-container-service-product
+        trigger: true
+        skip_download: true    
+        passed:
+         - upload-and-stage-pivotal-container-service
   - task: interpolate-product-templates
     <<: *interpolate-product-templates
   - task: configure-pivotal-container-service-cloud-provider
@@ -978,7 +980,8 @@ jobs:
       tags: ((tags))      
       params:
         unpack: true
-    - get: harbor-container-registry-product    
+    - get: harbor-container-registry-product
+      skip_download: true    
       tags: ((tags)) 
       trigger: true     
     - get: templates
@@ -1014,16 +1017,20 @@ jobs:
         tags: ((tags))      
         params:
           unpack: true
-        passed: # ((passed_configs))
-          - configure-pivotal-container-service
-          - configure-harbor-container-registry
-        trigger: true
       - get: variable
         tags: ((tags))
         passed: # ((passed_configs))
           - configure-pivotal-container-service
           - configure-harbor-container-registry          
-        trigger: true      
+        trigger: true 
+      - get: pivotal-container-service-product
+        trigger: true
+        skip_download: true    
+      - get: harbor-container-registry-product
+        trigger: true
+        skip_download: true    
+        passed: # ((passed_configs))
+          - configure-harbor-container-registry
   - task: apply-product-changes
     tags: ((tags))      
     image: platform-automation-image

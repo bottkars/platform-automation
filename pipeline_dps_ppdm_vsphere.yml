@@ -31,6 +31,41 @@ resources:
 #    interval: 24h
 
 
+- name: variable
+  icon: github
+  type: git  
+  source:
+    uri: ((variable-repo))
+    private_key: ((private_key)) 
+    branch: master
+    paths:
+    - proxy.yml
+
+#- name: instant_access
+#  icon: github
+#  type: git  
+#  source:
+#    uri: ((variable-repo))
+#    private_key: ((private_key)) 
+#    branch: master
+#    paths:
+#    - instant_access.yml
+
+- name: instant_access_request
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ppdm.restore
+    regexp: ppdm-instant-(.*).yml
+- name: instant_access_state
+  type: s3
+  tags: ((tags))
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ppdm.restore
+    regexp: instant_access/instant_access-*-(.*).json
 - name: one-time-trigger
   icon: calendar-clock
   type: time
@@ -68,6 +103,7 @@ resources:
     <<: *s3_env
     bucket: ((buckets.pivnet_image))
     regexp: platform-automation-image-(.*).tgz
+
 
 
 - name: dps_modules
@@ -246,7 +282,68 @@ jobs:
       INVENTORY_CREDENTIAL_TYPE: VCENTER
       INVENTORY_TYPE: VCENTER
       INVENTORY_PORT: 443
+- name: add-vpe-proxy
+  plan:
+  - in_parallel:
+    - get: variable
+      trigger: true
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))
+      passed: [ set-vsphere-inventory ]              
+    - get: dps_modules
+      tags: ((tags))
+  - task: add-proxy 
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps_modules/ci/tasks/add-ppdm-vproxy.yml
+    input_mapping:
+      dps_modules: dps_modules
+      variable: variable
+    params:
+      DEBUG: "FALSE"
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PROXY_FILE: variable/proxy.yml
 
+
+- name: ppdm-vm-instant-access
+  plan:
+  - in_parallel:
+    - get: instant_access_request
+      trigger: true
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))
+      passed: [ set-vsphere-inventory ]              
+    - get: dps_modules
+      tags: ((tags))
+  - task: instant-access 
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps_modules/ci/tasks/ppdm-vm-instant-access.yml
+    input_mapping:
+      dps_modules: dps_modules
+      variable: instant_access_request
+    params:
+      DEBUG: "FALSE"
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PROXY_FILE: variable/ppdm-instant-
+  - put: instant_access_state
+    tags: ((tags))
+    params:
+      file: instant_access/instant_access-*-(.*).json
 - name: delete-ppdm
   plan:
   - in_parallel:
