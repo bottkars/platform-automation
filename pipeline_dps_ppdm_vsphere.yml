@@ -65,7 +65,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ppdm.restore
-    regexp: instant_access/instant_access-*-(.*).json
+    regexp: instant_access/instant_access-*.json
 - name: one-time-trigger
   icon: calendar-clock
   type: time
