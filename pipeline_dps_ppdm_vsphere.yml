@@ -57,7 +57,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ppdm.restore
-    regexp: ppdm-instant-(.*).yml
+    regexp: request/ppdm-instant-(.*).yml
 - name: instant_access_state
   type: s3
   tags: ((tags))
@@ -65,7 +65,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ppdm.restore
-    regexp: instant_access/instant_access-*.json
+    regexp: instant_access/()-(.*).json
 - name: one-time-trigger
   icon: calendar-clock
   type: time
@@ -343,7 +343,7 @@ jobs:
   - put: instant_access_state
     tags: ((tags))
     params:
-      file: instant_access/instant_access-*-(.*).json
+      file: instant_access/*.json
 - name: delete-ppdm
   plan:
   - in_parallel:
