@@ -37,49 +37,22 @@ resources:
   source:
     interval: 999999h
 
-#- name: after-midnight
-#  type: time
-#  source:
-#    start: 01:00 AM
-#    stop: ((after_midnight_end))
-#    interval: 24h
-#    location: Europe/Berlin 
-
-#- name: installation
-#  icon: cloud-download
-#  type: s3
-#  source:
-#    <<: *s3_env
-#    bucket: ((buckets.installation))
-#    regexp: ((foundation))/installation-(.*).zip    
-#- name: platform-automation-pivnet
-#  type: pivnet
-#  source:
-#    api_token: ((((foundation))/pivnet-token))
-#    product_slug: platform-automation
-#    product_version: 4\.*\.(.*)
-#    sort_by: semver
-
-
 - name: dps-automation-image
-  icon: cloud-download
-  type: s3
+  icon: docker
+  type: docker-image
   source:
-    <<: *s3_env
-    bucket: ((buckets.pivnet_image))
-    regexp: platform-automation-image-(.*).tgz
+    repository: bottkars/dps-automation-image
+#    tag: v0.1
 
-
-- name: azs-concourse
+- name: dps_modules
   tags: ((tags))
   icon: git
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/azs-concourse.git
-    branch: ((azs_concourse_branch))
+    uri: https://github.com/bottkars/dps_modules.git
+    branch: master
 
-## product resources
 - name: AvamarUpgrade
   type: s3
   icon: folder-move
@@ -87,6 +60,7 @@ resources:
     <<: *s3_env
     bucket: ((buckets.dps_products))
     regexp: avamar/((avamar.version))/AvamarUpgrade-(.*).avp
+
 - name: UpgradeAvinstaller
   type: s3
   icon: folder-move
@@ -94,6 +68,7 @@ resources:
     <<: *s3_env
     bucket: ((buckets.dps_products))
     regexp: avamar/((avamar.version))/UpgradeAvinstaller-(.*).avp
+
 - name: UpgradeClientDownloads
   type: s3
   icon: folder-move
@@ -101,6 +76,7 @@ resources:
     <<: *s3_env
     bucket: ((buckets.dps_products))
     regexp: avamar/((avamar.version))/UpgradeClientDownloads-(.*).avp
+
 - name: UpgradeClientPluginCatalog
   type: s3
   icon: folder-move
@@ -133,7 +109,6 @@ resources:
 
 
 jobs:
-
 - name: get-avupdate
   plan:
   - in_parallel:
@@ -143,19 +118,20 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: azs-concourse
+    - get: dps_modules
       tags: ((tags))
   - task: download-avp
     tags: ((tags))
     image: dps-automation-image
-    file: azs-concourse/ci/tasks/download-avamar-upgrade.yml
+    file: dps_modules/ci/tasks/download-avamar-packages.yml
     input_mapping:
-      azs-concourse: azs-concourse
+      dps_modules: dps_modules
     params:
       AV_RELEASE: ((avamar.upgrade_release))
       AV_LOCATION: ((avamar.upgrade))
       avamar: ((avamar))
-      packages: AvamarUpgrade UpgradeAvinstaller UpgradeClientDownloads UpgradeClientPluginCatalog ChangeNetworkSettings
+      extension: avp
+      packages: ((avamar.packages))
     output_mapping: 
       AvamarUpgrade: AvamarUpgrade
       UpgradeAvinstaller: UpgradeAvinstaller
@@ -163,18 +139,21 @@ jobs:
       UpgradeClientPluginCatalog: UpgradeClientPluginCatalog
       ChangeNetworkSettings: ChangeNetworkSettings
   - in_parallel:
-    - put: AvamarUpgrade
-      tags: ((tags))
-      params:
-        file: AvamarUpgrade/*.avp
-    - put: UpgradeAvinstaller
-      tags: ((tags))
-      params:
-        file: UpgradeAvinstaller/*.avp
-    - put: UpgradeClientDownloads
-      tags: ((tags))
-      params:
-        file: UpgradeClientDownloads/*.avp
+    - try:
+        put: AvamarUpgrade
+        tags: ((tags))
+        params:
+          file: AvamarUpgrade/*.avp
+    - try:
+        put: UpgradeAvinstaller
+        tags: ((tags))
+        params:
+          file: UpgradeAvinstaller/*.avp
+    - try:
+        put: UpgradeClientDownloads
+        tags: ((tags))
+        params:
+          file: UpgradeClientDownloads/*.avp
     - put: UpgradeClientPluginCatalog
       tags: ((tags))
       params:
@@ -193,14 +172,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: azs-concourse
+    - get: dps_modules
       tags: ((tags))
   - task: download-ave
     tags: ((tags))
     image: dps-automation-image
-    file: azs-concourse/ci/tasks/download-avamar-packages.yml
+    file: dps_modules/ci/tasks/download-avamar-packages.yml
     input_mapping:
-      azs-concourse: azs-concourse
+      dps_modules: dps_modules
     params:
       avamar: ((avamar))
       packages: AZURE-AVE
@@ -215,7 +194,6 @@ jobs:
       params:
         file: AZURE-AVE/AZURE-AVE-*.vhd.7z
 
-
 - name: get-ave-ova
   plan:
   - in_parallel:
@@ -225,14 +203,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: azs-concourse
+    - get: dps_modules
       tags: ((tags))
   - task: download-ave
     tags: ((tags))
     image: dps-automation-image
-    file: azs-concourse/ci/tasks/download-avamar-packages.yml
+    file: dps_modules/ci/tasks/download-avamar-packages.yml
     input_mapping:
-      azs-concourse: azs-concourse
+      dps_modules: dps_modules
     params:
       avamar: ((avamar))
       packages: AVE

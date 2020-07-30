@@ -57,7 +57,9 @@ resources:
   source:
     <<: *s3_env
     bucket: ppdm.restore
-    regexp: request/ppdm-instant-(.*).yml
+    regexp: request/ppdm-instant-(?P<version>\d{4}\.\d{1,2}\.\d{1,2}-\d{1,9}).yml
+  check_every: 1m  
+  
 - name: instant_access_state
   type: s3
   tags: ((tags))
@@ -65,7 +67,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ppdm.restore
-    regexp: instant_access/()-(.*).json
+    regexp: state/(.*)-(?P<version>\d{4}\.\d{1,2}\.\d{1,2}-\d{1,9})\.json
 - name: one-time-trigger
   icon: calendar-clock
   type: time
@@ -96,14 +98,20 @@ resources:
 #    sort_by: semver
 
 
-- name: dps-automation-image
-  icon: cloud-download
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets.pivnet_image))
-    regexp: platform-automation-image-(.*).tgz
+#- name: dps-automation-image
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.pivnet_image))
+#    regexp: platform-automation-image-(.*).tgz
 
+- name: dps-automation-image
+  icon: docker-image
+  type: docker-image
+  source:
+    repository: bottkars/dps-automation-image
+#    tag: v0.1
 
 
 - name: dps_modules
@@ -316,12 +324,12 @@ jobs:
   plan:
   - in_parallel:
     - get: instant_access_request
+#      passed: [ set-vsphere-inventory ]              
       trigger: true
     - get: dps-automation-image
       params:
         unpack: true
       tags: ((tags))
-      passed: [ set-vsphere-inventory ]              
     - get: dps_modules
       tags: ((tags))
   - task: instant-access 
