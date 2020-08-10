@@ -86,9 +86,15 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: avamar/.*/AVE-(.*).ova
+    regexp: avamar/((AVE.BASEVER))/AVE-(.*).ova
 
-
+- name: UpgradeClientDownloads
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((AVE.BASEVER))/UpgradeClientDownloads-(.*).avp
 jobs:
 #- name: get-platform-automation
 #  plan:
@@ -101,7 +107,7 @@ jobs:
 #      params:
 #        file: platform-automation-pivnet/*image*.tgz
 
-- name: deploy-avamar-ova
+- name: deploy-avamar-ova-((AVE.VMNAME))
   plan:
   - in_parallel:
     - get: one-time-trigger
@@ -141,11 +147,11 @@ jobs:
       AVE_FQDN: ((AVE.FQDN))
       AVE_VMNAME: ((AVE.VMNAME))
       AVE_DNS: ((AVE.DNS))       
-- name: configure-avamar
+- name: configure-avamar-((AVE.VMNAME))
   plan:
   - in_parallel:
     - get: one-time-trigger
-      passed: [ deploy-avamar-ova ]
+      passed: [ deploy-avamar-ova-((AVE.VMNAME)) ]
       tags: ((tags))       
       trigger: true
     - get: dps-automation-image
@@ -154,16 +160,10 @@ jobs:
   - task: configure-avamar
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/configure-ave-vsphere.yml
+    file: dps_modules/ci/tasks/configure-ave-rest.yml
     input_mapping:
       dps_modules: dps_modules
     params:
-      GOVC_INSECURE: ((GOVC.INSECURE))
-      GOVC_PASSWORD: ((GOVC.PASSWORD))
-      GOVC_URL: ((GOVC.URL))
-      GOVC_USERNAME: ((GOVC.USERNAME))
-      GOVC_VM: ((AVE.VMNAME))   
-      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
       AVE_FQDN: ((AVE.FQDN))
       AVE_USERNAME: root
       AVE_PASSWORD: ((AVE.SETUP_PASSWORD))  
@@ -181,13 +181,16 @@ jobs:
       AVE_TOMCAT_KEYSTORE_PASSWORD: ((AVE.PASSWORD)) 
       AVE_AUTHC_ADMIN_PASSWORD: ((AVE.PASSWORD))
       AVE_ADD_DATADOMAIN_CONFIG: true 
+      AVE_BASEVER: ((AVE.BASEVER))
 
-- name: deploy-client-package
+- name: deploy-client-package-((AVE.VMNAME))
   plan:
   - in_parallel:
+    - get: UpgradeClientDownloads
+      tags: ((tags))
     - get: one-time-trigger
       passed: 
-      - configure-avamar   
+      - configure-avamar-((AVE.VMNAME))   
       trigger: true
     - get: dps-automation-image
       tags: ((tags))        
@@ -196,9 +199,10 @@ jobs:
   - task: deploy-avamar-client-package
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/deploy-avamar-client-avp.yml
+    file: dps_modules/ci/tasks/deploy-avamar-client-avp-rest.yml
     input_mapping:
       dps_modules: dps_modules
+      avamar_client_package: UpgradeClientDownloads
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
@@ -212,14 +216,13 @@ jobs:
       AVE_UPGRADE_CLIENT_DOWNLOADS_PACKAGE: ((AVE.UPGRADE_CLIENT_DOWNLOADS_PACKAGE))
       AVE_UPGRADE_CLIENT_DOWNLOADS_URL: ((AVE.UPGRADE_CLIENT_DOWNLOADS_URL))
            
-- name: delete-avamar-vm
+- name: delete-avamar-vm-((AVE.VMNAME))
   plan:
   - in_parallel:
     - get: one-time-trigger
-      passed: [ deploy-avamar-ova ]
+      passed: [ deploy-avamar-ova-((AVE.VMNAME)) ]
     - get: dps-automation-image
       tags: ((tags))
-      passed:          
     - get: dps_modules
       tags: ((tags))
   - task: delete-avamar
