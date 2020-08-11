@@ -112,6 +112,20 @@ interpolate-product-templates: &interpolate-product-templates
   output_mapping:
     interpolated-files: interpolated-product-templates
 
+
+interpolate-om-configuration: &interpolate-om-configuration
+  tags: ((tags))      
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: ((foundation))/config/opsman.yml
+    SKIP_MISSING: true
+  input_mapping:
+    files: variable
+  output_mapping:
+    interpolated-files: interpolated-om-configuration
+
 resource_types:
 - name: pivnet
   type: docker-image
@@ -156,6 +170,13 @@ resources:
     <<: *s3_env
     bucket: ((buckets_installation))
     regexp: ((foundation))/installation-(.*).zip    
+- name: certstate
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_installation))
+    regexp: ((foundation))/*-(d{4}-(d|1[0-2])-([0-2]d|3)).pem   
 - name: platform-automation-pivnet
   type: pivnet
   source:
@@ -195,6 +216,13 @@ resources:
     uri: ((template-repo))
     private_key: ((template-deploy-key.private_key))
     branch: master
+- name: pfsense_modules
+  icon: github
+  type: git  
+  source:
+    uri: git@github.com:bottkars/pfsense_modules.git
+    private_key: ((template-deploy-key.private_key))
+    branch: master    
 - name: variable
   icon: github
   type: git  
@@ -207,6 +235,7 @@ resources:
     - ((foundation))/vars/director-vars.yml
     - ((foundation))/vars/harbor-container-registry-vars.yml
     - ((foundation))/state/state.yml
+    - ((foundation))/config/opsman.yml
 
 ## product resources
 - name: opsman-product
@@ -565,7 +594,7 @@ jobs:
         tags: ((tags))
       - get: variable
         tags: ((tags))
-        trigger: true
+        trigger: false
       - get: pivotal-container-service-product
         tags: ((tags))
         trigger: true
@@ -655,7 +684,7 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-      trigger: true
+      trigger: false
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads       
   - task: download-harbor-container-registry
@@ -936,7 +965,7 @@ jobs:
         tags: ((tags))      
       - get: variable
         tags: ((tags))    
-        trigger: true
+        trigger: false
       - get: pivotal-container-service-product
         trigger: true
         skip_download: true
@@ -1244,7 +1273,10 @@ jobs:
         unpack: true
     - get: one-time-trigger
       tags: ((tags))
-      trigger: false
+    - get: certstate  
+      trigger: true
+      passed:
+      - issue-pks-cert-request
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -1252,17 +1284,54 @@ jobs:
     - get: templates
       tags: ((tags))
     - get: variable
-      tags: ((tags))
+      tags: ((tags))     
+  - task: interpolate-om-configuration
+    <<: *interpolate-om-configuration    
   - task: update om configuration
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-opsman.yml
     input_mapping:
       env: variable
-      config: variable
+      config: interpolated-om-configuration
     params:
-      OPSMAN_CONFIG_FILE: foundations/((foundation))/config/opsman.yml
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
       ENV_FILE: ((foundation))/env/env.yml
+- name: issue-pks-cert-request
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: one-time-trigger
+      tags: ((tags))
+      trigger: false
+    - get: pfsense_modules
+      tags: ((tags))
+      params:
+        unpack: true    
+  - task: request_new_certs
+    image: platform-automation-image
+    file: pfsense_modules/ci/tasks/request_cert.yml
+    params:
+      <<: *credhub_env
+      CERT_ID: 1
+      CA_ID: 1
+      STORED_CERT: pks_cer
+      SUBJECT: pks.home.labbuildr.com
+      PFSENSE_FQDN: pfsense.home.labbuildr.com
+      PFSENSE_USERNAME: ((pfsense_user.username)) 
+      PFSENSE_PASSWORD: ((pfsense_user.password))
+    input_mapping:
+      pfsense_modules: pfsense_modules
+    output_mapping: {certificates: certificates}
+  - put: certstate
+    tags: ((tags))      
+    params:
+      file: certificates/pks.home.labbuildr.com-(.*).pem
 
 groups:
 - name: full
@@ -1317,6 +1386,7 @@ groups:
   jobs:
   - upgrade-opsman 
   - update-om-configuration
+  - issue-pks-cert-request
       
 - name: delete
   jobs:
