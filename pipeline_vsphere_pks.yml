@@ -176,7 +176,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_installation))
-    regexp: ((foundation))/*-(d{4}-(d|1[0-2])-([0-2]d|3)).pem   
+    regexp: ((foundation))/((pks.fqdn))-(.*).pem   
 - name: platform-automation-pivnet
   type: pivnet
   source:
@@ -893,7 +893,6 @@ jobs:
       tags: ((tags))      
       params:
         unpack: true
-      trigger: true
     - get: platform-automation-tasks
       tags: ((tags))      
       params:
@@ -953,6 +952,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+      - get: certstate  
+        trigger: true
+        passed:
+        - issue-pks-cert-request
+        - get-certs-from-pfsense  
       - get: platform-automation-image
         tags: ((tags))      
         params:
@@ -1003,6 +1007,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: certstate  
+      trigger: true
+      passed:
+      - issue-pks-cert-request
+      - get-certs-from-pfsense
     - get: platform-automation-image
       tags: ((tags))      
       params:
@@ -1043,6 +1052,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+      - get: certstate  
+        trigger: true
+        passed:
+        - configure-harbor-container-registry
+        - configure-pivotal-container-service
       - get: platform-automation-tasks
         tags: ((tags))      
         params:
@@ -1277,6 +1291,7 @@ jobs:
       trigger: true
       passed:
       - issue-pks-cert-request
+      - get-certs-from-pfsense
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -1313,15 +1328,15 @@ jobs:
       tags: ((tags))
       params:
         unpack: true    
-  - task: request_new_certs
+  - task: request_new_certs_from _pfsense
     image: platform-automation-image
-    file: pfsense_modules/ci/tasks/request_cert.yml
+    file: pfsense_modules/ci/tasks/renew_cert.yml
     params:
       <<: *credhub_env
       CERT_ID: 1
       CA_ID: 1
       STORED_CERT: pks_cer
-      SUBJECT: pks.home.labbuildr.com
+      SUBJECT: ((pks.fqdn))
       PFSENSE_FQDN: pfsense.home.labbuildr.com
       PFSENSE_USERNAME: ((pfsense_user.username)) 
       PFSENSE_PASSWORD: ((pfsense_user.password))
@@ -1331,7 +1346,44 @@ jobs:
   - put: certstate
     tags: ((tags))      
     params:
-      file: certificates/pks.home.labbuildr.com-(.*).pem
+      file: certificates/((pks.fqdn))*.pem
+
+- name: get-certs-from-pfsense
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense_modules
+      tags: ((tags))
+      params:
+        unpack: true    
+  - task: get_current_certs
+    image: platform-automation-image
+    file: pfsense_modules/ci/tasks/request_cert.yml
+    params:
+      <<: *credhub_env
+      CERT_ID: 1
+      CA_ID: 1
+      STORED_CERT: pks_cer
+      SUBJECT: ((pks.fqdn))
+      PFSENSE_FQDN: pfsense.home.labbuildr.com
+      PFSENSE_USERNAME: ((pfsense_user.username)) 
+      PFSENSE_PASSWORD: ((pfsense_user.password))
+    input_mapping:
+      pfsense_modules: pfsense_modules
+    output_mapping: {certificates: certificates}
+  - put: certstate
+    tags: ((tags))      
+    params:
+      file: certificates/((pks.fqdn))*.pem
+
 
 groups:
 - name: full
@@ -1382,11 +1434,11 @@ groups:
     - test-interpolate-pivotal-container-service
     - test-interpolate-harbor-container-registry  
     - configure-director  
-- name: Upgrade
+- name: update-certificates
   jobs:
-  - upgrade-opsman 
   - update-om-configuration
   - issue-pks-cert-request
+  - get-certs-from-pfsense
       
 - name: delete
   jobs:
