@@ -86,6 +86,8 @@ use_jumphost(){
 }
 
 use_minio-client(){
+	local CONCOURSE_TARGET=${1-$CONCOURSE_TARGET}
+	local PIPELINE=${2-$PIPELINE}        
         # export minio_dir=.minio
         # mkdir -p ${minio_dir}
         # export_alias mc "mc --config-dir ${minio_dir} \$@" 
@@ -99,6 +101,7 @@ use_minio-client(){
         DOMAIN=$(echo ${AWS_ENDPOINT#*//})
         DOMAIN=$(echo ${DOMAIN%%\/*} )
         export AWS_ENDPOINT="${PROTOCOL}${DOMAIN}"
+        export AWS_S3_ENDPOINT="${PROTOCOL}${DOMAIN}"
         echo "exporting host ${cyan} ${PROTOCOL}${DOMAIN}${reset} as minio target ${cyan}${CONCOURSE_TARGET}${reset}"
         export MC_HOST_${CONCOURSE_TARGET}="${PROTOCOL}${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@${DOMAIN}"
         export_alias awss3 "aws --endpoint-url ${AWS_ENDPOINT} s3 \$@"
@@ -152,7 +155,44 @@ use_fly-aliases(){
 	echo ${reset}
 }
 
+use_azure(){
+	local CONCOURSE_TARGET=${1}
+	local PIPELINE=${2}
+        #####################        
+        # Notes on jmespath ( az-cli)
+        # within az-cli, jamespath search for types with Dash (-)
+        # need to be escaped in \"type-with-dash\"
+        ######################
+        export AZURE_CONFIG_DIR=$(pwd)/.azure
+        mkdir -p ${AZURE_CONFIG_DIR}
+        echo "Reading Azure Settings from lpass"
+         lpass status --quiet || :
+        export PROFILE="2019-03-01-hybrid"
+        export CLOUDPROFILE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=ENDPOINT)
+        export ARM_TENANT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=TENANT_ID)
+        export ARM_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=CLIENT_ID)
+        export ARM_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=CLIENT_SECRET)
+        export ARM_SUBSCRIPTION_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=SUBSCRIPTION_ID)
+        # export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+        # AZURE_CLI_CA_PATH: "/usr/local/lib/python3.6/site-packages/certifi/cacert.pem"
+        # az cli
+        ### evaluate active AzureCloud
+
+
+        az cloud set --name ${CLOUDPROFILE}
+        az login --service-principal \
+          -u ${ARM_CLIENT_ID} \
+          -p ${ARM_CLIENT_SECRET} \
+          --tenant ${ARM_TENANT_ID} \
+          --output tsv
+        az account set --subscription ${ARM_SUBSCRIPTION_ID}  
+#        export_alias az-vms 'az vm list --query "[?tags.\"user-agent\"=='"'"'bosh'"'"'].{deployment:tags.deployment, BoshName:tags.name, Name:name, RG:resourceGroup,state:provisioningState}" --output table'
+        export_alias az-vms 'az vm list --output table'
+}
+
+
 use_azure-env(){
+
         #####################        
         # Notes on jmespath ( az-cli)
         # within az-cli, jamespath search for types with Dash (-)
@@ -346,7 +386,7 @@ use_wsl_dns_fix(){
         if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
 	then
 		echo "${green}true${reset}"	
-		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/6/pwsh.exe  -Command "Get-NetAdapter | where status -eq up | Get-DnsClientServerAddress -Family IPv4 |Sort-Object -Property InterfaceIndex -Descending | Select-Object ServerAddresses -ExpandProperty ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
+		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/7/pwsh.exe  -Command "Get-NetAdapter | where status -eq up | Get-DnsClientServerAddress -Family IPv4 |Sort-Object -Property InterfaceIndex -Descending | Select-Object ServerAddresses -ExpandProperty ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
 		echo "${magenta}adjusting DNS Order with fix-dns${reset}"
                 export WSL=true
 		fix-dns

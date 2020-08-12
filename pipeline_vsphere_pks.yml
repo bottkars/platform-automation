@@ -1384,7 +1384,56 @@ jobs:
     params:
       file: certificates/((pks.fqdn))*.pem
 
-
+- name: get-harbor-cert-expiration
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense_modules
+      tags: ((tags))
+      params:
+        unpack: true    
+  - task: check_expiration
+    image: platform-automation-image
+    file: pfsense_modules/ci/tasks/check_cert_expiration.yml
+    params:
+      SUBJECT: harbor.((pks.fqdn))
+      PORT: "443"
+      EXPIRE_DAYS: "15"
+    input_mapping:
+      pfsense_modules: pfsense_modules
+- name: get-pks-api-cert-expiration
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense_modules
+      tags: ((tags))
+      params:
+        unpack: true    
+  - task: check_expiration
+    image: platform-automation-image
+    file: pfsense_modules/ci/tasks/check_cert_expiration.yml
+    params:
+      SUBJECT: api.((pks.fqdn))
+      PORT: "9021"
+      EXPIRE_DAYS: "15"
+    input_mapping:
+      pfsense_modules: pfsense_modules
 groups:
 - name: full
   jobs:
@@ -1439,6 +1488,11 @@ groups:
   - update-om-configuration
   - issue-pks-cert-request
   - get-certs-from-pfsense
+  - configure-pivotal-container-service
+  - configure-harbor-container-registry
+  - apply-product-changes
+  - get-harbor-cert-expiration
+  - get-pks-api-cert-expiration
       
 - name: delete
   jobs:
