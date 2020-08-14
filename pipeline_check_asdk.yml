@@ -24,7 +24,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_asdk_release))
-    regexp: asdk-(((asdk_version)).*).yml
+    regexp: asdk-1.(((asdk.version)).*).yml
 
 - name: tweet
   type: twitter
@@ -98,7 +98,7 @@ jobs:
             - azs-concourse/media/avatar.jpg
             status: >
               OMG! #AzureStackHub ASDK ((asdk.version)) is now live deployed
-              from my custom @concourseci pipeline in our PeZ environment!  
+              from my custom @concourseci pipeline at labbuildr@home!  
 
 - name: download-asdk
   plan:

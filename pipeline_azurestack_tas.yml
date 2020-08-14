@@ -267,6 +267,21 @@ interpolate-product-templates: &interpolate-product-templates
   output_mapping:
     interpolated-files: interpolated-product-templates
 
+interpolate-om-configuration: &interpolate-om-configuration
+  tags: ((tags))      
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: ((foundation))/config/opsman.yml
+    SKIP_MISSING: true
+  input_mapping:
+    files: variable
+  output_mapping:
+    interpolated-files: interpolated-om-configuration
+
+
+
 jobs:
 - name: get-opsman-image-azure
   on_failure:
@@ -346,10 +361,7 @@ jobs:
     tags: ((tags))
     params:
       unpack: true      
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
+
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates          
@@ -491,17 +503,18 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
       AUTH_CONFIG_FILE: ((foundation))/config/auth.yml 
-  - task: update om certficates
+  - task: interpolate-om-configuration
+    <<: *interpolate-om-configuration    
+  - task: update om configuration
     tags: ((tags))
     image: platform-automation-image
-    file: additional-tasks/tasks/update-ssl-certificate.yml
-    attempts: 10
+    file: platform-automation-tasks/tasks/configure-opsman.yml
     input_mapping:
       env: variable
+      config: interpolated-om-configuration
     params:
-      ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((tas_domain_cert.certificate))
-      KEY_PEM: ((tas_domain_cert.private_key))                
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      ENV_FILE: ((foundation))/env/env.yml              
   - task: configure-director
     tags: ((tags))
     image: platform-automation-image
@@ -537,7 +550,7 @@ jobs:
     params:
 #      VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/2.9/custom_vm_types_azurestack.yml      
+      DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/custom_vm_types_azurestack.yml      
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
@@ -616,10 +629,7 @@ jobs:
   - put: pipeline-lock
     tags: ((tags))
     params: {claim: base}  
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
+
   - in_parallel:
     - get: daily-trigger
       tags: ((tags))
@@ -676,10 +686,7 @@ jobs:
   - put: pipeline-lock
     tags: ((tags))
     params: {claim: base}
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
+
   - in_parallel:
     - get: one-time-trigger
       tags: ((tags))
@@ -812,6 +819,43 @@ jobs:
 #      release: download-lock
 
 ####
+- name: update-om-configuration
+  serial: false
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: one-time-trigger
+      tags: ((tags))
+#    - get: certstate  
+#      trigger: true
+#      passed:
+#      - issue-pks-cert-request
+#      - get-certs-from-pfsense
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true    
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))     
+  - task: interpolate-om-configuration
+    <<: *interpolate-om-configuration    
+  - task: update om configuration
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-opsman.yml
+    input_mapping:
+      env: variable
+      config: interpolated-om-configuration
+    params:
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      ENV_FILE: ((foundation))/env/env.yml
+
 groups:
 
 - name: install-tanzu-platform
@@ -824,6 +868,8 @@ groups:
   - get-platform-automation
   - get-opsman-pivnet
   - get-opsman-image-azure
+  - update-om-configuration
+
 
 
 
