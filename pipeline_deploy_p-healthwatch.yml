@@ -125,7 +125,7 @@ resources:
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_installation))
+    bucket: ((buckets_installation))
     regexp: ((foundation))/installation-(.*).zip    
 
 - name: platform-automation-tasks
