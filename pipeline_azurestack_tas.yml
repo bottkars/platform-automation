@@ -759,17 +759,20 @@ jobs:
     input_mapping:
       env: variable
       installation: installation
-  - task: update om certficates
+  - task: interpolate-om-configuration
+    <<: *interpolate-om-configuration    
+  - task: update om configuration
     tags: ((tags))
     image: platform-automation-image
-    file: additional-tasks/tasks/update-ssl-certificate.yml
-    attempts: 10
+    file: platform-automation-tasks/tasks/configure-opsman.yml
     input_mapping:
       env: variable
+      config: interpolated-om-configuration
     params:
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
       ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((tas_domain_cert.certificate))
-      KEY_PEM: ((tas_domain_cert.private_key))    
+
+
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image

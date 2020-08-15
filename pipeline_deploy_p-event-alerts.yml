@@ -329,14 +329,16 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-      trigger: true
+      trigger: false
     - get: p-event-alerts-product
       tags: ((tags))
-      skip_download: true
+      params:
+        skip_download: "true"   
       trigger: true
     - get: p-event-alerts-stemcell
       tags: ((tags))
-      skip_download: true
+      params:
+        skip_download: "true"   
       trigger: true
   - task: interpolate-product-downloads
     tags: ((tags))

@@ -313,10 +313,11 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-      trigger: true
+      trigger: false
     - get: pas-for-kubernetes-product
       tags: ((tags))
-      skip_download: true
+      params:
+        skip_download: "true"   
       trigger: true        
   - task: interpolate-product-downloads
     tags: ((tags))
