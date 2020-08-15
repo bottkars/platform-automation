@@ -112,7 +112,7 @@ resources:
 
 #- name: kubectl-release
 #  tags: ((tags))
-#  icon: github-circle
+#  icon: github
 #  type: github-release
 #  check_every: 10m  
 #  source: 

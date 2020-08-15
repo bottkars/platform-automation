@@ -8,7 +8,7 @@ s3_env: &s3_env
 credhub_env: &credhub_env
   CREDHUB_CLIENT: ((((foundation))/credhub-client))
   CREDHUB_SECRET: ((((foundation))/credhub-secret))
-  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  CREDHUB_SERVER: ((credhub-server))
   PREFIX: /concourse/main/((foundation))
   CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
 
@@ -174,7 +174,7 @@ resources:
 
 - name: templates
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
@@ -184,7 +184,7 @@ resources:
 
 - name: variable
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
@@ -192,6 +192,7 @@ resources:
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
     paths:
+    - ((foundation))/env/env.yaml
     - ((foundation))/vars/p-healthwatch2-pas-exporter-vars.yml
 
 - name: pipeline-lock

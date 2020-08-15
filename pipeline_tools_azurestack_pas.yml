@@ -152,7 +152,7 @@ resources:
 
 - name: templates
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
@@ -168,7 +168,7 @@ resources:
     regexp: \[ops-manager,(.*)\].*.yml
 - name: variable
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
@@ -200,7 +200,7 @@ resources:
 
 - name: azs-concourse
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source:  

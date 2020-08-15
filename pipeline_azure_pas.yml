@@ -148,14 +148,14 @@ resources:
 
 ## core resources
 - name: templates
-  icon: github-circle
+  icon: github
   type: git  
   source:
     uri: ((template-repo))
     private_key: ((template-deploy-key.private_key))
     branch: master
 - name: variable
-  icon: github-circle
+  icon: github
   type: git  
   source:
     uri: ((variable-repo))
