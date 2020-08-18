@@ -535,27 +535,28 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-      - get: daily-trigger
-        trigger: true
-      - get: platform-automation-image
-        tags: ((tags))      
-        params:
-          unpack: true
-        passed: [ install-opsman]
-      - get: platform-automation-tasks
-        tags: ((tags))      
-        params:
-          unpack: true
-      - get: opsman-product
-        trigger: true
-        skip_download: true    
-      - get: templates
-        tags: ((tags))      
-      - get: variable
-        tags: ((tags))      
-      - get: one-time-trigger
-        tags: ((tags))      
-        passed: [ install-opsman ]
+    - get: daily-trigger
+      trigger: true
+    - get: platform-automation-image
+      tags: ((tags))      
+      params:
+        unpack: true
+      passed: [ install-opsman]
+    - get: platform-automation-tasks
+      tags: ((tags))      
+      params:
+        unpack: true
+    - get: opsman-product
+      trigger: true
+      params:
+        skip_download: "true"       
+    - get: templates
+      tags: ((tags))      
+    - get: variable
+      tags: ((tags))      
+    - get: one-time-trigger
+      tags: ((tags))      
+      passed: [ install-opsman ]
   - task: export-installation
     tags: ((tags))      
     image: platform-automation-image
@@ -807,7 +808,10 @@ jobs:
     tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
-    <<: *interpolate-product-templates          
+    <<: *interpolate-product-templates     
+  - task: interpolate-om-configuration
+    tags: ((tags))
+    <<: *interpolate-om-configuration          
   - task: create-vm
     tags: ((tags))
     image: platform-automation-image
@@ -815,7 +819,7 @@ jobs:
     input_mapping:
       image: opsman-product
       state: variable      
-      config: variable
+      config: interpolated-om-configuration
       env: variable
       vars: variable
     params:
@@ -912,7 +916,10 @@ jobs:
   - task: interpolate-product-templates
     <<: *interpolate-product-templates          
   - task: interpolate-product-downloads
-    <<: *interpolate-product-downloads  
+    <<: *interpolate-product-downloads
+  - task: interpolate-om-configuration
+    tags: ((tags))
+    <<: *interpolate-om-configuration          
   - task: upgrade-opsman
     tags: ((tags))      
     image: platform-automation-image
@@ -920,7 +927,7 @@ jobs:
     input_mapping:
      image: opsman-product
      state: variable
-     config: variable
+     config: interpolated-om-configuration
      env: variable
      vars: variable
     params:
@@ -952,29 +959,30 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-      - get: certstate  
-        trigger: true
-        passed:
-        - issue-pks-cert-request
-        - get-certs-from-pfsense  
-      - get: platform-automation-image
-        tags: ((tags))      
-        params:
-          unpack: true
-      - get: platform-automation-tasks
-        tags: ((tags))      
-        params:
-          unpack: true
-      - get: templates
-        tags: ((tags))      
-      - get: variable
-        tags: ((tags))    
-        trigger: false
-      - get: pivotal-container-service-product
-        trigger: true
-        skip_download: true
-        passed:
-         - upload-and-stage-pivotal-container-service
+    - get: certstate  
+      trigger: true
+      passed:
+      - issue-pks-cert-request
+      - get-certs-from-pfsense  
+    - get: platform-automation-image
+      tags: ((tags))      
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))      
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))      
+    - get: variable
+      tags: ((tags))    
+      trigger: false
+    - get: pivotal-container-service-product
+      trigger: true
+      params:
+        skip_download: "true"
+      passed:
+        - upload-and-stage-pivotal-container-service
   - task: interpolate-product-templates
     <<: *interpolate-product-templates
   - task: configure-pivotal-container-service-cloud-provider
@@ -1024,7 +1032,8 @@ jobs:
       params:
         unpack: true
     - get: harbor-container-registry-product
-      skip_download: true    
+      params:
+        skip_download: "true"    
       tags: ((tags)) 
       trigger: true     
     - get: templates
@@ -1073,10 +1082,12 @@ jobs:
         trigger: true 
       - get: pivotal-container-service-product
         trigger: true
-        skip_download: true    
+        params:
+         skip_download: "true"       
       - get: harbor-container-registry-product
         trigger: true
-        skip_download: true    
+        params:
+         skip_download: "true"       
         passed: # ((passed_configs))
           - configure-harbor-container-registry
   - task: apply-product-changes
@@ -1173,13 +1184,16 @@ jobs:
     params:
     # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
      ENV_FILE: ((foundation))/env/env.yml
+  - task: interpolate-om-configuration
+    tags: ((tags))
+    <<: *interpolate-om-configuration       
   - task: delete-vm
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/delete-vm.yml
     input_mapping:
       state: variable      
-      config: variable
+      config: interpolated-om-configuration
       env: variable
       vars: variable
     params:
