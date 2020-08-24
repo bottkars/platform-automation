@@ -959,11 +959,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: certstate  
-      trigger: true
-      passed:
-      - issue-pks-cert-request
-      - get-certs-from-pfsense  
+    #- get: certstate  
+    #  trigger: true
+    #  passed:
+    #  - issue-pks-cert-request
+    #  - get-certs-from-pfsense  
     - get: platform-automation-image
       tags: ((tags))      
       params:
@@ -1015,11 +1015,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: certstate  
-      trigger: true
-      passed:
-      - issue-pks-cert-request
-      - get-certs-from-pfsense
+    #- get: certstate  
+    #  trigger: true
+    #  passed:
+    #  - issue-pks-cert-request
+    #  - get-certs-from-pfsense
     - get: platform-automation-image
       tags: ((tags))      
       params:
@@ -1061,11 +1061,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-      - get: certstate  
-        trigger: true
-        passed:
-        - configure-harbor-container-registry
-        - configure-pivotal-container-service
+      #- get: certstate  
+      #  trigger: true
+      #  passed:
+      #  - configure-harbor-container-registry
+      #  - configure-pivotal-container-service
       - get: platform-automation-tasks
         tags: ((tags))      
         params:
@@ -1398,6 +1398,37 @@ jobs:
     params:
       file: certificates/((pks.fqdn))*.pem
 
+
+- name: get-controlplane-cert-expiration
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense_modules
+      tags: ((tags))
+      params:
+        unpack: true  
+  - across:
+    - var: endpoints
+      values: [vmw.control.home.labbuildr.com, vmw.control.stackpoc.labbuildr.com]      
+    task: check_expiration
+    image: platform-automation-image
+    file: pfsense_modules/ci/tasks/check_cert_expiration.yml
+    params:
+      SUBJECT: ((.:endpoints))
+      PORT: "443"
+      EXPIRE_DAYS: "15"
+    input_mapping:
+      pfsense_modules: pfsense_modules
+
+
 - name: get-harbor-cert-expiration
   serial: true
   serial_groups: [ install ]
@@ -1507,6 +1538,7 @@ groups:
   - apply-product-changes
   - get-harbor-cert-expiration
   - get-pks-api-cert-expiration
+  - get-controlplane-cert-expiration
       
 - name: delete
   jobs:
