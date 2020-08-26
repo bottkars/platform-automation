@@ -107,7 +107,7 @@ resources:
 #    regexp: platform-automation-image-(.*).tgz
 
 - name: dps-automation-image
-  icon: docker-image
+  icon: docker
   type: docker-image
   source:
     repository: bottkars/dps-automation-image
