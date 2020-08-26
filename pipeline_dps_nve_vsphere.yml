@@ -61,13 +61,20 @@ resources:
 #    sort_by: semver
 
 
+#- name: dps-automation-image
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.pivnet_image))
+#    regexp: platform-automation-image-(.*).tgz
+
 - name: dps-automation-image
-  icon: cloud-download
-  type: s3
+  icon: docker
+  type: docker-image
   source:
-    <<: *s3_env
-    bucket: ((buckets.pivnet_image))
-    regexp: platform-automation-image-(.*).tgz
+    repository: bottkars/dps-automation-image
+#    tag: v0.1
 
 
 - name: dps-modules
