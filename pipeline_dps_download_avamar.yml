@@ -44,13 +44,13 @@ resources:
     repository: bottkars/dps-automation-image
 #    tag: v0.1
 
-- name: dps_modules
+- name: dps-modules
   tags: ((tags))
   icon: git
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/dps_modules.git
+    uri: https://github.com/bottkars/dps-modules.git
     branch: master
 
 - name: AvamarUpgrade
@@ -118,14 +118,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: download-avp
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/download-avamar-packages.yml
+    file: dps-modules/ci/tasks/download-avamar-packages.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       AV_RELEASE: ((avamar.upgrade_release))
       AV_LOCATION: ((avamar.upgrade))
@@ -172,14 +172,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: download-ave
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/download-avamar-packages.yml
+    file: dps-modules/ci/tasks/download-avamar-packages.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       avamar: ((avamar))
       packages: AZURE-AVE
@@ -203,14 +203,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: download-ave
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/download-avamar-packages.yml
+    file: dps-modules/ci/tasks/download-avamar-packages.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       avamar: ((avamar))
       packages: AVE

@@ -70,13 +70,13 @@ resources:
     regexp: platform-automation-image-(.*).tgz
 
 
-- name: dps_modules
+- name: dps-modules
   tags: ((tags))
   icon: git
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/dps_modules.git
+    uri: https://github.com/bottkars/dps-modules.git
     branch: master
 
 ## product resources
@@ -114,14 +114,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: deploy-ova
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/deploy-nve.yml
+    file: dps-modules/ci/tasks/deploy-nve.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
       networker: networker
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
@@ -151,14 +151,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: configure-nve
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/configure-nve.yml
+    file: dps-modules/ci/tasks/configure-nve.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
@@ -192,14 +192,14 @@ jobs:
         unpack: true
       tags: ((tags))
       passed: [ deploy-networker-ova ]              
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: delete-nve
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/delete-nve.yml
+    file: dps-modules/ci/tasks/delete-nve.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))

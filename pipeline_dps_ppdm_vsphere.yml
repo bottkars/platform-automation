@@ -114,13 +114,13 @@ resources:
 #    tag: v0.1
 
 
-- name: dps_modules
+- name: dps-modules
   tags: ((tags))
   icon: git
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/dps_modules.git
+    uri: https://github.com/bottkars/dps-modules.git
     branch: master
 
 ## product resources
@@ -147,14 +147,14 @@ jobs:
         unpack: false
     - get: dps-automation-image
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: deploy-ova
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/deploy-ppdm.yml
+    file: dps-modules/ci/tasks/deploy-ppdm.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
       powerprotect: powerprotect
     params:
       DEBUG: "FALSE"
@@ -184,14 +184,14 @@ jobs:
       passed: [ deploy-powerprotect-ova ]
     - get: dps-automation-image
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: configure-ppdm
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/configure-ppdm.yml
+    file: dps-modules/ci/tasks/configure-ppdm.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       DEBUG: "FALSE"
       PPDM_NETWORK: ((PPDM.NETWORK))
@@ -214,14 +214,14 @@ jobs:
       passed: [ configure-ppdm ]              
     - get: dps-automation-image
       tags: ((tags))
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: set-inventory
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/set-ppdm-inventory.yml
+    file: dps-modules/ci/tasks/set-ppdm-inventory.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
@@ -240,14 +240,14 @@ jobs:
       passed: [ set-ddve-inventory]              
     - get: dps-automation-image
       tags: ((tags))
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: set-sdr-configuration
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/set-ppdm-sdr.yml
+    file: dps-modules/ci/tasks/set-ppdm-sdr.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
@@ -264,14 +264,14 @@ jobs:
       passed: [ configure-ppdm ]              
     - get: dps-automation-image
       tags: ((tags))
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: set-inventory
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/set-ppdm-inventory.yml
+    file: dps-modules/ci/tasks/set-ppdm-inventory.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
@@ -291,14 +291,14 @@ jobs:
       tags: ((tags))
     - get: one-time-trigger  
       passed: [ set-vsphere-inventory ]              
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: add-proxy 
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/add-ppdm-vproxy.yml
+    file: dps-modules/ci/tasks/add-ppdm-vproxy.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
       variable: variable
     params:
       DEBUG: "FALSE"
@@ -321,14 +321,14 @@ jobs:
       passed: [ set-vsphere-inventory ]              
     - get: dps-automation-image
       tags: ((tags))
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: instant-access 
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/ppdm-vm-instant-access.yml
+    file: dps-modules/ci/tasks/ppdm-vm-instant-access.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
       variable: instant_access_request
     params:
       DEBUG: "FALSE"
@@ -348,16 +348,16 @@ jobs:
   - in_parallel:
     - get: dps-automation-image
       tags: ((tags))
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
     - get: one-time-trigger  
       passed: [ deploy-powerprotect-ova ]              
   - task: delete-ppdm
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/delete-ppdm.yml
+    file: dps-modules/ci/tasks/delete-ppdm.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       DEBUG: "FALSE"
       GOVC_INSECURE: ((GOVC.INSECURE))

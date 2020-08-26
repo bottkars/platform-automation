@@ -53,13 +53,13 @@ resources:
     repository: bottkars/dps-automation-image
 #    tag: v0.1
 
-- name: dps_modules
+- name: dps-modules
   tags: ((tags))
   icon: git
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/dps_modules.git
+    uri: https://github.com/bottkars/dps-modules.git
     branch: master
 
 ## product resources
@@ -86,14 +86,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: deploy-ova
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/deploy-ppdd.yml
+    file: dps-modules/ci/tasks/deploy-ppdd.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
       ddve: ddve
     params:
       DEBUG: "FALSE"
@@ -125,14 +125,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: configure-ppdd
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/configure-ppdd.yml
+    file: dps-modules/ci/tasks/configure-ppdd.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       DEBUG: "FALSE"
       GOVC_INSECURE: ((GOVC.INSECURE))
@@ -167,14 +167,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: change-ppdd-password
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/change-ppdd-password.yml
+    file: dps-modules/ci/tasks/change-ppdd-password.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       DEBUG: "FALSE"
       PPDD_FQDN: ((PPDD.FQDN))
@@ -189,14 +189,14 @@ jobs:
         unpack: true
       tags: ((tags))
       passed: [ deploy-ddve-ova ]              
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: delete-ddve
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/delete-ppdd.yml
+    file: dps-modules/ci/tasks/delete-ppdd.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       DEBUG: "FALSE"
       GOVC_INSECURE: ((GOVC.INSECURE))

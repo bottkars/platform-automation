@@ -70,13 +70,13 @@ resources:
 
 
 
-- name: dps_modules
+- name: dps-modules
   tags: ((tags))
   icon: git
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/dps_modules.git
+    uri: https://github.com/bottkars/dps-modules.git
     branch: master
 
 ## product resources
@@ -114,14 +114,14 @@ jobs:
       params:
         unpack: true
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: deploy-ova
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/deploy-ave.yml
+    file: dps-modules/ci/tasks/deploy-ave.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
       avamar: avamar
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
@@ -149,14 +149,14 @@ jobs:
       tags: ((tags))       
       trigger: true
     - get: dps-automation-image
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: configure-avamar
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/configure-ave-vsphere.yml
+    file: dps-modules/ci/tasks/configure-ave-vsphere.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
@@ -191,14 +191,14 @@ jobs:
       trigger: true
     - get: dps-automation-image
       tags: ((tags))        
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: deploy-avamar-client-package
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/deploy-avamar-client-avp.yml
+    file: dps-modules/ci/tasks/deploy-avamar-client-avp.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
@@ -220,14 +220,14 @@ jobs:
     - get: dps-automation-image
       tags: ((tags))
       passed:          
-    - get: dps_modules
+    - get: dps-modules
       tags: ((tags))
   - task: delete-avamar
     tags: ((tags))
     image: dps-automation-image
-    file: dps_modules/ci/tasks/delete-vm.yml
+    file: dps-modules/ci/tasks/delete-vm.yml
     input_mapping:
-      dps_modules: dps_modules
+      dps-modules: dps-modules
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
