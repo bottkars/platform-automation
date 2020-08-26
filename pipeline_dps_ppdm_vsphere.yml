@@ -51,7 +51,7 @@ resources:
 #    paths:
 #    - instant_access.yml
 
-- name: instant_access_request
+- name: instant-access-request
   type: s3
   icon: folder-move
   source:
@@ -60,7 +60,7 @@ resources:
     regexp: request/ppdm-instant-(?P<version>\d{4}\.\d{1,2}\.\d{1,2}-\d{1,9}).yml
   check_every: 1m  
   
-- name: instant_access_state
+- name: instant-access-state
   type: s3
   tags: ((tags))
   icon: folder-move
@@ -314,7 +314,7 @@ jobs:
 - name: ppdm-vm-instant-access
   plan:
   - in_parallel:
-    - get: instant_access_request
+    - get: instant-access-request
 #      passed: [ set-vsphere-inventory ]              
 #      trigger: true
     - get: one-time-trigger
@@ -329,7 +329,7 @@ jobs:
     file: dps-modules/ci/tasks/ppdm-vm-instant-access.yml
     input_mapping:
       dps-modules: dps-modules
-      variable: instant_access_request
+      variable: instant-access-request
     params:
       DEBUG: "FALSE"
       GOVC_INSECURE: ((GOVC.INSECURE))
@@ -339,7 +339,7 @@ jobs:
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       PROXY_FILE: variable/ppdm-instant-
-  - put: instant_access_state
+  - put: instant-access-state
     tags: ((tags))
     params:
       file: instant_access/*.json
