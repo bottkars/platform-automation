@@ -1316,7 +1316,7 @@ jobs:
       tags: ((tags))     
   - task: interpolate-om-configuration
     <<: *interpolate-om-configuration    
-  - task: update om configuration
+  - task: update-om-configuration
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-opsman.yml
