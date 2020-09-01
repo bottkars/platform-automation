@@ -6,15 +6,15 @@ s3_env: &s3_env
 
 azure_env: &azure_env
   PROFILE: ((azs.arm_profile))
-  CA_CERT: ((azs_ca.certificate))
+  CA_CERT: ((azs.azs_ca.certificate))
   AZURE_CLI_CA_PATH: /usr/local/lib/python3.6/dist-packages/certifi/cacert.pem
-  ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+  ENDPOINT_RESOURCE_MANAGER: ((azs.endpoint-resource-manager)) 
   VAULT_DNS:  ((azs.vault_dns))
   SUFFIX_STORAGE_ENDPOINT: ((azs.suffix_storage_endpoint))
-  AZURE_TENANT_ID: ((tenant_id))
-  AZURE_CLIENT_ID: ((client_id))
-  AZURE_CLIENT_SECRET: ((client_secret))
-  AZURE_SUBSCRIPTION_ID: ((subscription_id))
+  AZURE_TENANT_ID: ((azs.tenant_id))
+  AZURE_CLIENT_ID: ((azs.client_id))
+  AZURE_CLIENT_SECRET: ((azs.client_secret))
+  AZURE_SUBSCRIPTION_ID: ((azs.subscription_id))
   RESOURCE_GROUP: ((NVE.azs.resource_group))
   LOCATION: ((azs.azurestack_region))
 
@@ -74,30 +74,23 @@ resources:
 #    sort_by: semver
 
 
-#- name: dps-automation-image
-#  icon: cloud-download
-#  type: s3
-#  source:
-#    <<: *s3_env
-#    bucket: ((buckets.pivnet_image))
-#    regexp: platform-automation-image-(.*).tgz
 
-#- name: dps-automation-image
-#  icon: docker
-#  type: docker-image
-#  source:
-#    repository: bottkars/dps-automation-image
+- name: dps-automation-image
+  icon: docker
+  type: docker-image
+  source:
+    repository: bottkars/dps-automation-image
 ##    tag: v0.1
 
 
-#- name: dps-modules
-#  tags: ((tags))
-#  icon: git
-#  type: git
-#  check_every: 10m  
-#  source:  
-#    uri: https://github.com/bottkars/dps-modules.git
-#    branch: master
+- name: dps-modules
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/dps-modules.git
+    branch: master
 - name: platform-automation-tasks
   tags: ((tags))
   icon: cloud-download
@@ -106,7 +99,14 @@ resources:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_tasks))
     regexp: platform-automation-tasks-(.*).zip
-
+- name: deployment
+  tags: ((tags))
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((NVE.azs.bucket))
+    regexp: ((NVE.azs.resource_group))/deployment-(.*).json  
 - name: platform-automation-image
   tags: ((tags))
   icon: cloud-download
@@ -124,13 +124,13 @@ resources:
     uri: https://github.com/bottkars/azs-concourse
     branch: ((azs_concourse_branch))
 ## product resources
-#- name: networker
-#  type: s3
-#  icon: folder-move
-#  source:
-#    <<: *s3_env
-#    bucket: ((buckets.dps_products))
-#    regexp: networker/((NVE.VERSION))/AZURE-NVE-(.*).vhd
+- name: networker
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: networker/((NVE.VERSION))/AZURE-NVE-(.*).vhd
 
 
 #- name: networker-upgrade
@@ -153,9 +153,7 @@ jobs:
 #      params:
 #        file: platform-automation-pivnet/*image*.tgz
 
-
-
-- name: deploy-nve-azs
+- name: validate-nve-azs-template
   serial: true
   serial_groups: [ install ]
   plan:
@@ -167,7 +165,7 @@ jobs:
       unpack: true
   - get: one-time-trigger
     tags: ((tags))
-    trigger: true
+    trigger: false
   - get: platform-automation-tasks
     tags: ((tags))
     params:
@@ -189,63 +187,102 @@ jobs:
     tags: ((tags))
     image: platform-automation-image
     file: azs-concourse/ci/tasks/validate-template.yml  
+    input_mapping:
+      azs-concourse: azs-concourse    
     params:
       <<: *azure_env
       TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/201-solution-azurestack-networker/master/azuredeploy.json"
       PARAMETER_FILE: "https://raw.githubusercontent.com/bottkars/201-solution-azurestack-networker/master/azuredeploy.parameters.json"
       ADDITIONAL_PARAMETERS: ((NVE.azs.additional_parameters))
-#  - task: deploy-template 
+
+- name: deploy-nve-azs
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - get: one-time-trigger
+    tags: ((tags))
+    trigger: true
+    passed: [ validate-nve-azs-template ]
+  - get: platform-automation-tasks
+    tags: ((tags))
+    params:
+      unpack: true  
+#  - task: copy-opsman-image
 #    tags: ((tags))
+#    file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
 #    image: platform-automation-image
-#    file: azs-concourse/ci/tasks/deploy-template.yml  
+#    input_mapping:
+#      image: opsman-image
+#      config: variable
 #    params:
 #      <<: *azure_env
-#      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/tanzu/azuredeploy.json"
-#      PARAMETER_FILE: "https://raw.githubusercontent.com/bottkars/201-solution-azurestack-networker/master/azuredeploy.parameters.json"
-#      ADDITIONAL_PARAMETERS: ((azs.additional_parameters))
-
-##- name: configure-nve
-#  plan:
-#  - in_parallel:
-#    - get: one-time-trigger
-#      trigger: true
-#    - get: dps-automation-image
-#      passed: [ deploy-networker-ova ]
-#      params:
-#        unpack: true
-#      tags: ((tags))        
-#    - get: dps-modules
-#      tags: ((tags))
-#  - task: configure-nve
-#    tags: ((tags))
-#    image: dps-automation-image
-#    file: dps-modules/ci/tasks/configure-nve.yml
-#    input_mapping:
-#      dps-modules: dps-modules
-#    params:
-#      GOVC_INSECURE: ((GOVC.INSECURE))
-#      GOVC_PASSWORD: ((GOVC.PASSWORD))
-#      GOVC_URL: ((GOVC.URL))
-#      GOVC_USERNAME: ((GOVC.USERNAME))
-#      GOVC_VM: ((NVE.VMNAME))   
-#      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
-#      NVE_FQDN: ((NVE.FQDN))
-#      NVE_SETUP_PASSWORD: ((NVE.PASSWORD))  
-#      NVE_TIMEZONE: "((NVE.TIMEZONE))"
-#      NVE_ADMIN_PASSWORD_OS: ((NVE.PASSWORD)) 
-#      NVE_ROOT_PASSWORD_OS: ((NVE.PASSWORD)) 
-#      NVE_SNMP_STRING: ((NVE.SNMP_STRING))
-#      NVE_DATADOMAIN_HOST: ((NVE.DATADOMAIN_HOST))
-#      NVE_STORAGE_PATH: ((NVE.STORAGE_PATH))
-#      NVE_DDBOOST_USER: ((NVE.DDBOOST_USER))
-#      NVE_NEW_DDBOOST_USER: ((NVE.NEW_DDBOOST_USER))
-#      NVE_DDBOOST_USER_PWD: ((NVE.PASSWORD))
-#      NVE_DDBOOST_USER_PWD_CF: ((NVE.PASSWORD))
- #     NVE_DATADOMAIN_SYSADMIN: ((NVE.DATADOMAIN_SYSADMIN))
- #     NVE_DATADOMAIN_SYSADMIN_PWD: ((NVE.DATADOMAIN_SYSADMIN_PWD))
-#      NVE_TOMCAT_KEYSTORE_PASSWORD: ((NVE.PASSWORD)) 
-#      NVE_AUTHC_ADMIN_PASSWORD: ((NVE.PASSWORD))
-            
+#      ACCOUNT_NAME: ((azs.image_account_name))
+#      ACCOUNT_KEY: ((azs.storage_account_key))
+#      DESTINATION_CONTAINER: ((azs.destination_container))
+#      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+  - task: deploy-template 
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/deploy-template.yml  
+    input_mapping:
+      azs-concourse: azs-concourse    
+    params:
+      <<: *azure_env
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/201-solution-azurestack-networker/master/azuredeploy.json"
+      PARAMETER_FILE: "https://raw.githubusercontent.com/bottkars/201-solution-azurestack-networker/master/azuredeploy.parameters.json"
+      ADDITIONAL_PARAMETERS: ((NVE.azs.additional_parameters))
+  - put: deployment
+    tags: ((tags))
+    params:
+      file: deployment/deployment-*.json
+- name: configure-nve
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+      passed: [ deploy-nve-azs ]
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+    - get: networker
+      tags: ((tags))
+      params:
+        skip_download: "true"   
+      trigger: false      
+  - task: configure-nve
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/configure-nve-rest.yml
+    input_mapping:
+      dps-modules: dps-modules
+      deployment: deployment
+    params:
+      AVI_FQDN: ((NVE.azs.FQDN))
+      NVE_ADD_DATDOMAIN_CONFIG: ((NVE.ADD_DATDOMAIN_CONFIG))
+      NVE_SETUP_PASSWORD: ((NVE.PASSWORD))  
+      NVE_TIMEZONE: "((NVE.TIMEZONE))"
+      NVE_ADMIN_PASSWORD_OS: ((NVE.PASSWORD)) 
+      NVE_ROOT_PASSWORD_OS: ((NVE.PASSWORD)) 
+      NVE_SNMP_STRING: ((NVE.SNMP_STRING))
+      NVE_DATADOMAIN_HOST: ((NVE.DATADOMAIN_HOST))
+      NVE_STORAGE_PATH: ((NVE.STORAGE_PATH))azs
+      NVE_DDBOOST_USER: ((NVE.DDBOOST_USER))
+      NVE_NEW_DDBOOST_USER: ((NVE.NEW_DDBOOST_USER))
+      NVE_DDBOOST_USER_PWD: ((NVE.PASSWORD))
+      NVE_DDBOOST_USER_PWD_CF: ((NVE.PASSWORD))
+      NVE_DATADOMAIN_SYSADMIN: ((NVE.DATADOMAIN_SYSADMIN))
+      NVE_DATADOMAIN_SYSADMIN_PWD: ((NVE.DATADOMAIN_SYSADMIN_PWD))
+      NVE_TOMCAT_KEYSTORE_PASSWORD: ((NVE.PASSWORD)) 
+      NVE_AUTHC_ADMIN_PASSWORD: ((NVE.PASSWORD)) 
 #- name: upgrade-nve
 #  plan:
 #  - in_parallel:
@@ -303,3 +340,18 @@ jobs:
 #      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
 #      GOVC_NETWORK: ((GOVC.NETWORK))
 #      NVE_VMNAME: ((NVE.VMNAME))
+
+- name: delete-nve-rg
+  plan:
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - task: delete-rg
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
+    params:
+      <<: *azure_env
