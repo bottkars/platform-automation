@@ -133,13 +133,13 @@ resources:
     regexp: networker/((NVE.VERSION))/AZURE-NVE-(.*).vhd
 
 
-#- name: networker-upgrade
-#  type: s3
-#  icon: folder-move
-#  source:
-#    <<: *s3_env
-#    bucket: ((buckets.dps_products))
-#    regexp: networker/((NVE.VERSION))/NveUpgrade-(.*).avp
+- name: networker-upgrade
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: networker/((NVE.VERSION))/NveUpgrade-(.*).avp
 
 jobs:
 #- name: get-platform-automation
@@ -253,6 +253,8 @@ jobs:
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
+    - get: deployment
+      tags: ((tags))      
     - get: networker
       tags: ((tags))
       params:
@@ -283,63 +285,37 @@ jobs:
       NVE_DATADOMAIN_SYSADMIN_PWD: ((NVE.DATADOMAIN_SYSADMIN_PWD))
       NVE_TOMCAT_KEYSTORE_PASSWORD: ((NVE.PASSWORD)) 
       NVE_AUTHC_ADMIN_PASSWORD: ((NVE.PASSWORD)) 
-#- name: upgrade-nve
-#  plan:
-#  - in_parallel:
-#    - get: networker-upgrade
-#      tags: ((tags))
-#      trigger: true
-#    - get: one-time-trigger
-#      passed: 
-#      - configure-nve 
-#    - get: dps-automation-image
-#      tags: ((tags))        
-#    - get: dps-modules
-#      tags: ((tags))
-#  - task: deploy-networker-upgrade
-#    tags: ((tags))
-#    image: dps-automation-image
-#    file: dps-modules/ci/tasks/deploy-avi-package.yml
-#    input_mapping:
-#      dps-modules: dps-modules
-#      avi_package: networker-upgrade
-#    params:
+- name: upgrade-nve
+  plan:
+  - in_parallel:
+    - get: networker-upgrade
+      tags: ((tags))
+      trigger: true
+    - get: one-time-trigger
+      passed: 
+      - configure-nve 
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-networker-upgrade
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
+    input_mapping:
+      dps-modules: dps-modules
+      avi_package: networker-upgrade
+    params:
 #      GOVC_INSECURE: ((GOVC.INSECURE))
 #      GOVC_PASSWORD: ((GOVC.PASSWORD))
 #      GOVC_URL: ((GOVC.URL))
 #      GOVC_USERNAME: ((GOVC.USERNAME))
 #      GOVC_VM: ((NVE.VMNAME))   
 #      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
-#      AVI_FQDN: ((NVE.FQDN))
-#      AVI_USERNAME: ((NVE.USERNAME))
-#      AVI_PASSWORD: ((NVE.PASSWORD))  
-#      AVI_PACKAGE: NveUpgrade
-#- name: delete-nve
-#  plan:
-#  - in_parallel:
-#    - get: dps-automation-image
-#      params:
-#        unpack: true
-#      tags: ((tags))
-#      passed: [ deploy-networker-ova ]              
-#    - get: dps-modules
-#      tags: ((tags))
-#  - task: delete-nve
-#    tags: ((tags))
-#    image: dps-automation-image
-#    file: dps-modules/ci/tasks/delete-nve.yml
-#    input_mapping:
-#      dps-modules: dps-modules
-#    params:
-#      GOVC_INSECURE: ((GOVC.INSECURE))
-#      GOVC_PASSWORD: ((GOVC.PASSWORD))
-#      GOVC_URL: ((GOVC.URL))
-#      GOVC_USERNAME: ((GOVC.USERNAME))
-#      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
-#      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
-#      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
-#      GOVC_NETWORK: ((GOVC.NETWORK))
-#      NVE_VMNAME: ((NVE.VMNAME))
+      AVI_FQDN: ((NVE.azs.FQDN))
+      AVI_USERNAME: ((NVE.USERNAME))
+      AVI_PASSWORD: ((NVE.PASSWORD))  
+      AVI_PACKAGE: NveUpgrade
 
 - name: delete-nve-rg
   plan:
