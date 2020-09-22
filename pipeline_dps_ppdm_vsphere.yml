@@ -67,7 +67,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ppdm.restore
-    regexp: state/(.*)-(?P<version>\d{4}\.\d{1,2}\.\d{1,2}-\d{1,9})\.json
+    regexp: state/(.*)-(?P<version>([0-9]{4})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])\.(2[0-3]|[01][0-9])([0-5][0-9])\.([0-5][0-9]))(.*).json
 - name: one-time-trigger
   icon: calendar-clock
   type: time
@@ -107,7 +107,7 @@ resources:
 #    regexp: platform-automation-image-(.*).tgz
 
 - name: dps-automation-image
-  icon: docker-image
+  icon: docker
   type: docker-image
   source:
     repository: bottkars/dps-automation-image
@@ -309,6 +309,36 @@ jobs:
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       PROXY_FILE: variable/proxy.yml
+
+
+- name: delete-vm-instant-access
+  plan:
+  - in_parallel:
+    - get: instant-access-state
+      passed: [ ppdm-vm-instant-access ]              
+#      trigger: true    
+    - get: one-time-trigger
+      passed: [ set-vsphere-inventory ]              
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+  - task: remove-instant-access 
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ppdm-delete-vm-instant-access.yml
+    input_mapping:
+      dps-modules: dps-modules
+      variable: instant-access-state
+    params:
+      DEBUG: "FALSE"
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+
 
 
 - name: ppdm-vm-instant-access
