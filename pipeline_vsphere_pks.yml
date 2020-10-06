@@ -182,7 +182,7 @@ resources:
   source:
     api_token: ((pivnet-token))
     product_slug: platform-automation
-    product_version: 4\.*\.(.*)
+    product_version: 5\.*\.(.*)
     sort_by: semver
 
 - name: platform-automation-tasks
@@ -259,7 +259,8 @@ resources:
   source:
     <<: *s3_env
     bucket: windows-stemcell
-    regexp: stemcells/\[stemcells-windows-server-internal,(.*)\]bosh-stemcell-.*-vsphere-esxi-windows2019-go_agent.tgz
+    regexp: stemcell/bosh-stemcell-(.*)-vsphere-esxi-windows2019-go_agent.tgz
+#    regexp: stemcells/\[stemcells-windows-server-internal,(.*)\]bosh-stemcell-.*-vsphere-esxi-windows2019-go_agent.tgz
 
 - name: pivotal-container-service-product
   icon: cloud-download
@@ -610,8 +611,9 @@ jobs:
   - task: download-pivotal-container-service
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
+    file: platform-automation-tasks/tasks/download-product.yml
     params:
+      SOURCE: s3    
       CONFIG_FILE: download-product-configs/((pks.version))/download-pivotal-container-service.yml
     input_mapping:
       config: interpolated-product-downloads
@@ -691,8 +693,9 @@ jobs:
   - task: download-harbor-container-registry
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
+    file: platform-automation-tasks/tasks/download-product.yml
     params:
+      SOURCE: s3
       CONFIG_FILE: download-product-configs/((pks.version))/download-harbor-container-registry.yml
     input_mapping:
       config: interpolated-product-downloads
@@ -797,8 +800,9 @@ jobs:
   - task: download-opsman-s3
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
+    file: platform-automation-tasks/tasks/download-product.yml
     params:
+      SOURCE: s3
       CONFIG_FILE: download-product-configs/((pks.version))/((iaas))/download-opsman.yml
     input_mapping:
       config: interpolated-product-downloads

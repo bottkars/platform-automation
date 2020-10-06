@@ -8,7 +8,7 @@
 # within az-cli, jamespath search for types with Dash (-)
 # need to be escaped in \"type-with-dash\"
 ######################
-
+export DIRENV_WARN_TIMEOUT=100s
 ####
 echo "starting direnv"
 rm -rf .direnv
@@ -127,21 +127,21 @@ use_fly-aliases(){
         echo "${magenta}Exporting aliases"
 
         echo "${cyan}fly -t ${CONCOURSE_TARGET} exported as ${magenta}flyme" 
-        export_alias destroytilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme destroy-pipeline -p ${PIPELINE}_${TILE} \$@;done'
+        export_alias destroytilepipes "for TILE in ${TILES//,/ }; do  flyme destroy-pipeline -p ${PIPELINE}-${TILE} \$@;done"
         echo "${cyan}fly -t ${CONCOURSE_TARGET} destroy-pipeline is exported as ${magenta}destroytilepipes" 
-        export_alias unpausetilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme unpause-pipeline -p ${PIPELINE}_${TILE} \$@;done'
+        export_alias unpausetilepipes "for TILE in ${TILES//,/ }; do  flyme unpause-pipeline -p ${PIPELINE}-${TILE} \$@;done"
         echo "${cyan}fly -t ${CONCOURSE_TARGET} unpause-pipeline is exported as ${magenta}unpausetilepipes" 
-        export_alias settilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_deploy_${TILE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}_${TILE} \$@;done'
+        export_alias settilepipes "for TILE in ${TILES//,/ }; do  flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_deploy_${TILE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}-${TILE} \$@;done"
         echo "${cyan}fly -t ${CONCOURSE_TARGET} set-pipeline is exported as ${magenta}settilepipes" 
 
-        export_alias triggertiledownloads 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("get") ) | .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}_${TILE}/{} \$@;done'
-        export_alias triggerfailedbuilds 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | select(.finished_build.status | contains("failed") )| .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}_${TILE}/{} \$@;done'
-        export_alias pipeline-pause-build 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme pause-job --job ${PIPELINE}_${TILE}/{} \$@;done'
-        export_alias pipeline-unpause-build 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme unpause-job --job ${PIPELINE}_${TILE}/{} \$@;done'
+        export_alias triggertiledownloads 'for TILE in ${TILES//,/ }; do flyme jobs -p ${PIPELINE}-${TILE} --json | jq -r '"'"'.[] | select(.name | contains("get") ) | .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}-${TILE}/{} \$@;done'
+        export_alias triggerfailedbuilds 'for TILE in ${TILES//,/ }; do flyme jobs -p ${PIPELINE}-${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | select(.finished_build.status | contains("failed") )| .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}-${TILE}/{} \$@;done'
+        export_alias pipeline-pause-build 'for TILE in ${TILES//,/ }; do flyme jobs -p ${PIPELINE}-${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme pause-job --job ${PIPELINE}-${TILE}/{} \$@;done'
+        export_alias pipeline-unpause-build 'for TILE in ${TILES//,/ }; do flyme jobs -p ${PIPELINE}-${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme unpause-job --job ${PIPELINE}-${TILE}/{} \$@;done'
 
-        export_alias setbasepipe 'flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_${BASE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}'
-        export_alias unpausebasepipe 'flyme unpause-pipeline -p ${PIPELINE}'
-        export_alias destroybasepipe 'flyme destroy-pipeline -p ${PIPELINE}'
+        export_alias setbasepipe "flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_${BASE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}"
+        export_alias unpausebasepipe "flyme unpause-pipeline -p ${PIPELINE}"
+        export_alias destroybasepipe "flyme destroy-pipeline -p ${PIPELINE}"
         
         export_alias pipeline-jobs "flyme pipelines --json | jq  -r '.[] | select(.name|test('env.PIPELINE')) | .name' |  xargs -n 1 -I {} flyme jobs --pipeline {} \$@"
         export_alias pipeline-builds "flyme pipelines --json | jq  -r '.[] | select(.name|test('env.PIPELINE')) | .name' |  xargs -n 1 -I {} flyme builds --count=1 --pipeline {} \$@"
@@ -234,6 +234,7 @@ use_azurestack-env(){
         # within az-cli, jamespath search for types with Dash (-)
         # need to be escaped in \"type-with-dash\"
         ######################
+	export AZCOPY_DEFAULT_SERVICE_API_VERSION="2017-11-09"
         export AZURE_CONFIG_DIR=$(pwd)/.azure
         mkdir -p ${AZURE_CONFIG_DIR}
         echo "Reading Azurestack Settings from lpass"
@@ -320,7 +321,8 @@ use_pas4k8s-env(){
 }
 
 use_pks-admin-env(){
-        echo "Retrieving PKS API Endpoint from Pipeline Config"
+        export_alias pks "/usr/local/bin/tkgi \$@"
+	echo "Retrieving PKS API Endpoint from Pipeline Config"
         export PKS_API_ENDPOINT=$(\
         cat "./${PIPELINE}/vars/pivotal-container-service-vars.yml" | \
         grep -A 0 pks_api_hostname | \
