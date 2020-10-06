@@ -61,13 +61,20 @@ resources:
 #    sort_by: semver
 
 
+#- name: dps-automation-image
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.pivnet_image))
+#    regexp: platform-automation-image-(.*).tgz
+
 - name: dps-automation-image
-  icon: cloud-download
-  type: s3
+  icon: docker
+  type: docker-image
   source:
-    <<: *s3_env
-    bucket: ((buckets.pivnet_image))
-    regexp: platform-automation-image-(.*).tgz
+    repository: bottkars/dps-automation-image
+#    tag: v0.1
 
 
 - name: dps-modules
@@ -86,8 +93,16 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: networker/.*/NVE-(.*).ova
+    regexp: networker/((NVE.VERSION))/NVE-(.*).ova
 
+
+- name: networker-upgrade
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: networker/((NVE.VERSION))/NveUpgrade-(.*).avp
 
 jobs:
 #- name: get-platform-automation
@@ -183,7 +198,37 @@ jobs:
       NVE_TOMCAT_KEYSTORE_PASSWORD: ((NVE.PASSWORD)) 
       NVE_AUTHC_ADMIN_PASSWORD: ((NVE.PASSWORD))
             
-           
+- name: upgrade-nve
+  plan:
+  - in_parallel:
+    - get: networker-upgrade
+      tags: ((tags))
+      trigger: true
+    - get: one-time-trigger
+      passed: 
+      - configure-nve 
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-networker-upgrade
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
+    input_mapping:
+      dps-modules: dps-modules
+      avi_package: networker-upgrade
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((NVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
+      AVI_FQDN: ((NVE.FQDN))
+      AVI_USERNAME: ((NVE.USERNAME))
+      AVI_PASSWORD: ((NVE.PASSWORD))  
+      AVI_PACKAGE: NveUpgrade
 - name: delete-nve
   plan:
   - in_parallel:

@@ -505,7 +505,7 @@ jobs:
       AUTH_CONFIG_FILE: ((foundation))/config/auth.yml 
   - task: interpolate-om-configuration
     <<: *interpolate-om-configuration    
-  - task: update om configuration
+  - task: update-om-configuration
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-opsman.yml
@@ -761,7 +761,7 @@ jobs:
       installation: installation
   - task: interpolate-om-configuration
     <<: *interpolate-om-configuration    
-  - task: update om configuration
+  - task: update-om-configuration
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-opsman.yml
@@ -848,7 +848,7 @@ jobs:
       tags: ((tags))     
   - task: interpolate-om-configuration
     <<: *interpolate-om-configuration    
-  - task: update om configuration
+  - task: update-om-configuration
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-opsman.yml
