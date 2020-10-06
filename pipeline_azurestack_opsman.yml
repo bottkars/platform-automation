@@ -1,0 +1,283 @@
+---
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+azure_env: &azure_env
+  PROFILE: ((azs.arm_profile))
+  CA_CERT: ((((foundation))/azs_ca.certificate))
+  AZURE_CLI_CA_PATH: /usr/local/lib/python3.6/dist-packages/certifi/cacert.pem
+  ENDPOINT_RESOURCE_MANAGER: ((((foundation))/endpoint-resource-manager)) 
+  VAULT_DNS:  ((azs.vault_dns))
+  SUFFIX_STORAGE_ENDPOINT: ((azs.suffix_storage_endpoint))
+  AZURE_TENANT_ID: ((((foundation))/tenant_id))
+  AZURE_CLIENT_ID: ((((foundation))/client_id))
+  AZURE_CLIENT_SECRET: ((((foundation))/client_secret))
+  AZURE_SUBSCRIPTION_ID: ((((foundation))/subscription_id))
+  RESOURCE_GROUP: ((azs.resource_group))
+  LOCATION: ((azs.azurestack_region))
+
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+
+stage_steps: &stage_steps
+  steps:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))
+
+
+
+true_trigger: &true_trigger
+  trigger: true
+
+
+
+resource_types:
+- name: pivnet
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+ 
+resources:
+
+
+
+- name: one-time-trigger
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+
+- name: after-midnight
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    start: 01:00 AM
+    stop: ((after_midnight_end))
+    interval: 24h
+    location: Europe/Berlin 
+# notifications
+
+- name: platform-automation-pivnet
+  tags: ((tags))
+  icon: cloudfoundry
+  type: pivnet
+  source:
+    api_token: ((((foundation))/pivnet-token))
+    product_slug: platform-automation
+    product_version: 4\.(.*)
+    sort_by: semver
+
+- name: platform-automation-tasks
+  tags: ((tags))
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_tasks))
+    regexp: platform-automation-tasks-(.*).zip
+
+- name: platform-automation-image
+  tags: ((tags))
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+- name: opsman-product
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((((foundation))/buckets_pivnet_products))
+    regexp: \[ops-manager,(.*)\].*.yml
+
+- name: templates
+  tags: ((tags))
+  icon: github
+  type: git
+  check_every: 10m  
+  source: 
+    uri: ((templates.repo))
+    private_key: ((((foundation))/template-deploy-key.private_key))
+    branch: ((templates.branch))
+
+- name: variable
+  tags: ((tags))
+  icon: github
+  type: git
+  check_every: 10m  
+  source: 
+    uri: ((variable-repo))
+    private_key: ((((foundation))/variable-deploy-key.private_key))
+    branch: master
+
+
+- name: azs-concourse
+  tags: ((tags))
+  icon: github
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/azs-concourse
+    branch: ((azs_concourse_branch))
+
+interpolate-product-downloads: &interpolate-product-downloads
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: "download-product-configs/((tas_version))/download-opsman.yml"
+  input_mapping:
+    files: templates
+  output_mapping:
+    interpolated-files: interpolated-product-downloads
+
+interpolate-product-templates: &interpolate-product-templates
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: product-configs/((tas_version))/director-azurestack.yml 
+      product-configs/((tas_version))/extensions-azurestack.yml
+      product-configs/((tas_version))/custom_vm_types_azurestack.yml 
+    SKIP_MISSING: true
+  input_mapping:
+    files: templates
+  output_mapping:
+    interpolated-files: interpolated-product-templates
+
+interpolate-om-configuration: &interpolate-om-configuration
+  tags: ((tags))      
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: ((foundation))/config/opsman.yml
+    SKIP_MISSING: true
+  input_mapping:
+    files: variable
+  output_mapping:
+    interpolated-files: interpolated-om-configuration
+
+
+
+jobs:
+- name: get-opsman-image-azure
+  serial: true
+  serial_groups: [ get-products, upgrade-opsman, opsman ]
+  plan:
+  - in_parallel:
+    - get: templates
+      tags: ((tags))
+    - get: opsman-product
+      tags: ((tags))
+      passed: 
+      - get-opsman-pivnet
+      trigger: true
+    - get: one-time-trigger
+      tags: ((tags))
+      trigger: true
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: variable
+      tags: ((tags))
+  - task: copy-opsman-image
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
+    image: platform-automation-image
+    input_mapping:
+      image: opsman-product
+      config: variable
+    params:
+      <<: *azure_env
+      ACCOUNT_NAME: ((azs.image_account_name))
+      ACCOUNT_KEY: ((azs.storage_account_key))
+      DESTINATION_CONTAINER: ((azs.destination_container))
+      OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
+
+- name: get-opsman-pivnet
+  serial_groups: [ get-products ]
+  plan:
+  - in_parallel:
+    - get: after-midnight
+      tags: ((tags))
+      trigger: true
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))
+  - task: interpolate-product-downloads
+    tags: ((tags))
+    <<: *interpolate-product-downloads
+  - task: download-opsman-pivnet
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/download-product.yml
+    input_mapping:
+      config: interpolated-product-downloads      
+    params:
+      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
+  - in_parallel:
+    - put: opsman-product
+      tags: ((tags))
+      params:
+        file: downloaded-product/*
+
+- name: get-platform-automation
+  plan:  
+  - in_parallel:
+    - get: after-midnight
+      tags: ((tags))
+      trigger: true
+    - get: platform-automation-pivnet
+      tags: ((tags))
+      trigger: true
+  - in_parallel:
+    - put: platform-automation-tasks
+      tags: ((tags))
+      params:
+        file: platform-automation-pivnet/*tasks*.zip
+    - put: platform-automation-image
+      tags: ((tags))
+      params:
+        file: platform-automation-pivnet/*image*.tgz
+
+
+
+
+
+
+
+
