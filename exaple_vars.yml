@@ -16,5 +16,3 @@ resource_group: "pcf"
 runtime: srt # pas or srt
 s3_foundation_state_bucket: "pcfdemo.state"
 
-
-

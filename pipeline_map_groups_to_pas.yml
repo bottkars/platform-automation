@@ -8,7 +8,7 @@ s3_env: &s3_env
 credhub_env: &credhub_env
   CREDHUB_CLIENT: ((((foundation))/credhub-client))
   CREDHUB_SECRET: ((((foundation))/credhub-secret))
-  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  CREDHUB_SERVER: ((credhub-server))
   PREFIX: /concourse/main/((foundation))
   CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
 
@@ -58,7 +58,7 @@ resource_types:
     repository: cfcommunity/slack-notification-resource    
 resources:
 - name: additional-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -66,7 +66,7 @@ resources:
     regexp: additional-tasks-(.*).zip
 - name: variable
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
@@ -80,7 +80,7 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env

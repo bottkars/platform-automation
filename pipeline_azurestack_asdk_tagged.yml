@@ -152,7 +152,7 @@ resources:
     url: ((slack.webhook))
 - name: installation
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -170,7 +170,7 @@ resources:
 
 - name: additional-tasks
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -179,7 +179,7 @@ resources:
 
 - name: platform-automation-tasks
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -188,7 +188,7 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -196,7 +196,7 @@ resources:
     regexp: platform-automation-image-(.*).tgz
 #- name: pas-product
 #  tags: ((tags))
-#  icon: amazon-drive
+#  icon: cloud-download
 #  type: s3
 #  source:
 #    <<: *s3_env
@@ -205,7 +205,7 @@ resources:
 
 - name: pas-windows-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -214,7 +214,7 @@ resources:
 
 - name: srt-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -223,7 +223,7 @@ resources:
 
 - name: p-spring-cloud-services-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -232,7 +232,7 @@ resources:
 
 - name: p-spring-cloud-services-3-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -241,7 +241,7 @@ resources:
 
 - name: p-rabbitmq-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -250,7 +250,7 @@ resources:
 
 - name: pivotal-mysql-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -259,7 +259,7 @@ resources:
 
 - name: p-healthwatch-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -268,7 +268,7 @@ resources:
 
 - name: wavefront-nozzle-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -277,7 +277,7 @@ resources:
 
 - name: apm-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -285,7 +285,7 @@ resources:
     regexp: apm-product/\[apm,(.*)\]apm-.*.pivotal
 - name: azure-service-broker-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -293,7 +293,7 @@ resources:
     regexp: azure-service-broker-product/\[azure-service-broker,(.*)\]azure-service-broker-.*.pivotal
 - name: p-event-alerts-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -301,7 +301,7 @@ resources:
     regexp: p-event-alerts-product/\[p-event-alerts,(.*)\]p-event-alerts-.*.pivotal
 - name: p-compliance-scanner-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -311,7 +311,7 @@ resources:
 
 - name: container-services-manager-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -322,7 +322,7 @@ resources:
 # container-services-manager
 #- name: pas-stemcell
 #  tags: ((tags))
-#  icon: amazon-drive
+#  icon: cloud-download
 #  type: s3
 #  source:
 #    <<: *s3_env
@@ -331,7 +331,7 @@ resources:
 
 - name: srt-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -340,7 +340,7 @@ resources:
 
 - name: p-spring-cloud-services-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -349,7 +349,7 @@ resources:
 
 - name: p-spring-cloud-services-3-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -358,7 +358,7 @@ resources:
 
 - name: p-rabbitmq-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -367,7 +367,7 @@ resources:
 
 - name: pivotal-mysql-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -376,7 +376,7 @@ resources:
 
 - name: p-healthwatch-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -386,7 +386,7 @@ resources:
 
 - name: wavefront-nozzle-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -395,7 +395,7 @@ resources:
 
 - name: p-event-alerts-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -404,7 +404,7 @@ resources:
 
 - name: apm-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -413,7 +413,7 @@ resources:
 
 - name: azure-service-broker-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -422,7 +422,7 @@ resources:
 
 - name: p-compliance-scanner-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -432,7 +432,7 @@ resources:
 
 - name: pas-windows-stemcell
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -448,7 +448,7 @@ resources:
 
 - name: templates
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git  
   source:
     uri: ((template-repo))
@@ -457,7 +457,7 @@ resources:
 
 - name: variable
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git  
   source:
     uri: ((variable-repo))
@@ -466,7 +466,7 @@ resources:
 ##
 - name: azs-concourse
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git  
   source: 
     uri: https://github.com/bottkars/azs-concourse
@@ -486,7 +486,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: "download-product-configs/((pas_version))"
+    INTERPOLATION_PATHS: "download-product-configs/((tas_version))"
   input_mapping:
     files: templates
   output_mapping:
@@ -497,7 +497,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pas_version))
+    INTERPOLATION_PATHS: product-configs/((tas_version))
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -972,7 +972,7 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads      
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
   - in_parallel:
     - put: opsman-product
       tags: ((tags))
@@ -983,7 +983,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -1118,7 +1118,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director-azurestack.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/director-azurestack.yml
   - task: configure-extensions
     tags: ((tags))
     image: platform-automation-image
@@ -1130,7 +1130,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions-azurestack.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/extensions-azurestack.yml
   - task: configure-custom-vmtypes
     tags: ((tags))
     image: platform-automation-image
@@ -1142,7 +1142,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions-azure.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/extensions-azure.yml
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
@@ -1205,7 +1205,7 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads      
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
   - in_parallel:
     - put: opsman-product
       tags: ((tags))
@@ -1389,7 +1389,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -1511,7 +1511,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-event-alerts.yml
       VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
       SKIP_MISSING: true    
 - name: test-interpolate-srt
@@ -1540,7 +1540,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/srt.yml
+      CONFIG_FILE: product-configs/((tas_version))/srt.yml
       VARS_FILES: vars/((foundation))/vars/srt-vars.yml
       SKIP_MISSING: true  
 
@@ -1588,7 +1588,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-srt.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: srt-stemcell}
@@ -1642,7 +1642,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-spring-cloud-services.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-spring-cloud-services-stemcell}
@@ -1696,7 +1696,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-spring-cloud-services-3.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-spring-cloud-services-3-stemcell}
@@ -1750,7 +1750,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-pivotal-mysql.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: pivotal-mysql-stemcell}
@@ -1804,7 +1804,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-healthwatch.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-healthwatch.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-healthwatch-stemcell}
@@ -1858,7 +1858,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-wavefront-nozzle.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: wavefront-nozzle-stemcell}
@@ -1913,7 +1913,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-event-alerts.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-event-alerts-stemcell}
@@ -1967,7 +1967,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-apm.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-apm.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: apm-stemcell}
@@ -2023,7 +2023,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-compliance-scanner.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-compliance-scanner-stemcell}
@@ -2076,7 +2076,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-container-services-manager.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-container-services-manager.yml
     input_mapping:
       config: interpolated-product-downloads
   - in_parallel:
@@ -2125,7 +2125,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-rabbitmq.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-rabbitmq.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: p-rabbitmq-stemcell}
@@ -2178,7 +2178,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-pas-windows.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: pas-windows-stemcell}
@@ -2245,7 +2245,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-srt.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-srt.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -2331,7 +2331,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-pas-windows.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-pas-windows.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -2416,7 +2416,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-pivotal-mysql.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-pivotal-mysql.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -2501,7 +2501,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-healthwatch.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-healthwatch.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -2586,7 +2586,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-wavefront-nozzle.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-wavefront-nozzle.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -2671,7 +2671,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-event-alerts.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-event-alerts.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -2756,7 +2756,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-apm.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-apm.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -2843,7 +2843,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-compliance-scanner.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-compliance-scanner.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -2928,7 +2928,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-spring-cloud-services.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -3013,7 +3013,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-spring-cloud-services-3.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-spring-cloud-services-3.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -3098,7 +3098,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-p-rabbitmq.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-rabbitmq.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -3180,7 +3180,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-container-services-manager.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-container-services-manager.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -3309,7 +3309,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/pas-windows.yml
+      CONFIG_FILE: product-configs/((tas_version))/pas-windows.yml
       VARS_FILES: vars/((foundation))/vars/pas-windows-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
@@ -3362,7 +3362,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-rabbitmq.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-rabbitmq.yml
       VARS_FILES: vars/((foundation))/vars/p-rabbitmq-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
@@ -3414,7 +3414,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/pivotal-mysql.yml
+      CONFIG_FILE: product-configs/((tas_version))/pivotal-mysql.yml
       VARS_FILES: vars/((foundation))/vars/pivotal-mysql-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
@@ -3466,7 +3466,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-healthwatch.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-healthwatch.yml
       VARS_FILES: vars/((foundation))/vars/p-healthwatch-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
@@ -3518,7 +3518,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/wavefront-nozzle.yml
+      CONFIG_FILE: product-configs/((tas_version))/wavefront-nozzle.yml
       VARS_FILES: vars/((foundation))/vars/wavefront-nozzle-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 - name: configure-p-event-alerts
@@ -3569,7 +3569,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-event-alerts.yml
       VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
@@ -3621,7 +3621,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/apm.yml
+      CONFIG_FILE: product-configs/((tas_version))/apm.yml
       VARS_FILES: vars/((foundation))/vars/apm-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
@@ -3673,7 +3673,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-compliance-scanner.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-compliance-scanner.yml
       VARS_FILES: vars/((foundation))/vars/p-compliance-scanner-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
@@ -3725,7 +3725,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-spring-cloud-services.yml
       VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
 
@@ -3777,7 +3777,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-spring-cloud-services-3.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-spring-cloud-services-3.yml
       VARS_FILES: vars/((foundation))/vars/p-spring-cloud-services-3-vars.yml
       ENV_FILE: ((foundation))/env/env.yml        
 
@@ -3829,7 +3829,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/container-services-manager.yml
+      CONFIG_FILE: product-configs/((tas_version))/container-services-manager.yml
       VARS_FILES: vars/((foundation))/vars/container-services-manager-vars.yml
       ENV_FILE: ((foundation))/env/env.yml        
 
@@ -3881,7 +3881,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/srt.yml
+      CONFIG_FILE: product-configs/((tas_version))/srt.yml
       VARS_FILES: vars/((foundation))/vars/srt-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
 
@@ -3933,7 +3933,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/pas_certs.yml
+      CONFIG_FILE: product-configs/((tas_version))/pas_certs.yml
 #      VARS_FILES: vars/((foundation))/vars/pas_certs-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
 
@@ -4431,7 +4431,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-azure-service-broker.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-azure-service-broker.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: azure-service-broker-stemcell}
@@ -4489,7 +4489,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product-s3.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-azure-service-broker.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-azure-service-broker.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -4571,7 +4571,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/azure-service-broker.yml
+      CONFIG_FILE: product-configs/((tas_version))/azure-service-broker.yml
       VARS_FILES: vars/((foundation))/vars/azure-service-broker-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 

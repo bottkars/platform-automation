@@ -8,7 +8,7 @@ s3_env: &s3_env
 credhub_env: &credhub_env
   CREDHUB_CLIENT: ((((foundation))/credhub-client))
   CREDHUB_SECRET: ((((foundation))/credhub-secret))
-  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  CREDHUB_SERVER: ((credhub-server))
   PREFIX: /concourse/main/((foundation))
   CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
 
@@ -116,7 +116,7 @@ resources:
 
 - name: platform-automation-tasks
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -125,7 +125,7 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -137,7 +137,7 @@ resources:
 
 - name: stemcells-windows-server-internal
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -151,13 +151,13 @@ resources:
 
 - name: templates
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
-    uri: ((template-repo))
+    uri: ((templates.repo))
     private_key: ((((foundation))/template-deploy-key.private_key))
-    branch: master
+    branch: ((templates.branch))
 
 
 #- name: download-lock
@@ -176,7 +176,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: download-product-configs/((pks_version))/download-stemcells-windows-server-internal.yml
+    INTERPOLATION_PATHS: download-product-configs/((pks.version))/download-stemcells-windows-server-internal.yml
   input_mapping:
     files: templates
   output_mapping:
@@ -187,7 +187,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pks_version))
+    INTERPOLATION_PATHS: product-configs/((pks.version))
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -230,7 +230,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-stemcells-windows-server-internal.yml 
+      CONFIG_FILE: download-product-configs/((pks.version))/download-stemcells-windows-server-internal.yml 
     input_mapping:
       config: interpolated-product-downloads
 #    on_failure:

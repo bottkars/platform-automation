@@ -122,7 +122,7 @@ resources:
 
 - name: kubeconfig
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -130,7 +130,7 @@ resources:
     regexp: ((aks.resource_group))/kubeconfig-(.*).json  
 - name: apimodel
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -141,7 +141,7 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env

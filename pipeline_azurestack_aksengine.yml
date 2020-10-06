@@ -5,18 +5,18 @@ s3_env: &s3_env
   region_name: ((s3_region_name))
   secret_access_key: ((s3_secret_access_key))
 azure_env: &azure_env
-  PROFILE: ((arm_profile))
+  PROFILE: ((azs.arm_profile))
   CA_CERT: ((azs_ca.certificate))
   AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
   ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
-  VAULT_DNS:  ((vault-dns))
-  SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+  VAULT_DNS:  ((azs.vault_dns))
+  SUFFIX_STORAGE_ENDPOINT: ((azs.suffix_storage_endpoint))
   AZURE_TENANT_ID: ((tenant_id))
   AZURE_CLIENT_ID: ((client_id))
   AZURE_CLIENT_SECRET: ((client_secret))
   AZURE_SUBSCRIPTION_ID: ((subscription_id))
   RESOURCE_GROUP: ((aks.resource_group))
-  LOCATION: ((azurestack_region))
+  LOCATION: ((azs.azurestack_region))
 aks_env: &aks_env
   AKS_ORCHESTRATOR_RELEASE: ((aks.orchestrator_release))
   AKS_MASTER_DNS_PREFIX: ((aks.master.dns_prefix))
@@ -128,7 +128,7 @@ resources:
 
 - name: sonobuoy-results
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -137,7 +137,7 @@ resources:
 
 - name: installation
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -145,7 +145,7 @@ resources:
     regexp: ((aks.resource_group))/installation-(.*).zip    
 - name: kubeconfig
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -153,7 +153,7 @@ resources:
     regexp: ((aks.resource_group))/kubeconfig-(.*).json  
 - name: apimodel
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -172,7 +172,7 @@ resources:
 
 #- name: platform-automation-tasks
 #  tags: ((tags))
-#  icon: amazon-drive
+#  icon: cloud-download
 #  type: s3
 #  source:
 #    <<: *s3_env
@@ -181,18 +181,27 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 
+- name: yaml2json-release
+  tags: ((tags))
+  icon: github
+  type: github-release
+  check_every: 10m  
+  source: 
+    owner: bronze1man
+    repository: yaml2json
+
 
 
 - name: sonobuoy-release
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: github-release
   check_every: 10m  
   source: 
@@ -204,7 +213,7 @@ resources:
 
 - name: aks-engine-release
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: github-release
   check_every: 10m  
   source: 
@@ -214,7 +223,7 @@ resources:
 
 - name: bosh-cli-release
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: github-release
   check_every: 10m  
   source: 
@@ -223,7 +232,7 @@ resources:
 
 - name: cf-values
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -237,10 +246,10 @@ resources:
   check_every: 10m  
   source:
     branch: master
-    uri: https://github.com/cloudfoundry/cf-for-k8s
+    uri: https://github.com/cloudfoundry/cf-for-k8s.git
 #- name: kubectl-release
 #  tags: ((tags))
-#  icon: github-circle
+#  icon: github
 #  type: github-release
 #  check_every: 10m  
 #  source: 
@@ -263,8 +272,8 @@ resources:
   type: git
   check_every: 10m  
   source:  
-    uri: https://github.com/bottkars/azs-concourse
-    branch: master
+    uri: https://github.com/bottkars/azs-concourse.git
+    branch: ((azs_concourse_branch))
 
 
 jobs:
@@ -426,7 +435,6 @@ jobs:
       - validate-aks-cluster          
     - get: azs-concourse
       tags: ((tags))
-      passed:
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -523,6 +531,7 @@ jobs:
       <<: *azure_env 
     
 
+        
 - name: deploy-cf-for-k8s
   plan:
   - in_parallel:
@@ -543,7 +552,12 @@ jobs:
     tags: ((tags))
     params:
       globs:
-      - bosh-cli-*-linux-amd64   
+      - bosh-cli-*-linux-amd64
+  - get: yaml2json-release
+    tags: ((tags))
+    params:
+      globs:
+      - "*_linux_amd64"        
   - task: deploy-cf-for-k8s-master
     tags: ((tags))
     file: azs-concourse/ci/tasks/deploy-cf-for-k8s.yml  
@@ -551,6 +565,7 @@ jobs:
     params:
       <<: *azure_env
       DNS_DOMAIN: ((cf_k8s_domain))
+      GCR_CRED: ((gcr_cred))
   - put: cf-values
     tags: ((tags))
     params:

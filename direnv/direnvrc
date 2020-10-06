@@ -8,8 +8,11 @@
 # within az-cli, jamespath search for types with Dash (-)
 # need to be escaped in \"type-with-dash\"
 ######################
-
-######################
+export DIRENV_WARN_TIMEOUT=100s
+####
+echo "starting direnv"
+rm -rf .direnv
+##################
 # colors section is mandatory
 ######################
 
@@ -24,18 +27,20 @@ export cyan=`tput setaf 6`
 export white=`tput setaf 7`
 ######################
 
-
 export_alias() {
   local name=$1
   shift
   local alias_dir=$PWD/.direnv/aliases
+  # echo "creating alias for $name"
   local target="$alias_dir/$name"
   mkdir -p "$alias_dir"
   PATH_add "$alias_dir"
   echo "#!/usr/bin/env bash" > "$target"
   echo "$@" >> "$target"
   chmod +x "$target"
+  #echo $target
 }
+# export_alias updirenv "wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc"
 
 use_bosh-env(){
         echo "${white}Creating  BoSH environment for ${DEPLOYMENT}${reset}"
@@ -43,6 +48,7 @@ use_bosh-env(){
 }
 use_om-env-client(){
         echo "${white}Reading Opsman Settings from lpass${reset}"
+        lpass status --quiet || :
         export OM_SKIP_SSL_VALIDATION=true
         export OM_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
@@ -53,6 +59,7 @@ use_om-env-client(){
 } 
 use_om-env-user(){
         echo "${white}Reading Opsman Settings from lpass${reset}"
+        lpass status --quiet || :
         export OM_SKIP_SSL_VALIDATION=true
 	export OM_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --username)
         export OM_PASSWORD=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/OM_CLIENT --password)
@@ -63,11 +70,14 @@ use_om-env-user(){
 }
 
 use_git-token(){
+        echo "${white}Reading GITHUB Settings from lpass${reset}"
+        lpass status --quiet || :
 	export GIT_USERNAME=$(lpass show ${CONCOURSE_TARGET}/GIT_TOKEN --username)
         export GIT_TOKEN=$(lpass show ${CONCOURSE_TARGET}/GIT_TOKEN --password)
 }
 use_jumphost(){
         echo "${white}Reading Jumpost config from lpass${reset}"
+         lpass status --quiet || :
         export JUMPHOST_NAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/jumphost --field=Hostname)
         export JUMPHOST_PRIVATE_KEY=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/jumphost --field="Private Key" | awk '{gsub(/\\r\\n/,"\n")}1')
         export_alias ssh-jumphost 'eval `ssh-agent`; ssh-add - <<< "$JUMPHOST_PRIVATE_KEY"; ssh $JUMPHOST_NAME;kill $SSH_AGENT_PID'
@@ -76,10 +86,13 @@ use_jumphost(){
 }
 
 use_minio-client(){
+	local CONCOURSE_TARGET=${1-$CONCOURSE_TARGET}
+	local PIPELINE=${2-$PIPELINE}        
         # export minio_dir=.minio
         # mkdir -p ${minio_dir}
         # export_alias mc "mc --config-dir ${minio_dir} \$@" 
         echo "Getting minio settings from lpass"
+        lpass status --quiet || :
         export AWS_DEFAULT_REGION=region
 	export AWS_ACCESS_KEY_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --username)
         export AWS_SECRET_ACCESS_KEY=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/minio --password)
@@ -88,6 +101,7 @@ use_minio-client(){
         DOMAIN=$(echo ${AWS_ENDPOINT#*//})
         DOMAIN=$(echo ${DOMAIN%%\/*} )
         export AWS_ENDPOINT="${PROTOCOL}${DOMAIN}"
+        export AWS_S3_ENDPOINT="${PROTOCOL}${DOMAIN}"
         echo "exporting host ${cyan} ${PROTOCOL}${DOMAIN}${reset} as minio target ${cyan}${CONCOURSE_TARGET}${reset}"
         export MC_HOST_${CONCOURSE_TARGET}="${PROTOCOL}${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@${DOMAIN}"
         export_alias awss3 "aws --endpoint-url ${AWS_ENDPOINT} s3 \$@"
@@ -113,21 +127,21 @@ use_fly-aliases(){
         echo "${magenta}Exporting aliases"
 
         echo "${cyan}fly -t ${CONCOURSE_TARGET} exported as ${magenta}flyme" 
-        export_alias destroytilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme destroy-pipeline -p ${PIPELINE}_${TILE} \$@;done'
+        export_alias destroytilepipes "for TILE in ${TILES//,/ }; do  flyme destroy-pipeline -p ${PIPELINE}-${TILE} \$@;done"
         echo "${cyan}fly -t ${CONCOURSE_TARGET} destroy-pipeline is exported as ${magenta}destroytilepipes" 
-        export_alias unpausetilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme unpause-pipeline -p ${PIPELINE}_${TILE} \$@;done'
+        export_alias unpausetilepipes "for TILE in ${TILES//,/ }; do  flyme unpause-pipeline -p ${PIPELINE}-${TILE} \$@;done"
         echo "${cyan}fly -t ${CONCOURSE_TARGET} unpause-pipeline is exported as ${magenta}unpausetilepipes" 
-        export_alias settilepipes 'for TILE in $(echo $TILES | sed "s/,/ /g"); do  flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_deploy_${TILE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}_${TILE} \$@;done'
+        export_alias settilepipes "for TILE in ${TILES//,/ }; do  flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_deploy_${TILE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}-${TILE} \$@;done"
         echo "${cyan}fly -t ${CONCOURSE_TARGET} set-pipeline is exported as ${magenta}settilepipes" 
 
-        export_alias triggertiledownloads 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("get") ) | .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}_${TILE}/{} \$@;done'
-        export_alias triggerfailedbuilds 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | select(.finished_build.status | contains("failed") )| .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}_${TILE}/{} \$@;done'
-        export_alias pipeline-pause-build 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme pause-job --job ${PIPELINE}_${TILE}/{} \$@;done'
-        export_alias pipeline-unpause-build 'for TILE in $(echo $TILES | sed "s/,/ /g"); do flyme jobs -p ${PIPELINE}_${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme unpause-job --job ${PIPELINE}_${TILE}/{} \$@;done'
+        export_alias triggertiledownloads 'for TILE in ${TILES//,/ }; do flyme jobs -p ${PIPELINE}-${TILE} --json | jq -r '"'"'.[] | select(.name | contains("get") ) | .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}-${TILE}/{} \$@;done'
+        export_alias triggerfailedbuilds 'for TILE in ${TILES//,/ }; do flyme jobs -p ${PIPELINE}-${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | select(.finished_build.status | contains("failed") )| .name '"'"' | xargs -n 1 -I {} flyme trigger-job --job ${PIPELINE}-${TILE}/{} \$@;done'
+        export_alias pipeline-pause-build 'for TILE in ${TILES//,/ }; do flyme jobs -p ${PIPELINE}-${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme pause-job --job ${PIPELINE}-${TILE}/{} \$@;done'
+        export_alias pipeline-unpause-build 'for TILE in ${TILES//,/ }; do flyme jobs -p ${PIPELINE}-${TILE} --json | jq -r '"'"'.[] | select(.name | contains("upload") ) | .name '"'"' | xargs -n 1 -I {} flyme unpause-job --job ${PIPELINE}-${TILE}/{} \$@;done'
 
-        export_alias setbasepipe 'flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_${BASE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}'
-        export_alias unpausebasepipe 'flyme unpause-pipeline -p ${PIPELINE}'
-        export_alias destroybasepipe 'flyme destroy-pipeline -p ${PIPELINE}'
+        export_alias setbasepipe "flyme set-pipeline -c $HOME/workspace/platform-automation/pipeline_${BASE}.yml -l ./vars_${PIPELINE}.yml -p ${PIPELINE}"
+        export_alias unpausebasepipe "flyme unpause-pipeline -p ${PIPELINE}"
+        export_alias destroybasepipe "flyme destroy-pipeline -p ${PIPELINE}"
         
         export_alias pipeline-jobs "flyme pipelines --json | jq  -r '.[] | select(.name|test('env.PIPELINE')) | .name' |  xargs -n 1 -I {} flyme jobs --pipeline {} \$@"
         export_alias pipeline-builds "flyme pipelines --json | jq  -r '.[] | select(.name|test('env.PIPELINE')) | .name' |  xargs -n 1 -I {} flyme builds --count=1 --pipeline {} \$@"
@@ -141,7 +155,9 @@ use_fly-aliases(){
 	echo ${reset}
 }
 
-use_azure-env(){
+use_azure(){
+	local CONCOURSE_TARGET=${1}
+	local PIPELINE=${2}
         #####################        
         # Notes on jmespath ( az-cli)
         # within az-cli, jamespath search for types with Dash (-)
@@ -150,6 +166,42 @@ use_azure-env(){
         export AZURE_CONFIG_DIR=$(pwd)/.azure
         mkdir -p ${AZURE_CONFIG_DIR}
         echo "Reading Azure Settings from lpass"
+         lpass status --quiet || :
+        export PROFILE="2019-03-01-hybrid"
+        export CLOUDPROFILE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=ENDPOINT)
+        export ARM_TENANT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=TENANT_ID)
+        export ARM_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=CLIENT_ID)
+        export ARM_CLIENT_SECRET=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=CLIENT_SECRET)
+        export ARM_SUBSCRIPTION_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=SUBSCRIPTION_ID)
+        # export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+        # AZURE_CLI_CA_PATH: "/usr/local/lib/python3.6/site-packages/certifi/cacert.pem"
+        # az cli
+        ### evaluate active AzureCloud
+
+
+        az cloud set --name ${CLOUDPROFILE}
+        az login --service-principal \
+          -u ${ARM_CLIENT_ID} \
+          -p ${ARM_CLIENT_SECRET} \
+          --tenant ${ARM_TENANT_ID} \
+          --output tsv
+        az account set --subscription ${ARM_SUBSCRIPTION_ID}  
+#        export_alias az-vms 'az vm list --query "[?tags.\"user-agent\"=='"'"'bosh'"'"'].{deployment:tags.deployment, BoshName:tags.name, Name:name, RG:resourceGroup,state:provisioningState}" --output table'
+        export_alias az-vms 'az vm list --output table'
+}
+
+
+use_azure-env(){
+
+        #####################        
+        # Notes on jmespath ( az-cli)
+        # within az-cli, jamespath search for types with Dash (-)
+        # need to be escaped in \"type-with-dash\"
+        ######################
+        export AZURE_CONFIG_DIR=$(pwd)/.azure
+        mkdir -p ${AZURE_CONFIG_DIR}
+        echo "Reading Azure Settings from lpass"
+         lpass status --quiet || :
         export PROFILE="2019-03-01-hybrid"
         export CLOUDPROFILE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=ENDPOINT)
         export AZURE_TENANT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=TENANT_ID)
@@ -182,9 +234,11 @@ use_azurestack-env(){
         # within az-cli, jamespath search for types with Dash (-)
         # need to be escaped in \"type-with-dash\"
         ######################
+	export AZCOPY_DEFAULT_SERVICE_API_VERSION="2017-11-09"
         export AZURE_CONFIG_DIR=$(pwd)/.azure
         mkdir -p ${AZURE_CONFIG_DIR}
         echo "Reading Azurestack Settings from lpass"
+        lpass status --quiet || :
         export PROFILE="2019-03-01-hybrid"
         export ENDPOINT=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURESTACK_ENV --field=ENDPOINT)
         # CA_CERT: cert/root.pem
@@ -267,7 +321,8 @@ use_pas4k8s-env(){
 }
 
 use_pks-admin-env(){
-        echo "Retrieving PKS API Endpoint from Pipeline Config"
+        export_alias pks "/usr/local/bin/tkgi \$@"
+	echo "Retrieving PKS API Endpoint from Pipeline Config"
         export PKS_API_ENDPOINT=$(\
         cat "./${PIPELINE}/vars/pivotal-container-service-vars.yml" | \
         grep -A 0 pks_api_hostname | \
@@ -284,6 +339,7 @@ use_vsphere-env(){
         # need to be escaped in \"type-with-dash\"
         ######################
         echo "Reading vSphere Settings from lpass"
+        lpass status --quiet || :
         export GOVC_INSECURE=1
         export GOVC_URL=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_URL)
         export GOVC_USERNAME=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/VCENTER_ENV --field=VCENTER_USERNAME)
@@ -301,21 +357,22 @@ use_vsphere-env(){
                 (.elements[].Object | [.Name, .Guest.HostName, .Guest.IpAddress, .Runtime.PowerState, .Config.Hardware.NumCPU,. .Config.Hardware.MemoryMB]) | @tsv '"'"''
 }
 
-use_hammer(){
-export HAMMER_TARGET_CONFIG=.direnv/hammer.yml
-cat <<EOF > ${HAMMER_TARGET_CONFIG}
-name: ${DEPLOYMENT}
-ops_manager:
-  password: ${OM_USERNAME}
-  url: ${OM_TARGET}
-  username: ${OM_PASSWORD}
-ops_manager_private_key: OPSMAN-RSA-PRIVATE-KEY
-ops_manager_public_ip: 172.16.100.8
-pks_api:
-  url: ${PKS_API_ENDPOINT}
-sys_domain: ${PAS_SYSTEM_DOMAIN}
-EOF
-}
+#use_hammer(){
+#export HAMMER_TARGET_CONFIG=.direnv/hammer.yml
+#cat <<EOF > ${HAMMER_TARGET_CONFIG}
+#name: ${DEPLOYMENT}
+#ops_manager:
+#  password: ${OM_USERNAME}
+#  url: ${OM_TARGET}
+#  username: ${OM_PASSWORD}
+#ops_manager_private_key: OPSMAN-RSA-PRIVATE-KEY
+#ops_manager_public_ip: 172.16.100.8
+#pks_api:
+#  url: ${PKS_API_ENDPOINT}
+#sys_domain: ${PAS_SYSTEM_DOMAIN}
+#EOF
+#}
+
 use_wsl_docker(){
 	echo -n "Checking if we run on WSL: "
         if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
@@ -331,7 +388,7 @@ use_wsl_dns_fix(){
         if [[ $(grep Microsoft /proc/version 2>/dev/null) ]]
 	then
 		echo "${green}true${reset}"	
-		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/6/pwsh.exe  -Command "Get-NetAdapter | where status -eq up | Get-DnsClientServerAddress -Family IPv4 |Sort-Object -Property InterfaceIndex -Descending | Select-Object ServerAddresses -ExpandProperty ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
+		export_alias fix-dns '/mnt/c/Program\ Files/PowerShell/7/pwsh.exe  -Command "Get-NetAdapter | where status -eq up | Get-DnsClientServerAddress -Family IPv4 |Sort-Object -Property InterfaceIndex -Descending | Select-Object ServerAddresses -ExpandProperty ServerAddresses" | while read line; do echo "nameserver ${line}";done | sudo tee /etc/resolv.conf > /dev/null'
 		echo "${magenta}adjusting DNS Order with fix-dns${reset}"
                 export WSL=true
 		fix-dns
@@ -347,23 +404,22 @@ use_check_vpn(){
 		sleep 10
 	done	
 }
-
 use_check_vpn1(){
-        target=$1
-        echo "Testing connection to ${magenta}$target${reset}"
-        while  ! ping -c 1 -W 1 $target &>/dev/null
+        vpn_target=$1
+        echo "Testing connection to ${magenta}$vpn_target${reset}"
+        while  ! ping -c 1 -W 1 $vpn_target &>/dev/null
         do
                 echo "${red}VPN is down, Please connect first${reset}"
                 sleep 10
         done
-        echo "Successfully connected to ${green}${target}${reset}"
+        echo "Successfully connected to ${green}${vpn_target}${reset}"
 }
 
 use_kubeapps_secret(){
-        export_alias kubeapps-secret 'printf "Name: KUBEAPPS\nURL: http://localhost:8080\nPassword: %s" "$(kubectl get secret $(kubectl get serviceaccount kubeapps-operator -o jsonpath='"'"'{.secrets[].name}'"'"') -o jsonpath='"'"'{.data.token}'"'"' -o go-template='"'"'{{.data.token | base64decode}}'"'"' && echo)" | lpass edit --sync=auto KUBEAPPS --non-interactive'
+      export_alias kubeapps-secret 'printf "Name: KUBEAPPS\nURL: http://localhost:8080\nPassword: %s" "$(kubectl get secret $(kubectl get serviceaccount kubeapps-operator -o jsonpath='"'"'{.secrets[].name}'"'"') -o jsonpath='"'"'{.data.token}'"'"' -o go-template='"'"'{{.data.token | base64decode}}'"'"' && echo)" | lpass edit --sync=auto KUBEAPPS --non-interactive'
 }
+##
 use_control_credhub(){
-
 export CREDHUB_CONTROL_SERVER=$(grep "external_url:" plane/vars/bosh-vars.yml | cut -d ':' -f3 | tr -d ' "//'):8844
 export CREDHUB_CONTROL_SECRET=$(credhub get --name="/p-bosh/control-plane/credhub_admin_client_password" -j | jq -r '.value')
 export CREDHUB_CONTROL_CLIENT=credhub_admin_client
@@ -380,14 +436,13 @@ unset CREDHUB_SECRET
 }
 
 use_get-kubeconfig(){
-        export_alias get-kubeconfig 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/kubeconfig | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./kubeconfig.json'
+export_alias get-kubeconfig 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/kubeconfig | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./kubeconfig.json'
 }
-use_get-cfadmin()
-{
+
+use_get-cfadmin(){
 export_alias get-cfadmin 'bosh interpolate ${PWD}/cf-values.yml --path=/cf_admin_password'
 }
+
 use_get-cfvalues(){
 export_alias get-cfvalues 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/cf-val | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./cf-values.yml'        
 }
-
-export_alias update-direnv ' wget -O ~/.direnvrc https://raw.githubusercontent.com/bottkars/platform-automation/master/direnv/direnvrc'

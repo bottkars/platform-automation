@@ -5,18 +5,18 @@ s3_env: &s3_env
   region_name: ((s3_region_name))
   secret_access_key: ((s3_secret_access_key))
 azure_env: &azure_env
-  PROFILE: ((arm_profile))
+  PROFILE: ((azs.arm_profile))
   CA_CERT: ((azs_ca.certificate))
-  AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
+  AZURE_CLI_CA_PATH: /usr/local/lib/python3.6/dist-packages/certifi/cacert.pem
   ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
-  VAULT_DNS:  ((vault-dns))
-  SUFFIX_STORAGE_ENDPOINT: ((suffix-storage-endpoint))
+  VAULT_DNS:  ((azs.vault_dns))
+  SUFFIX_STORAGE_ENDPOINT: ((azs.suffix_storage_endpoint))
   AZURE_TENANT_ID: ((tenant_id))
   AZURE_CLIENT_ID: ((client_id))
   AZURE_CLIENT_SECRET: ((client_secret))
   AZURE_SUBSCRIPTION_ID: ((subscription_id))
-  RESOURCE_GROUP: ((resource_group))
-  LOCATION: ((azurestack_region))
+  RESOURCE_GROUP: ((azs.resource_group))
+  LOCATION: ((azs.azurestack_region))
 
 
 credhub_env: &credhub_env
@@ -61,7 +61,7 @@ true_trigger: &true_trigger
 
   
 git_commit_env: &git_commit_env
-  GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@ebottnet.de"
+  GIT_AUTHOR_EMAIL: "tas-pipeline-bot@ebottnet.de"
   GIT_AUTHOR_NAME: "Platform Automation Bot"
   COMMIT_MESSAGE: 'Staged  Config Writer'
 
@@ -110,7 +110,7 @@ resource_types:
     repository: cfcommunity/slack-notification-resource    
 resources:
 - name: additional-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -151,7 +151,7 @@ resources:
     url: ((slack.webhook))
 - name: installation
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -169,7 +169,7 @@ resources:
 
 - name: platform-automation-tasks
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -178,7 +178,7 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -193,17 +193,17 @@ resources:
 
 - name: templates
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
-    uri: ((template-repo))
-    private_key: ((template-deploy-key.private_key))
-    branch: master
+    uri: ((templates.repo))
+    private_key: ((((foundation))/template-deploy-key.private_key))
+    branch: ((templates.branch))
 
 - name: variable
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
@@ -222,32 +222,32 @@ resources:
     private_key: ((((foundation))/variable-deploy-key.private_key))
     retry_delay: 300s
 
-- name: download-lock
-  icon: cloud-lock-outline
-  type: pool
-  check_every: 10m
-  source:
-    uri: ((variable-repo))
-    branch: master
-    pool: download-lock
-    private_key: ((((foundation))/variable-deploy-key.private_key))
-    retry_delay: 300s
+#- name: download-lock
+#  icon: cloud-lock-outline
+#  type: pool
+#  check_every: 10m
+#  source:
+#    uri: ((variable-repo))
+#    branch: master
+#    pool: download-lock
+ #   private_key: ((((foundation))/variable-deploy-key.private_key))
+#    retry_delay: 300s
 
 - name: azs-concourse
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source:  
     uri: https://github.com/bottkars/azs-concourse
-    branch: master
+    branch: ((azs_concourse_branch))
 
 interpolate-product-downloads: &interpolate-product-downloads
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: "download-product-configs/((pas_version))/download-opsman.yml"
+    INTERPOLATION_PATHS: "download-product-configs/((tas_version))/download-opsman.yml"
   input_mapping:
     files: templates
   output_mapping:
@@ -258,12 +258,29 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pas_version))/director-azurestack.yml product-configs/((pas_version))/extensions-azurestack.yml product-configs/((pas_version))/extensions-azurestack.yml 
+    INTERPOLATION_PATHS: product-configs/((tas_version))/director-azurestack.yml 
+      product-configs/((tas_version))/extensions-azurestack.yml
+      product-configs/((tas_version))/custom_vm_types_azurestack.yml 
     SKIP_MISSING: true
   input_mapping:
     files: templates
   output_mapping:
     interpolated-files: interpolated-product-templates
+
+interpolate-om-configuration: &interpolate-om-configuration
+  tags: ((tags))      
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: ((foundation))/config/opsman.yml
+    SKIP_MISSING: true
+  input_mapping:
+    files: variable
+  output_mapping:
+    interpolated-files: interpolated-om-configuration
+
+
 
 jobs:
 - name: get-opsman-image-azure
@@ -305,17 +322,10 @@ jobs:
       config: variable
     params:
       <<: *azure_env
-      ACCOUNT_NAME: ((image_account_name))
-      ACCOUNT_KEY: ((storage_account_key))
-      DESTINATION_CONTAINER: ((destination_container))
+      ACCOUNT_NAME: ((azs.image_account_name))
+      ACCOUNT_KEY: ((azs.storage_account_key))
+      DESTINATION_CONTAINER: ((azs.destination_container))
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
-
-
-
-
-
-
-
 
 - name: install-opsman
   on_failure:
@@ -351,35 +361,32 @@ jobs:
     tags: ((tags))
     params:
       unpack: true      
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
+
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates          
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-opsman-pivnet
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product.yml
-    input_mapping:
-      config: interpolated-product-downloads      
-    params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
-  - in_parallel:
-    - put: opsman-product
-      tags: ((tags))
-      params:
-        file: downloaded-product/*     
+#  - task: download-opsman-pivnet
+#    tags: ((tags))
+#    image: platform-automation-image
+#    file: platform-automation-tasks/tasks/download-product.yml
+#    input_mapping:
+#      config: interpolated-product-downloads      
+#    params:
+#      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
+#  - in_parallel:
+#    - put: opsman-product
+#      tags: ((tags))
+#      params:
+#        file: downloaded-product/*     
   - task: download-opsman-s3
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
       SOURCE: s3      
     input_mapping:
       config: interpolated-product-downloads
@@ -390,44 +397,47 @@ jobs:
     file: azs-concourse/ci/tasks/copy-opsman-to-blob.yml  
     image: platform-automation-image
     input_mapping:
-      image: opsman-product
+      image: opsman-image
       config: variable
     params:
       <<: *azure_env
-      ACCOUNT_NAME: ((image_account_name))
-      ACCOUNT_KEY: ((storage_account_key))
-      DESTINATION_CONTAINER: ((destination_container))
+      ACCOUNT_NAME: ((azs.image_account_name))
+      ACCOUNT_KEY: ((azs.storage_account_key))
+      DESTINATION_CONTAINER: ((azs.destination_container))
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
   - task: validate-template
     tags: ((tags))
     image: platform-automation-image
-    file: azs-concourse/ci/tasks/validate-pcf-template.yml  
+    file: azs-concourse/ci/tasks/validate-tas-template.yml  
     input_mapping:
       config: variable
-      image: opsman-product
+      image: opsman-image
     params:
       <<: *azure_env
-      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/tanzu/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
-      BOSHSTORAGEACCOUNT: ((boshstorageaccount))
+      BOSHSTORAGEACCOUNT: ((azs.boshstorageaccount))
       VM_NAME: ((ops_man_vmname))
+      ADDITIONAL_PARAMETERS: ((azs.additional_parameters))
   - task: deploy-opsman-template 
     tags: ((tags))
     image: platform-automation-image
-    file: azs-concourse/ci/tasks/deploy-pcf-template.yml  
+    file: azs-concourse/ci/tasks/deploy-tas-template.yml  
     input_mapping:
       config: variable
-      image: opsman-product
+      image: opsman-image
     params:
       <<: *azure_env
-      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy.json"
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/tanzu/azuredeploy.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman.json
-      BOSHSTORAGEACCOUNT: ((boshstorageaccount))
+      BOSHSTORAGEACCOUNT: ((azs.boshstorageaccount))
       STATE_FILE: director_deployment_vars.yml
-      ACCOUNT_NAME: ((image_account_name))
-      DESTINATION_CONTAINER: ((destination_container))
+      ACCOUNT_NAME: ((azs.image_account_name))
+      DESTINATION_CONTAINER: ((azs.destination_container))
       OPSMAN_IMAGE_LOCATION: ((opsman_image_location))
       VM_NAME: ((ops_man_vmname))
+      OPSMAN_URL: ((opsman-url))
+      ADDITIONAL_PARAMETERS: ((azs.additional_parameters))
     on_success: &make-config-director-commit
       do:
         - task: make-commit
@@ -442,7 +452,7 @@ jobs:
           params:
             FILE_SOURCE_PATH: director_deployment_vars.yml
             FILE_DESTINATION_PATH: ((foundation))/vars/director_deployment_vars.yml
-            GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
+            GIT_AUTHOR_EMAIL: "tas-pipeline-bot@example.com"
             GIT_AUTHOR_NAME: "Platform Automation Bot"
             COMMIT_MESSAGE: 'Update director state file'
         - put: variable
@@ -474,7 +484,7 @@ jobs:
           params:
             FILE_SOURCE_PATH: state.yml
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
-            GIT_AUTHOR_EMAIL: "pcf-pipeline-bot@example.com"
+            GIT_AUTHOR_EMAIL: "tas-pipeline-bot@example.com"
             GIT_AUTHOR_NAME: "Platform Automation Bot"
             COMMIT_MESSAGE: 'Update state file'
         - put: variable
@@ -493,17 +503,18 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
       AUTH_CONFIG_FILE: ((foundation))/config/auth.yml 
-  - task: update om certficates
+  - task: interpolate-om-configuration
+    <<: *interpolate-om-configuration    
+  - task: update-om-configuration
     tags: ((tags))
     image: platform-automation-image
-    file: additional-tasks/tasks/update-ssl-certificate.yml
-    attempts: 10
+    file: platform-automation-tasks/tasks/configure-opsman.yml
     input_mapping:
       env: variable
+      config: interpolated-om-configuration
     params:
-      ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((pcf_domain_cert.certificate))
-      KEY_PEM: ((pcf_domain_cert.private_key))                
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      ENV_FILE: ((foundation))/env/env.yml              
   - task: configure-director
     tags: ((tags))
     image: platform-automation-image
@@ -515,7 +526,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/director-azurestack.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/director-azurestack.yml
   - task: configure-extensions
     tags: ((tags))
     image: platform-automation-image
@@ -527,7 +538,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions-azurestack.yml
+      DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/extensions-azurestack.yml
   - task: configure-custom-vmtypes
     tags: ((tags))
     image: platform-automation-image
@@ -537,9 +548,9 @@ jobs:
       env: variable
       vars: variable
     params:
-      VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+#      VARS_FILES: vars/((foundation))/vars/director-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pas_version))/extensions-azurestack.yml       
+      DIRECTOR_CONFIG_FILE: product-configs/((tas_version))/custom_vm_types_azurestack.yml      
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
@@ -599,7 +610,7 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads      
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
   - in_parallel:
     - put: opsman-product
       tags: ((tags))
@@ -618,10 +629,7 @@ jobs:
   - put: pipeline-lock
     tags: ((tags))
     params: {claim: base}  
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
+
   - in_parallel:
     - get: daily-trigger
       tags: ((tags))
@@ -636,7 +644,7 @@ jobs:
         unpack: true
     - get: opsman-product
       passed:
-      - get-opsman-image-azure
+#      - get-opsman-image-azure
       tags: ((tags))
       trigger: true       
     - get: templates
@@ -674,15 +682,11 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-
   plan:
   - put: pipeline-lock
     tags: ((tags))
     params: {claim: base}
-  - put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_start_param
+
   - in_parallel:
     - get: one-time-trigger
       tags: ((tags))
@@ -721,7 +725,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pas_version))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-opsman.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
@@ -733,15 +737,16 @@ jobs:
     file: azs-concourse/ci/tasks/upgrade-opsman-template.yml  
     input_mapping:
       config: variable
-      image: opsman-product
+      image: opsman-image
     params:
       <<: *azure_env
-      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/testing/azuredeploy_update.json"
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azure-pcf-opsman-powershell/tanzu/azuredeploy_update.json"
       PARAMETER_FILE: ((foundation))/config/parameters_opsman_update.json
-      ACCOUNT_NAME: ((image_account_name))
+      ACCOUNT_NAME: ((azs.image_account_name))
       STATE_FILE: state.yml
       OPSMAN_URL: ((opsman-url))
       VM_NAME: ((ops_man_vmname))
+      ADDITIONAL_PARAMETERS: ((azs.additional_parameters))
     ensure: *make-state-commit
   - task: import-installation
     tags: ((tags))
@@ -754,17 +759,20 @@ jobs:
     input_mapping:
       env: variable
       installation: installation
-  - task: update om certficates
+  - task: interpolate-om-configuration
+    <<: *interpolate-om-configuration    
+  - task: update-om-configuration
     tags: ((tags))
     image: platform-automation-image
-    file: additional-tasks/tasks/update-ssl-certificate.yml
-    attempts: 10
+    file: platform-automation-tasks/tasks/configure-opsman.yml
     input_mapping:
       env: variable
+      config: interpolated-om-configuration
     params:
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
       ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((pcf_domain_cert.certificate))
-      KEY_PEM: ((pcf_domain_cert.private_key))    
+
+
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
@@ -786,12 +794,11 @@ jobs:
     tags: ((tags))
     params:
       <<: *slack_failed_param
-
   plan:
-  - put: download-lock
-    tags: ((tags))
-    params:
-      acquire: true    
+#  - put: download-lock
+#    tags: ((tags))
+#    params:
+#      acquire: true    
   - in_parallel:
     - get: after-midnight
       tags: ((tags))
@@ -808,16 +815,53 @@ jobs:
       tags: ((tags))
       params:
         file: platform-automation-pivnet/*image*.tgz
-  - put: download-lock
-    attempts: 5
-    tags: ((tags))
-    params:
-      release: download-lock
+#  - put: download-lock
+#    attempts: 5
+#    tags: ((tags))
+#    params:
+#      release: download-lock
 
 ####
+- name: update-om-configuration
+  serial: false
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: one-time-trigger
+      tags: ((tags))
+#    - get: certstate  
+#      trigger: true
+#      passed:
+#      - issue-pks-cert-request
+#      - get-certs-from-pfsense
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true    
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))     
+  - task: interpolate-om-configuration
+    <<: *interpolate-om-configuration    
+  - task: update-om-configuration
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-opsman.yml
+    input_mapping:
+      env: variable
+      config: interpolated-om-configuration
+    params:
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      ENV_FILE: ((foundation))/env/env.yml
+
 groups:
 
-- name: install-pivotal-platform
+- name: install-tanzu-platform
   jobs:
   - get-opsman-pivnet
   - upgrade-opsman
@@ -827,6 +871,8 @@ groups:
   - get-platform-automation
   - get-opsman-pivnet
   - get-opsman-image-azure
+  - update-om-configuration
+
 
 
 

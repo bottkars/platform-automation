@@ -94,7 +94,7 @@ resource_types:
 
 resources:
 - name: additional-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -103,7 +103,7 @@ resources:
 
 - name: installation
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -122,7 +122,7 @@ resources:
 
 - name: platform-automation-tasks
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -131,7 +131,7 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -140,17 +140,17 @@ resources:
 
 - name: templates
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
-    uri: ((template-repo))
+    uri: ((templates.repo))
     private_key: ((((foundation))/template-deploy-key.private_key))
-    branch: master
+    branch: ((templates.branch))
 
 - name: variable
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
@@ -182,7 +182,7 @@ resources:
 
 - name: azs-concourse
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source:  
@@ -194,7 +194,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: "download-product-configs/((pas_version))"
+    INTERPOLATION_PATHS: "download-product-configs/((tas_version))"
   input_mapping:
     files: templates
   output_mapping:
@@ -205,7 +205,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pas_version))
+    INTERPOLATION_PATHS: product-configs/((tas_version))
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -406,7 +406,7 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pas_version))/p-event-alerts.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-event-alerts.yml
       VARS_FILES: vars/((foundation))/vars/p-event-alerts-vars.yml
       SKIP_MISSING: true    
 #      VARS_FILES: vars/((foundation))/vars/pas_certs-vars.yml

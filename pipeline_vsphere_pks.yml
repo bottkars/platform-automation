@@ -93,7 +93,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: "download-product-configs/((pks_version))"
+    INTERPOLATION_PATHS: "download-product-configs/((pks.version))"
   input_mapping:
     files: templates
   output_mapping:
@@ -105,12 +105,26 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((pks_version))
+    INTERPOLATION_PATHS: product-configs/((pks.version))
     SKIP_MISSING: true
   input_mapping:
     files: templates
   output_mapping:
     interpolated-files: interpolated-product-templates
+
+
+interpolate-om-configuration: &interpolate-om-configuration
+  tags: ((tags))      
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  params:
+    <<: *credhub_env
+    INTERPOLATION_PATHS: ((foundation))/config/opsman.yml
+    SKIP_MISSING: true
+  input_mapping:
+    files: variable
+  output_mapping:
+    interpolated-files: interpolated-om-configuration
 
 resource_types:
 - name: pivnet
@@ -118,10 +132,10 @@ resource_types:
   source:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
-- name: slack-notification
-  type: docker-image
-  source:
-    repository: cfcommunity/slack-notification-resource    
+#- name: slack-notification
+#  type: docker-image
+#  source:
+#    repository: cfcommunity/slack-notification-resource    
 
 resources:
 # triggers
@@ -145,27 +159,34 @@ resources:
     stop: ((after_midnight_end))
     interval: 24h
     location: Europe/Berlin 
-- name: notify
-  type: slack-notification
-  source:
-    url: ((slack-webhook))
+#- name: notify
+#  type: slack-notification
+#  source:
+#    url: ((slack-webhook))
 - name: installation
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
     bucket: ((buckets_installation))
     regexp: ((foundation))/installation-(.*).zip    
+- name: certstate
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_installation))
+    regexp: ((foundation))/((pks.fqdn))-(.*).pem   
 - name: platform-automation-pivnet
   type: pivnet
   source:
     api_token: ((pivnet-token))
     product_slug: platform-automation
-    product_version: 4\.*\.(.*)
+    product_version: 5\.*\.(.*)
     sort_by: semver
 
 - name: platform-automation-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -173,7 +194,7 @@ resources:
     regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -181,7 +202,7 @@ resources:
     regexp: platform-automation-image-(.*).tgz
 
 - name: additional-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -189,14 +210,21 @@ resources:
     regexp: additional-tasks-(.*).zip
 ## core resources
 - name: templates
-  icon: github-circle
+  icon: github
   type: git  
   source:
     uri: ((template-repo))
     private_key: ((template-deploy-key.private_key))
     branch: master
+- name: pfsense_modules
+  icon: github
+  type: git  
+  source:
+    uri: git@github.com:bottkars/pfsense_modules.git
+    private_key: ((template-deploy-key.private_key))
+    branch: master    
 - name: variable
-  icon: github-circle
+  icon: github
   type: git  
   source:
     uri: ((variable-repo))
@@ -206,6 +234,8 @@ resources:
     - ((foundation))/vars/pivotal-container-service-vars.yml
     - ((foundation))/vars/director-vars.yml
     - ((foundation))/vars/harbor-container-registry-vars.yml
+    - ((foundation))/state/state.yml
+    - ((foundation))/config/opsman.yml
 
 ## product resources
 - name: opsman-product
@@ -216,7 +246,7 @@ resources:
     regexp: \[ops-manager,(.*)\].*.ova
 
 - name: pivotal-container-service-stemcell
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -224,15 +254,16 @@ resources:
     regexp: pivotal-container-service-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
 
 - name: pivotal-container-service-stemcell-windows
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
     bucket: windows-stemcell
-    regexp: stemcells/\[stemcells-windows-server-internal,(.*)\]bosh-stemcell-.*-vsphere-esxi-windows2019-go_agent.tgz
+    regexp: stemcell/bosh-stemcell-(.*)-vsphere-esxi-windows2019-go_agent.tgz
+#    regexp: stemcells/\[stemcells-windows-server-internal,(.*)\]bosh-stemcell-.*-vsphere-esxi-windows2019-go_agent.tgz
 
 - name: pivotal-container-service-product
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -240,7 +271,7 @@ resources:
     regexp: pivotal-container-service-product/\[pivotal-container-service,(.*)\]pivotal-container-service-.*.pivotal
 
 - name: pivotal-container-service-cli
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -248,7 +279,7 @@ resources:
     regexp: pivotal-container-service-product/\[pivotal-container-service,(.*)\]pks-linux-amd64*
 # pks-linux-amd64-1.4.0-build.230
 - name: harbor-container-registry-stemcell
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -256,7 +287,7 @@ resources:
     regexp: harbor-container-registry-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
 
 - name: harbor-container-registry-product
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -265,10 +296,6 @@ resources:
 
 jobs:
 - name: get-platform-automation
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -284,10 +311,6 @@ jobs:
         file: platform-automation-pivnet/*image*.tgz
 - name: get-opsman
   serial_groups: [ get-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -307,7 +330,7 @@ jobs:
     input_mapping:
       config: interpolated-product-downloads      
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/((iaas))/download-opsman.yml
   - in_parallel:
     - put: opsman-product
       params:
@@ -316,10 +339,6 @@ jobs:
 - name: get-pivotal-container-service
   serial: true
   serial_groups: [ get-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -337,7 +356,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/download-pivotal-container-service.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: pivotal-container-service-stemcell}
@@ -352,10 +371,6 @@ jobs:
 - name: get-pivotal-container-service-cli
   serial: true
   serial_groups: [ get-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     # - get: after-midnight
@@ -373,22 +388,18 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service-cli.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/download-pivotal-container-service-cli.yml
     input_mapping:
       config: interpolated-product-downloads
   - in_parallel:
     - put: pivotal-container-service-cli
       params:
-        file: downloaded-product/pks-linux-amd64*
+        file: downloaded-product/*pks-linux-amd64*
 
 
 - name: get-harbor-container-registry
   serial: true
   serial_groups: [ get-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: after-midnight
@@ -406,7 +417,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-harbor-container-registry.yml
+      CONFIG_FILE: download-product-configs/((pks.version))/download-harbor-container-registry.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping: {downloaded-stemcell: harbor-container-registry-stemcell}
@@ -422,10 +433,6 @@ jobs:
 - name: staged-pivotal-container-service-config
   serial_groups:
   - staged-configs
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
       <<: *stage_steps
@@ -451,10 +458,6 @@ jobs:
 - name: staged-pas-for-kubernetes-config
   serial_groups:
   - staged-configs
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
       <<: *stage_steps
@@ -480,10 +483,6 @@ jobs:
 - name: staged-harbor-container-registry-config
   serial_groups:
   - staged-configs
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
      <<: *stage_steps
@@ -509,10 +508,6 @@ jobs:
 - name: staged-director-config
   serial: true
   serial_groups: [ staged-products ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
      <<: *stage_steps
@@ -539,30 +534,30 @@ jobs:
               
 - name: export-installation
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
-      - get: daily-trigger
-        trigger: true
-      - get: platform-automation-image
-        tags: ((tags))      
-        params:
-          unpack: true
-        passed: [ install-opsman]
-      - get: platform-automation-tasks
-        tags: ((tags))      
-        params:
-          unpack: true
-      - get: templates
-        tags: ((tags))      
-      - get: variable
-        tags: ((tags))      
-      - get: one-time-trigger
-        tags: ((tags))      
-        passed: [ install-opsman ]
+    - get: daily-trigger
+      trigger: true
+    - get: platform-automation-image
+      tags: ((tags))      
+      params:
+        unpack: true
+      passed: [ install-opsman]
+    - get: platform-automation-tasks
+      tags: ((tags))      
+      params:
+        unpack: true
+    - get: opsman-product
+      trigger: true
+      params:
+        skip_download: "true"       
+    - get: templates
+      tags: ((tags))      
+    - get: variable
+      tags: ((tags))      
+    - get: one-time-trigger
+      tags: ((tags))      
+      passed: [ install-opsman ]
   - task: export-installation
     tags: ((tags))      
     image: platform-automation-image
@@ -583,10 +578,6 @@ jobs:
   serial_groups:
   - upload-and-stage
   - install
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
       - get: platform-automation-image
@@ -605,7 +596,7 @@ jobs:
         tags: ((tags))
       - get: variable
         tags: ((tags))
-        trigger: true
+        trigger: false
       - get: pivotal-container-service-product
         tags: ((tags))
         trigger: true
@@ -620,9 +611,10 @@ jobs:
   - task: download-pivotal-container-service
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
+    file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-pivotal-container-service.yml
+      SOURCE: s3    
+      CONFIG_FILE: download-product-configs/((pks.version))/download-pivotal-container-service.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -671,15 +663,7 @@ jobs:
   serial_groups:
   - upload-and-stage
   - install
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
-  - put: notify
-    tags: ((tags))
-    params:
-     <<: *slack_start_param
   - in_parallel:
     - get: platform-automation-image
       tags: ((tags))
@@ -703,15 +687,16 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-      trigger: true
+      trigger: false
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads       
   - task: download-harbor-container-registry
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
+    file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/download-harbor-container-registry.yml
+      SOURCE: s3
+      CONFIG_FILE: download-product-configs/((pks.version))/download-harbor-container-registry.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -748,10 +733,6 @@ jobs:
 - name: configure-director
   serial: true
   serial_groups: [ install ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: platform-automation-image
@@ -779,7 +760,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director.yml        
+      DIRECTOR_CONFIG_FILE: product-configs/((pks.version))/((iaas))/director.yml        
   - task: apply-director-changes
     tags: ((tags))
     image: platform-automation-image
@@ -793,14 +774,10 @@ jobs:
 - name: install-opsman
   serial: true
   serial_groups: [ install ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
-    - get: opsman-product
-      tags: ((tags))
+#    - get: opsman-product
+ #     tags: ((tags))
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -823,9 +800,10 @@ jobs:
   - task: download-opsman-s3
     tags: ((tags))
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/download-product-s3.yml
+    file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((pks_version))/((iaas))/download-opsman.yml
+      SOURCE: s3
+      CONFIG_FILE: download-product-configs/((pks.version))/((iaas))/download-opsman.yml
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
@@ -834,7 +812,10 @@ jobs:
     tags: ((tags))
   - task: interpolate-product-templates
     tags: ((tags))
-    <<: *interpolate-product-templates          
+    <<: *interpolate-product-templates     
+  - task: interpolate-om-configuration
+    tags: ((tags))
+    <<: *interpolate-om-configuration          
   - task: create-vm
     tags: ((tags))
     image: platform-automation-image
@@ -842,7 +823,7 @@ jobs:
     input_mapping:
       image: opsman-product
       state: variable      
-      config: variable
+      config: interpolated-om-configuration
       env: variable
       vars: variable
     params:
@@ -873,17 +854,17 @@ jobs:
     params:
       ENV_FILE: ((foundation))/env/env.yml
       AUTH_CONFIG_FILE: ((foundation))/config/auth.yml 
-  - task: update om certficates
-    tags: ((tags))
-    image: platform-automation-image
-    file: additional-tasks/tasks/update-ssl-certificate.yml
-    attempts: 10
-    input_mapping:
-      env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((pks_domain_cert.certificate))
-      KEY_PEM: ((pks_domain_cert.private_key))    
+#  - task: update om certficates
+#    tags: ((tags))
+#    image: platform-automation-image
+#    file: additional-tasks/tasks/update-ssl-certificate.yml
+#    attempts: 10
+#    input_mapping:
+#      env: variable
+#    params:
+#      ENV_FILE: ((foundation))/env/env.yml
+#      CERTIFICATE_PEM: ((pks_cert.certificate))
+#      KEY_PEM: ((pks_cert.private_key))    
   - task: configure-director
     tags: ((tags))
     attempts: 3    
@@ -896,7 +877,7 @@ jobs:
     params:
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       ENV_FILE: ((foundation))/env/env.yml
-      DIRECTOR_CONFIG_FILE: product-configs/((pks_version))/((iaas))/director((overlay_type)).yml        
+      DIRECTOR_CONFIG_FILE: product-configs/((pks.version))/((iaas))/director((overlay_type)).yml        
   - task: apply-director-changes
     tags: ((tags))
     attempts: 3    
@@ -910,15 +891,8 @@ jobs:
 - name: upgrade-opsman
   serial: true
   serial_groups: [ install ]
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
-  - put: notify
-    tags: ((tags))      
-    params:
-     <<: *slack_start_param
+
   - in_parallel:
     - get: one-time-trigger
       tags: ((tags))      
@@ -927,7 +901,6 @@ jobs:
       tags: ((tags))      
       params:
         unpack: true
-      trigger: true
     - get: platform-automation-tasks
       tags: ((tags))      
       params:
@@ -935,6 +908,8 @@ jobs:
     - get: opsman-product
       tags: ((tags))      
       trigger: true
+      passed:
+      - export-installation
     - get: installation
       tags: ((tags))      
       passed: [ export-installation ]
@@ -945,7 +920,10 @@ jobs:
   - task: interpolate-product-templates
     <<: *interpolate-product-templates          
   - task: interpolate-product-downloads
-    <<: *interpolate-product-downloads  
+    <<: *interpolate-product-downloads
+  - task: interpolate-om-configuration
+    tags: ((tags))
+    <<: *interpolate-om-configuration          
   - task: upgrade-opsman
     tags: ((tags))      
     image: platform-automation-image
@@ -953,7 +931,7 @@ jobs:
     input_mapping:
      image: opsman-product
      state: variable
-     config: variable
+     config: interpolated-om-configuration
      env: variable
      vars: variable
     params:
@@ -983,27 +961,32 @@ jobs:
   serial_groups:
   - configure-products
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
-      - get: platform-automation-image
-        tags: ((tags))      
-        params:
-          unpack: true
-        passed:
-         - upload-and-stage-pivotal-container-service
-        trigger: true
-      - get: platform-automation-tasks
-        tags: ((tags))      
-        params:
-          unpack: true
-      - get: templates
-        tags: ((tags))      
-      - get: variable
-        tags: ((tags))      
+    #- get: certstate  
+    #  trigger: true
+    #  passed:
+    #  - issue-pks-cert-request
+    #  - get-certs-from-pfsense  
+    - get: platform-automation-image
+      tags: ((tags))      
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      tags: ((tags))      
+      params:
+        unpack: true
+    - get: templates
+      tags: ((tags))      
+    - get: variable
+      tags: ((tags))    
+      trigger: false
+    - get: pivotal-container-service-product
+      trigger: true
+      params:
+        skip_download: "true"
+      passed:
+        - upload-and-stage-pivotal-container-service
   - task: interpolate-product-templates
     <<: *interpolate-product-templates
   - task: configure-pivotal-container-service-cloud-provider
@@ -1015,7 +998,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service((overlay_type)).yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/pivotal-container-service((overlay_type)).yml
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
   - task: assign-multi-stemcell
@@ -1028,18 +1011,19 @@ jobs:
       vars: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service-multi-stemcell.yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/pivotal-container-service-multi-stemcell.yml
 
 - name: configure-harbor-container-registry
   serial_groups:
   - configure-products
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
+    #- get: certstate  
+    #  trigger: true
+    #  passed:
+    #  - issue-pks-cert-request
+    #  - get-certs-from-pfsense
     - get: platform-automation-image
       tags: ((tags))      
       params:
@@ -1051,7 +1035,9 @@ jobs:
       tags: ((tags))      
       params:
         unpack: true
-    - get: harbor-container-registry-product    
+    - get: harbor-container-registry-product
+      params:
+        skip_download: "true"    
       tags: ((tags)) 
       trigger: true     
     - get: templates
@@ -1069,7 +1055,7 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/harbor-container-registry.yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/harbor-container-registry.yml
       VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
         
@@ -1077,12 +1063,13 @@ jobs:
   serial_groups:
   - install
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
+      #- get: certstate  
+      #  trigger: true
+      #  passed:
+      #  - configure-harbor-container-registry
+      #  - configure-pivotal-container-service
       - get: platform-automation-tasks
         tags: ((tags))      
         params:
@@ -1091,12 +1078,22 @@ jobs:
         tags: ((tags))      
         params:
           unpack: true
+      - get: variable
+        tags: ((tags))
         passed: # ((passed_configs))
           - configure-pivotal-container-service
-          - configure-harbor-container-registry
+          - configure-harbor-container-registry          
+        trigger: true 
+      - get: pivotal-container-service-product
         trigger: true
-      - get: variable
-        tags: ((tags))      
+        params:
+         skip_download: "true"       
+      - get: harbor-container-registry-product
+        trigger: true
+        params:
+         skip_download: "true"       
+        passed: # ((passed_configs))
+          - configure-harbor-container-registry
   - task: apply-product-changes
     tags: ((tags))      
     image: platform-automation-image
@@ -1107,10 +1104,6 @@ jobs:
       ENV_FILE: ((foundation))/env/env.yml
 
 - name: test-interpolate-director
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - get: variable
   - get: templates
@@ -1127,16 +1120,12 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/director((overlay_type)).yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/director((overlay_type)).yml
       VARS_FILES: vars/((foundation))/vars/director-vars.yml
       SKIP_MISSING: true    
 
         
 - name: test-interpolate-pivotal-container-service
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - get: variable
   - get: templates
@@ -1153,14 +1142,10 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/pivotal-container-service((overlay_type)).yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/pivotal-container-service((overlay_type)).yml
       VARS_FILES: vars/((foundation))/vars/pivotal-container-service-vars.yml
       SKIP_MISSING: true    
 - name: test-interpolate-harbor-container-registry
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - get: variable
   - get: templates
@@ -1177,15 +1162,11 @@ jobs:
       config: templates
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((pks_version))/((iaas))/harbor-container-registry.yml
+      CONFIG_FILE: product-configs/((pks.version))/((iaas))/harbor-container-registry.yml
       VARS_FILES: vars/((foundation))/vars/harbor-container-registry-vars.yml
       SKIP_MISSING: true    
 - name: delete-installation
   serial: true
-  on_failure:
-    put: notify
-    params:
-      <<: *slack_failed_param
   plan:
   - in_parallel:
     - get: platform-automation-image
@@ -1207,13 +1188,16 @@ jobs:
     params:
     # VARS_FILES: vars/((foundation))/vars/opsman-vars.yml
      ENV_FILE: ((foundation))/env/env.yml
+  - task: interpolate-om-configuration
+    tags: ((tags))
+    <<: *interpolate-om-configuration       
   - task: delete-vm
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/delete-vm.yml
     input_mapping:
       state: variable      
-      config: variable
+      config: interpolated-om-configuration
       env: variable
       vars: variable
     params:
@@ -1266,10 +1250,10 @@ jobs:
         ENV_FILE: ((foundation))/env/env.yml
         KEY_FILE: ((foundation))/env/opsman.key
         # conatins the opsman private key
-        PKS_USERNAME: ((pks_username))
-        PKS_PASSWORD: ((pks_password))
-        PKS_API_ENDPOINT: ((pks_api_endpoint))
-        PKS_USER_EMAIL: ((pks_user_email))          
+        PKS_USERNAME: ((pks.username))
+        PKS_PASSWORD: ((pks.password))
+        PKS_API_ENDPOINT: ((pks.api_endpoint))
+        PKS_USER_EMAIL: ((pks.user_email))          
 
 
 - name: create-pks-cluster
@@ -1304,13 +1288,49 @@ jobs:
       params:
         ENV_FILE: ((foundation))/env/env.yml
         KEY_FILE: ((foundation))/env/opsman.key
-        PKS_API_ENDPOINT: ((pks_api_endpoint))
-        PKS_CLUSTERNAME: ((pks_clustername))
-        PKS_MASTER_FQDN: ((pks_master_fqdn))
-        WORKER_INSTANCES: ((worker_instances))
-        PKS_PLAN_NAME: ((pks_plan_name))
+        PKS_API_ENDPOINT: ((pks.api_endpoint))
+        PKS_CLUSTERNAME: ((pks.clustername))
+        PKS_MASTER_FQDN: ((pks.master_fqdn))
+        WORKER_INSTANCES: ((pks.worker_instances))
+        PKS_PLAN_NAME: ((pks.plan_name))
 ## service
-- name: update-om-certificates
+- name: update-om-configuration
+  serial: false
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: one-time-trigger
+      tags: ((tags))
+    - get: certstate  
+      trigger: true
+      passed:
+      - issue-pks-cert-request
+      - get-certs-from-pfsense
+    - get: platform-automation-tasks
+      tags: ((tags))
+      params:
+        unpack: true    
+    - get: templates
+      tags: ((tags))
+    - get: variable
+      tags: ((tags))     
+  - task: interpolate-om-configuration
+    <<: *interpolate-om-configuration    
+  - task: update-om-configuration
+    tags: ((tags))
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-opsman.yml
+    input_mapping:
+      env: variable
+      config: interpolated-om-configuration
+    params:
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      ENV_FILE: ((foundation))/env/env.yml
+- name: issue-pks-cert-request
   serial: true
   serial_groups: [ install ]
   plan:
@@ -1322,24 +1342,147 @@ jobs:
     - get: one-time-trigger
       tags: ((tags))
       trigger: false
-    - get: additional-tasks
+    - get: pfsense_modules
       tags: ((tags))
       params:
         unpack: true    
-    - get: templates
-      tags: ((tags))
-    - get: variable
-      tags: ((tags))
-  - task: update om certficates
-    tags: ((tags))
+  - task: request_new_certs_from _pfsense
     image: platform-automation-image
-    file: additional-tasks/tasks/update-ssl-certificate.yml
-    input_mapping:
-      env: variable
+    file: pfsense_modules/ci/tasks/renew_cert.yml
     params:
-      ENV_FILE: ((foundation))/env/env.yml
-      CERTIFICATE_PEM: ((pks_domain_cert.certificate))
-      KEY_PEM: ((pks_domain_cert.private_key))
+      <<: *credhub_env
+      CERT_ID: 1
+      CA_ID: 1
+      STORED_CERT: pks_cer
+      SUBJECT: ((pks.fqdn))
+      PFSENSE_FQDN: pfsense.home.labbuildr.com
+      PFSENSE_USERNAME: ((pfsense_user.username)) 
+      PFSENSE_PASSWORD: ((pfsense_user.password))
+    input_mapping:
+      pfsense_modules: pfsense_modules
+    output_mapping: {certificates: certificates}
+  - put: certstate
+    tags: ((tags))      
+    params:
+      file: certificates/((pks.fqdn))*.pem
+
+- name: get-certs-from-pfsense
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense_modules
+      tags: ((tags))
+      params:
+        unpack: true    
+  - task: get_current_certs
+    image: platform-automation-image
+    file: pfsense_modules/ci/tasks/request_cert.yml
+    params:
+      <<: *credhub_env
+      CERT_ID: 1
+      CA_ID: 1
+      STORED_CERT: pks_cer
+      SUBJECT: ((pks.fqdn))
+      PFSENSE_FQDN: pfsense.home.labbuildr.com
+      PFSENSE_USERNAME: ((pfsense_user.username)) 
+      PFSENSE_PASSWORD: ((pfsense_user.password))
+    input_mapping:
+      pfsense_modules: pfsense_modules
+    output_mapping: {certificates: certificates}
+  - put: certstate
+    tags: ((tags))      
+    params:
+      file: certificates/((pks.fqdn))*.pem
+
+
+- name: get-controlplane-cert-expiration
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense_modules
+      tags: ((tags))
+      params:
+        unpack: true  
+  - across:
+    - var: endpoints
+      values: [vmw.control.home.labbuildr.com, vmw.control.stackpoc.labbuildr.com]      
+    task: check_expiration
+    image: platform-automation-image
+    file: pfsense_modules/ci/tasks/check_cert_expiration.yml
+    params:
+      SUBJECT: ((.:endpoints))
+      PORT: "443"
+      EXPIRE_DAYS: "15"
+    input_mapping:
+      pfsense_modules: pfsense_modules
+
+
+- name: get-harbor-cert-expiration
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense_modules
+      tags: ((tags))
+      params:
+        unpack: true    
+  - task: check_expiration
+    image: platform-automation-image
+    file: pfsense_modules/ci/tasks/check_cert_expiration.yml
+    params:
+      SUBJECT: harbor.((pks.fqdn))
+      PORT: "443"
+      EXPIRE_DAYS: "15"
+    input_mapping:
+      pfsense_modules: pfsense_modules
+- name: get-pks-api-cert-expiration
+  serial: true
+  serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense_modules
+      tags: ((tags))
+      params:
+        unpack: true    
+  - task: check_expiration
+    image: platform-automation-image
+    file: pfsense_modules/ci/tasks/check_cert_expiration.yml
+    params:
+      SUBJECT: api.((pks.fqdn))
+      PORT: "9021"
+      EXPIRE_DAYS: "15"
+    input_mapping:
+      pfsense_modules: pfsense_modules
 groups:
 - name: full
   jobs:
@@ -1389,10 +1532,17 @@ groups:
     - test-interpolate-pivotal-container-service
     - test-interpolate-harbor-container-registry  
     - configure-director  
-- name: Upgrade
+- name: update-certificates
   jobs:
-  - upgrade-opsman 
-  - update-om-certificates
+  - update-om-configuration
+  - issue-pks-cert-request
+  - get-certs-from-pfsense
+  - configure-pivotal-container-service
+  - configure-harbor-container-registry
+  - apply-product-changes
+  - get-harbor-cert-expiration
+  - get-pks-api-cert-expiration
+  - get-controlplane-cert-expiration
       
 - name: delete
   jobs:

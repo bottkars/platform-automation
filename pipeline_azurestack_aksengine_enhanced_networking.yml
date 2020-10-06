@@ -19,18 +19,25 @@ azure_env: &azure_env
   LOCATION: ((azs.azurestack_region))
 aks_env: &aks_env
   AKS_ORCHESTRATOR_RELEASE: ((aks.orchestrator_release))
+  AKS_VNET_RG: ((aks.vnet.rg))
+  AKS_VNET_NAME: ((aks.vnet.name))
   AKS_MASTER_DNS_PREFIX: ((aks.master.dns_prefix))
   AKS_MASTER_VMSIZE: ((aks.master.vmsize))
   AKS_MASTER_NODE_COUNT: ((aks.master.node_count))
   AKS_MASTER_DISTRO: ((aks.master.distro))
+  AKS_MASTER_SUBNET_NAME: ((aks.master.subnet_name))
+  AKS_MASETR_ADDRESS_PREFIX: ((aks.master.address_prefix))  
   AKS_AGENT_0_VMSIZE: ((aks.agent.0.vmsize))
   AKS_AGENT_0_NODE_COUNT: ((aks.agent.0.node_count))
-  AKS_AGENT_0_POOL_NAME: ((aks.agent.0.pool_name))
   AKS_AGENT_0_DISTRO: ((aks.agent.0.distro))
   AKS_AGENT_0_OSTYPE: ((aks.agent.0.ostype))
+  AKS_AGENT_0_POOL_NAME: ((aks.agent.0.pool_name))
+  AKS_AGENT_0_SUBNET_NAME: ((aks.agent.0.subnet_name))
+  AKS_AGENT_0_ADDRESS_PREFIX: ((aks.agent.0.address_prefix))
   AKS_RESOURCE_GROUP: ((aks.resource_group))
+  AKS_ADDITIONAL_APIMODEL: ((aks.additional_apimodel))
+#  AKS_SUBNET_ID:
   SSH_PUBLIC_KEY: ((aks.ssh_public_key))
-  AKS_WINDOWS_ADMIN_PASSWORD: ((aks.agent.0.windows_admin_password))
 
 credhub_env: &credhub_env
   CREDHUB_CLIENT: ((credhub-client))
@@ -125,6 +132,16 @@ resources:
 #  source:
 #    url: ((slack.webhook))
 #
+
+- name: sonobuoy-results
+  tags: ((tags))
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/((2[0-9]{3})(0[1-9]|1[012])([123]0|[012][1-9]|31))(([01][0-9]|2[0-3])((([0-5][0-9]))){1,2})_sonobuoy_(.*).tar.gz
+
 - name: installation
   tags: ((tags))
   icon: cloud-download
@@ -178,7 +195,24 @@ resources:
     bucket: ((buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 
+- name: yaml2json-release
+  tags: ((tags))
+  icon: github
+  type: github-release
+  check_every: 10m  
+  source: 
+    owner: bronze1man
+    repository: yaml2json
 
+- name: sonobuoy-release
+  tags: ((tags))
+  icon: github
+  type: github-release
+  check_every: 10m  
+  source: 
+    owner: vmware-tanzu
+    repository: sonobuoy
+    
 - name: aks-engine-release
   tags: ((tags))
   icon: github
@@ -187,13 +221,34 @@ resources:
   source: 
     owner: Azure
     repository: aks-engine
-    # uri: https://github.com/Azure/aks-engine
-    # private_key: ((template-deploy-key.private_key))
-    # branch: master
     tag_filter: ((aks.engine_tagfilter))
-    
 
+- name: bosh-cli-release
+  tags: ((tags))
+  icon: github
+  type: github-release
+  check_every: 10m  
+  source: 
+    owner: cloudfoundry
+    repository: bosh-cli  
 
+- name: cf-values
+  tags: ((tags))
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/cf-values-(.*).yml  
+
+- name: cf-for-k8s-master
+  tags: ((tags))
+  type: git
+  icon: github-box
+  check_every: 10m  
+  source:
+    branch: master
+    uri: https://github.com/cloudfoundry/cf-for-k8s.git
 
 - name: apimodel-json
   check_every: 10m  
@@ -210,15 +265,40 @@ resources:
   check_every: 10m  
   source:  
     uri: https://github.com/bottkars/azs-concourse.git
-    branch: master
+    branch: ((azs_concourse_branch))
 
 
 jobs:
-- name: deploy-aks-cluster-windows
+- name: configure-networks
   plan:
   - in_parallel:
     - get: one-time-trigger
       trigger: true
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+  - task: deploy-vnet-template 
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/deploy-template.yml  
+    input_mapping:
+      config: azs-concourse
+    params:
+      <<: *azure_env
+      TEMPLATE_URI: "https://raw.githubusercontent.com/bottkars/azs-concourse/tanzu/templates/aks-network-azuredeploy-vnetadd.json"
+      PARAMETER_FILE: templates/azuredeploy-parameters.json
+      ADDITIONAL_PARAMETERS: 'VNETName=((aks.vnet.name)) MasterSubnet=((aks.master.subnet_name)) AgentSubnet=((aks.agent.0.subnet_name)) AgentAddressPrefix=((aks.agent.0.address_prefix)) MasterAddressPrefix=((aks.master.address_prefix))'
+      RESOURCE_GROUP: ((aks.vnet.rg))
+
+- name: deploy-aks-cluster
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+      passed: [ configure-networks ]
     - get: apimodel-json
     - get: aks-engine-release
       tags: ((tags))
@@ -232,15 +312,16 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
-  - task: deploy-windows-cluster
+  - task: deploy-cluster
     tags: ((tags))
-    file: azs-concourse/ci/tasks/deploy-aks-windows.yml  
+    file: azs-concourse/ci/tasks/deploy-aks.yml  
     image: platform-automation-image
     input_mapping:
       aks-engine: aks-engine-release
     params:
       <<: *azure_env
       <<: *aks_env
+      # AKS_ADDITIONAL_APIMODEL: masterProfile.firstConsecutiveStaticIP=10.100.10.5,masterProfile.vnetSubnetId=/subscriptions/((subscription_id))/resourceGroups/((aks.vnet.rg))/providers/Microsoft.Network/virtualNetworks/((aks.vnet.name))/subnets/((aks.master.subnet_name))
   - put: installation
     tags: ((tags))
     params:
@@ -254,12 +335,31 @@ jobs:
     params:
       file: kubeconfig/kubeconfig-*.json              
 
-
+- name: update-routing-table
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      tags: ((tags))
+      passed: [ deploy-aks-cluster ]  
+      trigger: true    
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+  - task: update-routingtable 
+    tags: ((tags))
+    image: platform-automation-image
+    file: azs-concourse/ci/tasks/update-aks-routingtable.yml  
+    params:
+      <<: *azure_env
+      <<: *aks_env
 - name: query-aks-agent-pool
   plan:
   - in_parallel:
     - get: installation
-      passed: [ deploy-aks-cluster-windows ]
+      passed: [ deploy-aks-cluster ]
       trigger: false
       tags: ((tags))
       params:
@@ -284,7 +384,6 @@ jobs:
       aks-engine: aks-engine-release
       current-installation: installation
     params:
-    #  <<: *azure_env
       <<: *aks_env
       AKS_AGENT_POOL: linuxpool
 #  - put: installation
@@ -305,7 +404,8 @@ jobs:
   plan:
   - in_parallel:
     - get: installation
-      passed: [ deploy-aks-cluster-windows ]
+      passed: 
+      - deploy-aks-cluster
       trigger: false
       tags: ((tags))
       params:
@@ -318,6 +418,8 @@ jobs:
         - aks-engine-*-linux-amd64.tar.gz
     - get: azs-concourse
       tags: ((tags))
+      passed:
+      - validate-aks-cluster      
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -351,7 +453,8 @@ jobs:
   plan:
   - in_parallel:
     - get: installation
-      passed: [ deploy-aks-cluster-windows ]
+      passed:
+      - deploy-aks-cluster
       trigger: false
       tags: ((tags))
       params:
@@ -362,6 +465,11 @@ jobs:
         unpack: true
         globs:
         - aks-engine-*-linux-amd64.tar.gz
+    - get: sonobuoy-results
+      tags: ((tags))
+      trigger: true
+      passed:
+      - validate-aks-cluster          
     - get: azs-concourse
       tags: ((tags))
     - get: platform-automation-image
@@ -392,6 +500,60 @@ jobs:
     params:
       file: kubeconfig/kubeconfig-*.json     
 
+- name: validate-aks-cluster
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      tags: ((tags))
+      passed:  
+      - update-routing-table 
+      trigger: true
+    - get: kubeconfig
+      tags: ((tags))
+    - get: sonobuoy-release
+      tags: ((tags))
+      params:
+        unpack: true   
+        globs:
+        - sonobuoy_*_linux_amd64.tar.gz         
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true        
+  - task: validate-cluster
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/validate-kubernetes-cluster.yml  
+    image: platform-automation-image
+    params:
+      SONOBUOY_MODE: quick #certified-conformance #  Valid modes are non-disruptive-conformance, quick, certified-conformance. (default non-disruptive-conformance)
+  - put: sonobuoy-results
+    tags: ((tags))
+    params:
+      file: validation-report/*_sonobuoy_*.tar.gz   
+
+
+
+- name: install-kubeapps
+  plan:
+  - in_parallel:
+    - get: kubeconfig
+      tags: ((tags))
+      passed: [ validate-aks-cluster ]
+      trigger: true 
+#    - get: kubectl-release          
+    - get: azs-concourse
+      tags: ((tags))
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true        
+  - task: install-bitnami-kubeapps
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/install-kubeapps.yml  
+    image: platform-automation-image
+ 
 
 - name: delete-aks-cluster
   plan:
@@ -408,3 +570,42 @@ jobs:
     params:
       <<: *azure_env 
     
+
+- name: deploy-cf-for-k8s
+  plan:
+  - in_parallel:
+    - get: kubeconfig
+      tags: ((tags))
+      passed:
+      - scale-aks-cluster
+      trigger: true      
+  - get: cf-for-k8s-master
+    tags: ((tags))
+  - get: azs-concourse
+    tags: ((tags))
+  - get: platform-automation-image
+    tags: ((tags))
+    params:
+      unpack: true
+  - get: bosh-cli-release
+    tags: ((tags))
+    params:
+      globs:
+      - bosh-cli-*-linux-amd64
+  - get: yaml2json-release
+    tags: ((tags))
+    params:
+      globs:
+      - *_linux_amd64          
+  - task: deploy-cf-for-k8s-master
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/deploy-cf-for-k8s.yml  
+    image: platform-automation-image
+    params:
+      <<: *azure_env
+      DNS_DOMAIN: ((cf_k8s_domain))
+      GCR_CRED: ((gcr_cred))
+  - put: cf-values
+    tags: ((tags))
+    params:
+      file: cf-values/cf-values-*.yml 

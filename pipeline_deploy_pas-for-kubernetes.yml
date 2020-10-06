@@ -8,7 +8,7 @@ s3_env: &s3_env
 credhub_env: &credhub_env
   CREDHUB_CLIENT: ((((foundation))/credhub-client))
   CREDHUB_SECRET: ((((foundation))/credhub-secret))
-  CREDHUB_SERVER: ((((foundation))/credhub-server))
+  CREDHUB_SERVER: ((credhub-server))
   PREFIX: /concourse/main/((foundation))
   CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
 
@@ -95,7 +95,7 @@ resource_types:
     repository: cfcommunity/slack-notification-resource    
 resources:
 - name: additional-tasks
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -121,16 +121,16 @@ resources:
     url: ((slack.webhook))
 - name: installation
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
-    bucket: ((((foundation))/buckets_installation))
+    bucket: ((buckets_installation))
     regexp: ((foundation))/installation-(.*).zip    
 
 - name: platform-automation-tasks
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -139,7 +139,7 @@ resources:
 
 - name: platform-automation-image
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
@@ -151,21 +151,13 @@ resources:
 
 - name: pas-for-kubernetes-product
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: pas-for-kubernetes-product/\[pas-for-kubernetes,(.*)\]pas-for-kubernetes-.*.pivotal
+    regexp: pas-for-kubernetes-product/\[pas-for-kubernetes,(.*)\]tanzu-application-service.*.tar
 
-- name: pas-for-kubernetes-stemcell
-  tags: ((tags))
-  icon: amazon-drive
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: pas-for-kubernetes-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
 
 #############################
 ###### Products end here ####
@@ -173,17 +165,17 @@ resources:
 
 - name: templates
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
-    uri: ((template-repo))
+    uri: ((templates.repo))
     private_key: ((((foundation))/template-deploy-key.private_key))
-    branch: master
+    branch: ((templates.branch))
 
 - name: variable
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git
   check_every: 10m  
   source: 
@@ -191,6 +183,7 @@ resources:
     private_key: ((((foundation))/variable-deploy-key.private_key))
     branch: master
     paths:
+    - ((foundation))/env/env.yaml
     - ((foundation))/vars/pas-for-kubernetes-vars.yml
 
 - name: pipeline-lock
@@ -269,7 +262,7 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-pas-for-kubernetes-product-and-stemcell
+  - task: download-pas-for-kubernetes-product
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
@@ -277,7 +270,6 @@ jobs:
       CONFIG_FILE: download-product-configs/((pks_version))/download-pas-for-kubernetes.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: pas-for-kubernetes-stemcell}
     on_failure:
       put: download-lock
       attempts: 5
@@ -288,11 +280,7 @@ jobs:
     - put: pas-for-kubernetes-product
       tags: ((tags))
       params:
-        file: downloaded-product/*.pivotal
-    - put: pas-for-kubernetes-stemcell
-      tags: ((tags))
-      params:
-        file: pas-for-kubernetes-stemcell/*.tgz
+        file: downloaded-product/*.tar
   - put: download-lock
     attempts: 5
     tags: ((tags))
@@ -326,15 +314,12 @@ jobs:
       tags: ((tags))
     - get: variable
       tags: ((tags))
-      trigger: true
+      trigger: false
     - get: pas-for-kubernetes-product
       tags: ((tags))
-      skip_download: true
-      trigger: true     
-    - get: pas-for-kubernetes-stemcell
-      tags: ((tags))
-      skip_download: true
-      trigger: true    
+      params:
+        skip_download: "true"   
+      trigger: true        
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
@@ -349,7 +334,6 @@ jobs:
       config: interpolated-product-downloads
     output_mapping:
       downloaded-product: pas-for-kubernetes-product
-      downloaded-stemcell: pas-for-kubernetes-stemcell
   - put: pipeline-lock
     attempts: 5
     tags: ((tags))    
@@ -362,15 +346,6 @@ jobs:
     input_mapping:
       product: pas-for-kubernetes-product
       env: variable
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-pas-for-kubernetes-stemcell
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      env: variable
-      stemcell: pas-for-kubernetes-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product

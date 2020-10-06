@@ -26,6 +26,7 @@ set -u
 while IFS=", " read -r REPO RELEASE; do
     OLD_VERSION=$(grep -A0 ${RELEASE} $VERSIONS_FILE | cut -d ':' -f2 | tr -d ' "')
     VERSION=$(get_latest_release "${REPO}/${RELEASE}")
+    VERSION=${VERSION//RELEASE.}
     if [[ ${VERSION//v} != $OLD_VERSION ]]
     then
         echo "Replacing ${RELEASE} version ${OLD_VERSION} with ${VERSION//v} in $VERSIONS_FILE"
@@ -35,25 +36,20 @@ while IFS=", " read -r REPO RELEASE; do
     fi
 done <<< "${RELEASES}"    
 
-VERSION=$(curl -u "${GIT_USERNAME}:${GIT_TOKEN}" --silent "https://api.github.com/repos/cloudfoundry/bosh-linux-stemcell-builder/tags"  | jq -r '[.[] | select(.name | contains("621."))] | .[0].name')
+
+stemcells=$(curl -s https://bosh.io/api/v1/stemcells/bosh-azure-hyperv-ubuntu-xenial-go_agent)
+
+VERSION=$(echo $stemcells |jq -r '[.[] | select(.version|test("621."))][0].version')
 RELEASE=stemcell-release
     echo "Checking Stemcell Releases"
     OLD_VERSION=$(grep -A0 ${RELEASE} $VERSIONS_FILE | cut -d ':' -f2 | tr -d ' "')
-    if [[ ${VERSION//ubuntu-xenial\/v} != ${OLD_VERSION} ]]
+    if [[ ${VERSION} != ${OLD_VERSION} ]]
         then
-        echo "testing if new stemcell exists from Stemcell Builder ${VERSION//ubuntu-xenial\/v}"
-        return=$(curl --write-out %{http_code} --silent --head --output /dev/null  "https://bosh.io/d/stemcells//bosh-stemcell-${VERSION//ubuntu-xenial\/v}-azure-hyperv-ubuntu-xenial-go_agent.tgz")
-        echo "getting return $return for Stemcell $VERSION"
-        if [[ $return != *"40"* ]]
-        then
-            echo "we found Stemcell $VERSION"
-            echo "Replacing ${RELEASE} version ${OLD_VERSION} with \"${VERSION//ubuntu-xenial\/v}\" in $VERSIONS_FILE"
-            sed -i "/${RELEASE}/s/.*/${RELEASE}: \"${VERSION//ubuntu-xenial\/v}\"/" $VERSIONS_FILE
-        else
-            echo "Stemcell for $VERSION not yet published"        
-        fi    
+        echo "new stemcell ${VERSION} found at bosh.io"
+            echo "Replacing ${RELEASE} version ${OLD_VERSION} with \"${VERSION}\" in $VERSIONS_FILE"
+            sed -i'.bak' "/${RELEASE}/s/.*/${RELEASE}: \"${VERSION}\"/" ${VERSIONS_FILE}
     else
-        echo "Already at Stemcell version ${VERSION//ubuntu-xenial\/v}"
+        echo "Already at Stemcell version ${VERSION}"
     fi
 
 

@@ -109,7 +109,7 @@ resources:
   type: time
   source:
     start: 01:00 AM
-    stop: 11:00 AM
+    stop: ((after_midnight_end))
     interval: 24h
     location: Europe/Berlin 
 # notifications
@@ -149,23 +149,23 @@ resources:
 ###### Products go here #####
 #############################    
 
-- name: app-metrics-product
+- name: p-healthwatch2-product
   tags: ((tags))
   icon: cloud-download
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: app-metrics-product/\[apm,(.*)\]app-metrics-.*.pivotal
+    regexp: p-healthwatch2-product/\[p-healthwatch,(.*)\]healthwatch-.*.pivotal
 
-- name: app-metrics-stemcell
+- name: p-healthwatch2-stemcell
   tags: ((tags))
   icon: cloud-download
   type: s3
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: app-metrics-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
+    regexp: p-healthwatch2-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-azure-hyperv-ubuntu-xenial-go_agent\.tgz
 
 
 #############################
@@ -193,7 +193,7 @@ resources:
     branch: master
     paths:
     - ((foundation))/env/env.yaml
-    - ((foundation))/vars/app-metrics-vars.yml
+    - ((foundation))/vars/p-healthwatch2-vars.yml
 
 - name: pipeline-lock
   icon: cloud-lock
@@ -221,7 +221,7 @@ interpolate-product-downloads: &interpolate-product-downloads
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: download-product-configs/((tas_version))/download-app-metrics.yml
+    INTERPOLATION_PATHS: download-product-configs/((tas_version))/download-p-healthwatch2.yml
   input_mapping:
     files: templates
   output_mapping:
@@ -232,7 +232,7 @@ interpolate-product-templates: &interpolate-product-templates
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   params:
     <<: *credhub_env
-    INTERPOLATION_PATHS: product-configs/((tas_version))/app-metrics.yml
+    INTERPOLATION_PATHS: product-configs/((tas_version))/p-healthwatch2.yml
     SKIP_MISSING: true
   input_mapping:
     files: templates
@@ -240,7 +240,10 @@ interpolate-product-templates: &interpolate-product-templates
     interpolated-files: interpolated-product-templates
 
 jobs:
-- name: get-app-metrics
+## opsman starts here
+
+## 
+- name: get-p-healthwatch2
   on_failure:
     put: notify
     tags: ((tags))
@@ -250,12 +253,9 @@ jobs:
   serial_groups: [ get-products ]
   plan:
   - put: download-lock
-    params:
-      acquire: true
-  - put: notify
     tags: ((tags))
     params:
-      <<: *slack_start_param
+      acquire: true    
   - in_parallel:
     - get: after-midnight
       tags: ((tags))
@@ -273,15 +273,15 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads
-  - task: download-app-metrics-product-and-stemcell
+  - task: download-p-healthwatch2-product-and-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((tas_version))/download-app-metrics.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-healthwatch2.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: app-metrics-stemcell}
+    output_mapping: {downloaded-stemcell: p-healthwatch2-stemcell}
     on_failure:
       put: download-lock
       attempts: 5
@@ -289,20 +289,22 @@ jobs:
       params:
         release: download-lock
   - in_parallel:
-    - put: app-metrics-product
+    - put: p-healthwatch2-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: app-metrics-stemcell
+    - put: p-healthwatch2-stemcell
       tags: ((tags))
       params:
-        file: app-metrics-stemcell/*.tgz
+        file: p-healthwatch2-stemcell/*.tgz
   - put: download-lock
+    attempts: 5
+    tags: ((tags))
     params:
-      release: true      
+      release: download-lock      
 
 ##
-- name: upload-and-stage-app-metrics
+- name: upload-and-stage-p-healthwatch2
   on_failure:
     put: notify
     tags: ((tags))
@@ -329,12 +331,12 @@ jobs:
     - get: variable
       tags: ((tags))
       trigger: false
-    - get: app-metrics-product
+    - get: p-healthwatch2-product
       tags: ((tags))
       params:
         skip_download: "true"   
       trigger: true
-    - get: app-metrics-stemcell
+    - get: p-healthwatch2-stemcell
       tags: ((tags))
       params:
         skip_download: "true"   
@@ -342,18 +344,18 @@ jobs:
   - task: interpolate-product-downloads
     tags: ((tags))
     <<: *interpolate-product-downloads     
-  - task: download-app-metrics
+  - task: download-p-healthwatch2
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
-      CONFIG_FILE: download-product-configs/((tas_version))/download-app-metrics.yml
+      CONFIG_FILE: download-product-configs/((tas_version))/download-p-healthwatch2.yml
       SOURCE: s3
     input_mapping:
       config: interpolated-product-downloads
     output_mapping:
-      downloaded-product: app-metrics-product
-      downloaded-stemcell: app-metrics-stemcell
+      downloaded-product: p-healthwatch2-product
+      downloaded-stemcell: p-healthwatch2-stemcell
 
   - put: pipeline-lock
     attempts: 5
@@ -366,17 +368,17 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: app-metrics-product
+      product: p-healthwatch2-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
-  - task: upload-app-metrics-stemcell
+  - task: upload-p-healthwatch2-stemcell
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: variable
-      stemcell: app-metrics-stemcell
+      stemcell: p-healthwatch2-stemcell
     params:
       ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
@@ -384,7 +386,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: app-metrics-product
+      product: p-healthwatch2-product
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml      
@@ -392,7 +394,7 @@ jobs:
 
 ##
 
-- name: configure-app-metrics
+- name: configure-p-healthwatch2
   on_failure:
     put: notify
     tags: ((tags))
@@ -408,14 +410,14 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))  
       passed:
-        - upload-and-stage-app-metrics
+        - upload-and-stage-p-healthwatch2
       trigger: true    
     - get: platform-automation-image
       tags: ((tags))
       params:
         unpack: true
       passed:
-        - upload-and-stage-app-metrics
+        - upload-and-stage-p-healthwatch2
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -427,7 +429,7 @@ jobs:
   - task: interpolate-product-templates
     tags: ((tags))
     <<: *interpolate-product-templates
-  - task: configure-app-metrics
+  - task: configure-p-healthwatch2
     tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -436,8 +438,8 @@ jobs:
       env: variable
       vars: variable
     params:
-      CONFIG_FILE: product-configs/((tas_version))/app-metrics.yml
-      VARS_FILES: vars/((foundation))/vars/app-metrics-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
+      CONFIG_FILE: product-configs/((tas_version))/p-healthwatch2.yml
+      VARS_FILES: vars/((foundation))/vars/p-healthwatch2-vars.yml vars/((foundation))/vars/director_deployment_vars.yml
       ENV_FILE: ((foundation))/env/env.yml 
 
 ##
@@ -468,7 +470,7 @@ jobs:
     - get: pipeline-lock
       tags: ((tags))
       passed: 
-      - configure-app-metrics 
+      - configure-p-healthwatch2 
       trigger: true   
     - get: variable
       tags: ((tags))
@@ -479,7 +481,7 @@ jobs:
     input_mapping:
       env: variable
     params:
-      PRODUCT_NAME: appMetrics
+      PRODUCT_NAME: p-healthwatch2
       ENV_FILE: ((foundation))/env/env.yml
   - task: export-installation
     tags: ((tags))

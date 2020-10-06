@@ -19,12 +19,12 @@ resource_types:
 resources:
 - name: asdk-release-file
   tags: ((tags))
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
     bucket: ((buckets_asdk_release))
-    regexp: asdk-(((asdk_version)).*).yml
+    regexp: asdk-1.(((asdk.version)).*).yml
 
 - name: tweet
   type: twitter
@@ -42,23 +42,24 @@ resources:
 
 - name: after-midnight
   type: time
+  icon: calendar-clock
   source:
-    start: 01:00 AM
-    stop: ((after_midnight_end))
-    interval: 24h
+#    start: 01:00 AM
+#    stop: ((after_midnight_end))
+    interval: 1h
     location: Europe/Berlin 
 
 - name: platform-automation-image
-  icon: amazon-drive
+  icon: cloud-download
   type: s3
   source:
     <<: *s3_env
-    bucket: ((buckets_pivnet_image))
+    bucket: ((((foundation))/buckets_pivnet_image))
     regexp: platform-automation-image-(.*).tgz
 
 - name: azs-concourse
   tags: ((tags))
-  icon: github-circle
+  icon: github
   type: git  
   source: 
     uri: https://github.com/bottkars/azs-concourse.git
@@ -83,7 +84,8 @@ jobs:
     output_mapping:
       asdk-release: asdk-release-file  
     params:
-      ASDK_VERSION: ((asdk_version))
+      ASDK_VERSION: ((asdk.version))
+      FROM: ((asdk.minor_version))
     on_success:
       try:    
         put: asdk-release-file
@@ -95,8 +97,8 @@ jobs:
             media:
             - azs-concourse/media/avatar.jpg
             status: >
-              OMG! #AzureStackHub ASDK ((asdk_version)) is now live deployed
-              from my custom @concourseci pipeline in our PeZ environment!  
+              OMG! #AzureStackHub ASDK ((asdk.version)) is now live deployed
+              from my custom @concourseci pipeline at labbuildr@home!  
 
 - name: download-asdk
   plan:
@@ -116,7 +118,7 @@ jobs:
 #      media:
 #      - azs-concourse/media/avatar.jpg
 #      status: >
-#        OMG! Apparently, I strongly believe that #AzureStackHub #ASDK ((asdk_version)) 
+#        OMG! Apparently, I strongly believe that #AzureStackHub #ASDK ((asdk.version)) 
 #        is soon available !! (indicated by my Harddrive LED))
 #        from my custom @concourseci pipeline in my Homelab  
 

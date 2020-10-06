@@ -1,0 +1,240 @@
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+
+
+
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+   
+
+resources:
+# triggers
+#- name: daily-trigger
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    interval: 24h
+
+
+- name: one-time-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+#- name: after-midnight
+#  type: time
+#  source:
+#    start: 01:00 AM
+#    stop: ((after_midnight_end))
+#    interval: 24h
+#    location: Europe/Berlin 
+
+#- name: installation
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.installation))
+#    regexp: ((foundation))/installation-(.*).zip    
+#- name: platform-automation-pivnet
+#  type: pivnet
+#  source:
+#    api_token: ((((foundation))/pivnet-token))
+#    product_slug: platform-automation
+#    product_version: 4\.*\.(.*)
+#    sort_by: semver
+
+
+- name: dps-automation-image
+  icon: docker
+  type: docker-image
+  source:
+    repository: bottkars/dps-automation-image
+#    tag: v0.1
+
+
+
+- name: dps-modules
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/dps-modules.git
+    branch: master
+
+## product resources
+- name: avamar
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/.*/AVE-(.*).ova
+
+
+jobs:
+#- name: get-platform-automation
+#  plan:
+#  - in_parallel:
+#    - get: after-midnight
+#      trigger: true
+#    - get: platform-automation-pivnet
+#      trigger: true
+#    - put: dps-automation-image
+#      params:
+#        file: platform-automation-pivnet/*image*.tgz
+
+- name: deploy-avamar-ova
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+    - get: avamar
+      tags: ((tags))
+      params:
+        unpack: false
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-ova
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-ave.yml
+    input_mapping:
+      dps-modules: dps-modules
+      avamar: avamar
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
+      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER))
+      GOVC_NETWORK: ((GOVC.NETWORK))
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
+      AVE_FOLDER: ((AVE.FOLDER))
+      AVE_NETWORK: ((AVE.NETWORK))
+      AVE_ADDRESS: ((AVE.ADDRESS))
+      AVE_GATEWAY: ((AVE.GATEWAY))
+      AVE_NETMASK: ((AVE.NETMASK))
+      AVE_FQDN: ((AVE.FQDN))
+      AVE_VMNAME: ((AVE.VMNAME))
+      AVE_DNS: ((AVE.DNS))       
+- name: configure-avamar
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      passed: [ deploy-avamar-ova ]
+      tags: ((tags))       
+      trigger: true
+    - get: dps-automation-image
+    - get: dps-modules
+      tags: ((tags))
+  - task: configure-avamar
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/configure-ave-vsphere.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((AVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
+      AVE_FQDN: ((AVE.FQDN))
+      AVE_USERNAME: root
+      AVE_PASSWORD: ((AVE.SETUP_PASSWORD))  
+      AVE_TIMEZONE: "((AVE.TIMEZONE))"
+      AVE_ADMIN_PASSWORD_OS: ((AVE.PASSWORD)) 
+      AVE_ROOT_PASSWORD_OS: ((AVE.PASSWORD))
+      AVE_COMMON_PASSWORD: ((AVE.PASSWORD))
+      AVE_SNMP_STRING: ((AVE.SNMP_STRING))
+      AVE_DATADOMAIN_HOST: ((AVE.DATADOMAIN_HOST))
+      AVE_DDBOOST_USER: ((AVE.DDBOOST_USER))
+      AVE_DDBOOST_USER_PWD: ((AVE.PASSWORD))
+      AVE_DDBOOST_USER_PWD_CF: ((AVE.PASSWORD))
+      AVE_DATADOMAIN_SYSADMIN: ((AVE.DATADOMAIN_SYSADMIN))
+      AVE_DATADOMAIN_SYSADMIN_PWD: ((AVE.DATADOMAIN_SYSADMIN_PWD))
+      AVE_TOMCAT_KEYSTORE_PASSWORD: ((AVE.PASSWORD)) 
+      AVE_AUTHC_ADMIN_PASSWORD: ((AVE.PASSWORD))
+      AVE_ADD_DATADOMAIN_CONFIG: true 
+
+- name: deploy-client-package
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      passed: 
+      - configure-avamar   
+      trigger: true
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-avamar-client-package
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-avamar-client-avp.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((AVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
+      AVE_FQDN: ((AVE.FQDN))
+      AVE_USERNAME: root
+      AVE_PASSWORD: ((AVE.PASSWORD))  
+      AVE_UPGRADE_CLIENT_DOWNLOADS_PACKAGE: ((AVE.UPGRADE_CLIENT_DOWNLOADS_PACKAGE))
+      AVE_UPGRADE_CLIENT_DOWNLOADS_URL: ((AVE.UPGRADE_CLIENT_DOWNLOADS_URL))
+           
+- name: delete-avamar-vm
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      passed: [ deploy-avamar-ova ]
+    - get: dps-automation-image
+      tags: ((tags))
+      passed:          
+    - get: dps-modules
+      tags: ((tags))
+  - task: delete-avamar
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/delete-vm.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
+      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
+      GOVC_NETWORK: ((GOVC.NETWORK))
+      VMNAME: ((AVE.VMNAME))

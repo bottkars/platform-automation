@@ -1,0 +1,168 @@
+---
+s3_env: &s3_env
+  access_key_id: ((s3_access_key_id))
+  endpoint:  ((s3_endpoint))
+  region_name: ((s3_region_name))
+  secret_access_key: ((s3_secret_access_key))
+azure_env: &azure_env
+  PROFILE: ((azs.arm_profile))
+  CA_CERT: ((azs_ca.certificate))
+  AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
+  ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+  VAULT_DNS:  ((azs.vault_dns))
+  SUFFIX_STORAGE_ENDPOINT: ((azs.suffix_storage_endpoint))
+  AZURE_TENANT_ID: ((tenant_id))
+  AZURE_CLIENT_ID: ((client_id))
+  AZURE_CLIENT_SECRET: ((client_secret))
+  AZURE_SUBSCRIPTION_ID: ((subscription_id))
+  RESOURCE_GROUP: ((aks.resource_group))
+  LOCATION: ((azs.azurestack_region))
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((credhub-client))
+  CREDHUB_SECRET: ((credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
+  PREFIX: /concourse/main/((aks.team))
+  CREDHUB_CA_CERT: ((credhub-ca-cert.certificate))
+
+
+resource_types:
+- name: file-url
+  type: docker-image
+  source:
+    repository: pivotalservices/concourse-curl-resource
+    tag: latest
+
+- name: pivnet
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+- name: slack-notification
+  tags: ((tags))
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource    
+resources:
+
+# triggers
+#- name: daily-trigger
+#  tags: ((tags))
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    interval: 24h
+
+
+- name: one-time-trigger
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+
+#- name: after-midnight
+#  tags: ((tags))
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    start: 01:00 AM
+#    stop: ((after_midnight_end))
+#    interval: 24h
+#    location: Europe/Berlin 
+# notifications
+#- name: notify
+#  tags: ((tags))
+#  icon: bell
+#  type: slack-notification
+#  source:
+#    url: ((slack.webhook))
+#
+
+#- name: platform-automation-pivnet
+#  tags: ((tags))
+#  icon: cloudfoundry
+#  type: pivnet
+#  source:
+#    api_token: ((pivnet-token))
+#    product_slug: platform-automation
+#    product_version: 4\.(.*)
+#    sort_by: semver
+
+#- name: platform-automation-tasks
+#  tags: ((tags))
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets_pivnet_tasks))
+#    regexp: platform-automation-tasks-(.*).zip
+
+- name: dps-automation-image
+  tags: ((tags))
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets_pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
+
+
+#- name: kubectl-release
+#  tags: ((tags))
+#  icon: github
+#  type: github-release
+#  check_every: 10m  
+#  source: 
+#    owner: kubernetes
+#    repository: kubectl
+#    tag_filter: "v0.17.3" #v?([0-9.]*)
+
+
+- name: azs-concourse
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/azs-concourse.git
+    branch: ((azs_concourse_branch))
+
+
+- name: AZURE-AVE
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((avamar.version))/AZURE-AVE-(.*).vhd.7z
+
+jobs:
+- name: deploy-azure-ave
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+    - get: apimodel-json
+    - get: AZURE-AVE
+      tags: ((tags))
+      params:
+        unpack: true
+        globs:
+        - AZURE-AVE-*.vhd.7z
+    - get: azs-concourse
+      tags: ((tags))
+    - get: dps-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+  - task: deploy-cluster
+    tags: ((tags))
+    file: azs-concourse/ci/tasks/deploy-azure-ave.yml  
+    image: dps-automation-image
+    input_mapping:
+      AZURE-AVE: AZURE-AVE
+    params:
+      <<: *azure_env
