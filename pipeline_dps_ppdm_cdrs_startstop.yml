@@ -65,7 +65,7 @@ resources:
   source:
     <<: *s3_env
     bucket: cdr
-    regexp: state/(.*)-state-(?P<version>([0-9]{4})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])\.(2[0-3]|[01][0-9])([0-5][0-9])\.([0-5][0-9])).json
+    regexp: state/(.*)-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
 
 
 - name: cdra-active
@@ -76,7 +76,7 @@ resources:
   source:
     <<: *s3_env
     bucket: cdr
-    regexp: state/cdra-state-(?P<version>([0-9]{4})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])\.(2[0-3]|[01][0-9])([0-5][0-9])\.([0-5][0-9])).json
+    regexp: state/cdra-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
 
 
 - name: cdrs-state
@@ -86,7 +86,7 @@ resources:
   source:
     <<: *s3_env
     bucket: cdr
-    regexp: state/cdrs-state-(?P<version>([0-9]{4})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])\.(2[0-3]|[01][0-9])([0-5][0-9])\.([0-5][0-9])).json
+    regexp: state/cdrs-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
 
 
 
@@ -147,7 +147,6 @@ jobs:
       trigger: true  
     - get: dps-automation-image
       tags: ((tags))
-      trigger: true        
     - get: dps-modules
       tags: ((tags))
   - task: query-backupstate
@@ -170,7 +169,7 @@ jobs:
       params:
         file: cdra-state/*.json
       get_params:
-        regexp: state\/(.*)-state-(?P<version>([0-9]{4})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])\.(2[0-3]|[01][0-9])([0-5][0-9])\.([0-5][0-9])).json
+        regexp: state\/(.*)-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
 
 - name: is-cdrs-active
   serial: true
@@ -182,7 +181,7 @@ jobs:
       tags: ((tags))
     - get: cdra-active
       tags: ((tags))
-      passed:
+#      passed:
 #        - is-cdra-active 
       trigger: true    
   - task: query-cdrs-state
@@ -262,8 +261,8 @@ jobs:
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       PPDM_USERNAME: admin
-      PPDM_QUERY: CLOUD_PROTECT
-      PPDM_FILTER: RUNNING
+      PPDM_QUERY: '*'
+      PPDM_FILTER: 'parentId eq null and classType in ("JOB", "CLOUD_PROTECT") and state in ("RUNNING", "QUEUED")'
 #      CDRA_STATE_FILE: cdra-state-$timestamp.json
 #  - put: cdra-state 
 #    tags: ((tags))
