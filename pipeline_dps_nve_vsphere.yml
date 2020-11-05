@@ -73,7 +73,10 @@ resources:
   icon: docker
   type: docker-image
   source:
-    repository: bottkars/dps-automation-image
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image
+    ca_certs:
+    - domain: harbor.pks.home.labbuildr.com
+      cert: ((pksdemo/pks_cert.ca))
 #    tag: v0.1
 
 

@@ -58,14 +58,14 @@ resources:
 
 
   
-- name: cdra-state
-  type: s3
-  tags: ((tags))
-  icon: folder-move
-  source:
-    <<: *s3_env
-    bucket: cdr
-    regexp: state/(.*)-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
+#- name: cdra-state
+#  type: s3
+#  tags: ((tags))
+#  icon: folder-move
+#  source:
+#    <<: *s3_env
+#    bucket: cdr
+#    regexp: state/(.*)-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
 
 
 - name: cdra-active
@@ -77,6 +77,9 @@ resources:
     <<: *s3_env
     bucket: cdr
     regexp: state/cdra-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
+    initial_path: state/cdra-state-0.0.0.json
+#    initial_version: 0.0.0
+
 
 
 - name: cdrs-state
@@ -121,7 +124,10 @@ resources:
   icon: docker
   type: docker-image
   source:
-    repository: bottkars/dps-automation-image
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image
+    ca_certs:
+    - domain: harbor.pks.home.labbuildr.com
+      cert: ((pksdemo/pks_cert.ca))
 #    tag: v0.1
 
 
@@ -141,6 +147,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: cdra-active
     - get: one-time-trigger
       trigger: true
     - get: after-midnight
@@ -160,11 +167,11 @@ jobs:
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       PPDM_USERNAME: admin
-      PPDM_QUERY: CLOUD_PROTECT
-      PPDM_FILTER: RUNNING
+      PPDM_QUERY: '*'
+      PPDM_FILTER: 'parentId eq null and category in ("CLOUD_PROTECT") and state in ("RUNNING", "QUEUED")'
       CDRA_STATE_FILE: cdra-state-$timestamp.json
   - try:
-      put: cdra-state 
+      put: cdra-active 
       tags: ((tags))
       params:
         file: cdra-state/*.json
@@ -181,8 +188,8 @@ jobs:
       tags: ((tags))
     - get: cdra-active
       tags: ((tags))
-#      passed:
-#        - is-cdra-active 
+      passed:
+        - is-cdra-active 
       trigger: true    
   - task: query-cdrs-state
     tags: ((tags))
@@ -262,7 +269,7 @@ jobs:
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       PPDM_USERNAME: admin
       PPDM_QUERY: '*'
-      PPDM_FILTER: 'parentId eq null and classType in ("JOB", "CLOUD_PROTECT") and state in ("RUNNING", "QUEUED")'
+      PPDM_FILTER: 'parentId eq null and category in ("CLOUD_PROTECT") and state in ("RUNNING", "QUEUED")'
 #      CDRA_STATE_FILE: cdra-state-$timestamp.json
 #  - put: cdra-state 
 #    tags: ((tags))
