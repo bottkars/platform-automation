@@ -110,12 +110,11 @@ resources:
   icon: docker
   type: docker-image
   source:
-    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine
+    tag: latest
     ca_certs:
     - domain: harbor.pks.home.labbuildr.com
       cert: ((pksdemo/pks_cert.ca))
-#    tag: v0.1
-
 
 - name: dps-modules
   tags: ((tags))
