@@ -210,7 +210,7 @@ resources:
   check_every: 10m  
   source:  
     uri: https://github.com/bottkars/azs-concourse.git
-    branch: master
+    branch: main
 
 
 jobs:

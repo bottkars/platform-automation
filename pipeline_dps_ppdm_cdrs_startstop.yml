@@ -28,44 +28,6 @@ resource_types:
    
 
 resources:
-# triggers
-#- name: daily-trigger
-#  icon: calendar-clock
-#  type: time
-#  source:
-#    interval: 24h
-
-
-#- name: variable
-#  icon: github
-#  type: git  
-#  source:
-#    uri: ((variable-repo))
-#    private_key: ((private_key)) 
-#    branch: master
-#    paths:
-#    - proxy.yml
-
-#- name: instant_access
-#  icon: github
-#  type: git  
-#  source:
-#    uri: ((variable-repo))
-#    private_key: ((private_key)) 
-#    branch: master
-#    paths:
-#    - instant_access.yml
-
-
-  
-#- name: cdra-state
-#  type: s3
-#  tags: ((tags))
-#  icon: folder-move
-#  source:
-#    <<: *s3_env
-#    bucket: cdr
-#    regexp: state/(.*)-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
 
 
 - name: cdra-active
@@ -90,10 +52,6 @@ resources:
     <<: *s3_env
     bucket: cdr
     regexp: state/cdrs-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
-
-
-
-
 - name: one-time-trigger
   icon: calendar-clock
   type: time
@@ -110,14 +68,14 @@ resources:
     location: Europe/Berlin 
 
 
-- name: platform-automation-image
-  tags: ((tags))
-  icon: cloud-download
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((((foundation))/buckets_pivnet_image))
-    regexp: platform-automation-image-(.*).tgz
+#- name: platform-automation-image
+#  tags: ((tags))
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((((foundation))/buckets_pivnet_image))
+#    regexp: platform-automation-image-(.*).tgz
 
 
 - name: dps-automation-image
@@ -138,7 +96,7 @@ resources:
   check_every: 10m  
   source:  
     uri: https://github.com/bottkars/dps-modules.git
-    branch: master
+    branch: main
 
 
 
@@ -215,7 +173,7 @@ jobs:
   - in_parallel:
     - get: one-time-trigger
     - get: after-midnight 
-    - get: platform-automation-image
+    - get: dps-automation-image
       tags: ((tags)) 
       params:
         unpack: true      
@@ -227,7 +185,7 @@ jobs:
       trigger: true  
   - task: start-cdrs-and-mysql
     tags: ((tags))
-    image: platform-automation-image
+    image: dps-automation-image
     file: dps-modules/ci/tasks/start-cdrs-services.yml
     input_mapping:
       dps-modules: dps-modules
@@ -282,7 +240,7 @@ jobs:
   - in_parallel:
     - get: one-time-trigger
     - get: after-midnight 
-    - get: platform-automation-image
+    - get: dps-automation-image
       tags: ((tags)) 
       params:
         unpack: true      
@@ -294,7 +252,7 @@ jobs:
       trigger: true  
   - task: stop-cdrs-and-mysql
     tags: ((tags))
-    image: platform-automation-image
+    image: dps-automation-image
     file: dps-modules/ci/tasks/stop-cdrs-services.yml
     input_mapping:
       dps-modules: dps-modules
