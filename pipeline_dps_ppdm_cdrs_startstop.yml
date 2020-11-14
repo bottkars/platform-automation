@@ -1,0 +1,262 @@
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+
+azure_env: &azure_env
+  AZURE_TENANT_ID: ((azure_emc_tenant_id))
+  AZURE_CLIENT_ID: ((azure_emc_client_id))
+  AZURE_CLIENT_SECRET: ((azure_emc_client_secret))
+  AZURE_SUBSCRIPTION_ID: ((azure_emc_subscription_id))
+
+
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+   
+
+resources:
+
+
+- name: cdra-active
+  type: s3
+  tags: ((tags))
+  check_every: 2m  
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: cdr
+    regexp: state/cdra-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
+    initial_path: state/cdra-state-0.0.0.json
+#    initial_version: 0.0.0
+
+
+
+- name: cdrs-state
+  type: s3
+  tags: ((tags))
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: cdr
+    regexp: state/cdrs-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
+- name: one-time-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+- name: after-midnight
+  type: time
+  source:
+    start: 01:00 AM
+    stop: 11:00 PM
+#    stop: ((after_midnight_end))
+    interval: 1h
+    location: Europe/Berlin 
+
+
+#- name: platform-automation-image
+#  tags: ((tags))
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((((foundation))/buckets_pivnet_image))
+#    regexp: platform-automation-image-(.*).tgz
+
+
+- name: dps-automation-image
+  icon: docker
+  type: docker-image
+  source:
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine
+    tag: latest
+    ca_certs:
+    - domain: harbor.pks.home.labbuildr.com
+      cert: ((pksdemo/pks_cert.ca))
+
+- name: dps-modules
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/dps-modules.git
+    branch: main
+
+
+
+jobs:
+- name: is-cdra-active
+  serial: true
+  plan:
+  - in_parallel:
+    - get: cdra-active
+    - get: one-time-trigger
+      trigger: true
+    - get: after-midnight
+      trigger: true  
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+  - task: query-backupstate
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/query-ppdm-activities.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PPDM_USERNAME: admin
+      PPDM_QUERY: '*'
+      PPDM_FILTER: 'parentId eq null and category in ("CLOUD_PROTECT") and state in ("RUNNING", "QUEUED")'
+      CDRA_STATE_FILE: cdra-state-$timestamp.json
+  - try:
+      put: cdra-active 
+      tags: ((tags))
+      params:
+        file: cdra-state/*.json
+      get_params:
+        regexp: state\/(.*)-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
+
+- name: is-cdrs-active
+  serial: true
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+    - get: cdra-active
+      tags: ((tags))
+      passed:
+        - is-cdra-active 
+      trigger: true    
+  - task: query-cdrs-state
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/query-cdrs-state.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PPDM_USERNAME: admin
+      CDRS_STATE_FILE: cdrs-state-$timestamp.json
+  - put: cdrs-state 
+    tags: ((tags))
+    params:
+      file: cdrs-state/*.json
+
+
+- name: start-cdrs-services
+  serial: true
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+    - get: after-midnight 
+    - get: dps-automation-image
+      tags: ((tags)) 
+      params:
+        unpack: true      
+    - get: dps-modules
+      tags: ((tags))
+    - get: cdrs-state  
+      passed: 
+        - is-cdrs-active
+      trigger: true  
+  - task: start-cdrs-and-mysql
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/start-cdrs-services.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      <<: *azure_env
+      DEBUG: "FALSE"
+      CDRS_SERVER_ID: /subscriptions/8c21cadc-9e41-459e-bf4b-919aa2fad975/resourceGroups/CDRS-RESOURCEGROUP/providers/Microsoft.Compute/virtualMachines/CDRS-Instance
+      CDRS_MYSQL_ID: /subscriptions/8c21cadc-9e41-459e-bf4b-919aa2fad975/resourceGroups/CDRS-ResourceGroup/providers/Microsoft.DBforMySQL/servers/dbserverrm6agdkrxfkwe
+#  - put: cdrs-state 
+#    tags: ((tags))
+#    params:
+#      file: cdrs-state/*.json     
+
+
+- name: cdra-sessions-done 
+  serial: true
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+    - get: after-midnight  
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+    - get: cdrs-state  
+      passed: 
+        - start-cdrs-services
+      trigger: true        
+  - task: wait-backup-done
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/wait-ppdm-activities-cdra-done.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PPDM_USERNAME: admin
+      PPDM_QUERY: '*'
+      PPDM_FILTER: 'parentId eq null and category in ("CLOUD_PROTECT") and state in ("RUNNING", "QUEUED")'
+#      CDRA_STATE_FILE: cdra-state-$timestamp.json
+#  - put: cdra-state 
+#    tags: ((tags))
+#    params:
+#      file: cdra-state/*.json 
+
+- name: stop-cdrs-services
+  serial: true
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+    - get: after-midnight 
+    - get: dps-automation-image
+      tags: ((tags)) 
+      params:
+        unpack: true      
+    - get: dps-modules
+      tags: ((tags))
+    - get: cdrs-state  
+      passed: 
+        - cdra-sessions-done
+      trigger: true  
+  - task: stop-cdrs-and-mysql
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/stop-cdrs-services.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      <<: *azure_env
+      DEBUG: "FALSE"
+      CDRS_SERVER_ID: /subscriptions/8c21cadc-9e41-459e-bf4b-919aa2fad975/resourceGroups/CDRS-RESOURCEGROUP/providers/Microsoft.Compute/virtualMachines/CDRS-Instance
+      CDRS_MYSQL_ID: /subscriptions/8c21cadc-9e41-459e-bf4b-919aa2fad975/resourceGroups/CDRS-ResourceGroup/providers/Microsoft.DBforMySQL/servers/dbserverrm6agdkrxfkwe

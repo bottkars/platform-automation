@@ -61,6 +61,14 @@ resources:
 #    sort_by: semver
 
 
+#- name: dps-automation-image
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.pivnet_image))
+#    regexp: platform-automation-image-(.*).tgz
+
 - name: dps-automation-image
   icon: docker
   type: docker-image
@@ -70,7 +78,6 @@ resources:
     ca_certs:
     - domain: harbor.pks.home.labbuildr.com
       cert: ((pksdemo/pks_cert.ca))
-
 
 - name: dps-modules
   tags: ((tags))
@@ -82,14 +89,22 @@ resources:
     branch: master
 
 ## product resources
-- name: avamar
+- name: dpc
   type: s3
   icon: folder-move
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: avamar/.*/AVE-(.*).ova
+    regexp: dpc/((DPC.VERSION))/emc-dpc-ova-(.*).ova
 
+
+- name: dpc-upgrade
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: dpc/((DPC.VERSION))/emc-dpc-(.*).jar
 
 jobs:
 #- name: get-platform-automation
@@ -103,12 +118,12 @@ jobs:
 #      params:
 #        file: platform-automation-pivnet/*image*.tgz
 
-- name: deploy-avamar-ova
+- name: deploy-dpc-ova
   plan:
   - in_parallel:
     - get: one-time-trigger
       trigger: true
-    - get: avamar
+    - get: dpc
       tags: ((tags))
       params:
         unpack: false
@@ -121,10 +136,10 @@ jobs:
   - task: deploy-ova
     tags: ((tags))
     image: dps-automation-image
-    file: dps-modules/ci/tasks/deploy-ave.yml
+    file: dps-modules/ci/tasks/deploy-dpc-vsphere.yml
     input_mapping:
       dps-modules: dps-modules
-      avamar: avamar
+      dpc: dpc
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
@@ -134,29 +149,38 @@ jobs:
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER))
       GOVC_NETWORK: ((GOVC.NETWORK))
-      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
-      AVE_FOLDER: ((AVE.FOLDER))
-      AVE_NETWORK: ((AVE.NETWORK))
-      AVE_ADDRESS: ((AVE.ADDRESS))
-      AVE_GATEWAY: ((AVE.GATEWAY))
-      AVE_NETMASK: ((AVE.NETMASK))
-      AVE_FQDN: ((AVE.FQDN))
-      AVE_VMNAME: ((AVE.VMNAME))
-      AVE_DNS: ((AVE.DNS))       
-- name: configure-avamar
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((DPC.FOLDER))/((DPC.VMNAME))
+      DPC_FOLDER: ((DPC.FOLDER))
+      DPC_NETWORK: ((DPC.NETWORK))
+      DPC_ADDRESS: ((DPC.ADDRESS))
+      DPC_GATEWAY: ((DPC.GATEWAY))
+      DPC_NETMASK: ((DPC.NETMASK))
+      DPC_FQDN: ((DPC.FQDN))
+      DPC_VMNAME: ((DPC.VMNAME))
+      DPC_DNS: ((DPC.DNS))
+      DPC_NTP: ((DPC.NTP))
+      DPC_TIMEZONE: "((DPC.TIMEZONE))"
+      DPC_ADMIN_PASSWORD: ((DPC.PASSWORD)) 
+      DPC_ROOT_PASSWORD: ((DPC.PASSWORD)) 
+      DPC_UI_PASSWORD: ((DPC.PASSWORD)) 
+      DPC_LOCKBOX_PASSWORD: ((DPC.PASSWORD))       
+       
+- name: configure-dpc
   plan:
   - in_parallel:
     - get: one-time-trigger
-      passed: [ deploy-avamar-ova ]
-      tags: ((tags))       
       trigger: true
     - get: dps-automation-image
+      passed: [ deploy-dpc-ova ]
+      params:
+        unpack: true
+      tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
-  - task: configure-avamar
+  - task: configure-dpc
     tags: ((tags))
     image: dps-automation-image
-    file: dps-modules/ci/tasks/configure-ave-vsphere.yml
+    file: dps-modules/ci/tasks/configure-dpc.yml
     input_mapping:
       dps-modules: dps-modules
     params:
@@ -164,70 +188,67 @@ jobs:
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
       GOVC_USERNAME: ((GOVC.USERNAME))
-      GOVC_VM: ((AVE.VMNAME))   
-      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
-      AVE_FQDN: ((AVE.FQDN))
-      AVE_USERNAME: root
-      AVE_PASSWORD: ((AVE.SETUP_PASSWORD))  
-      AVE_TIMEZONE: "((AVE.TIMEZONE))"
-      AVE_ADMIN_PASSWORD_OS: ((AVE.PASSWORD)) 
-      AVE_ROOT_PASSWORD_OS: ((AVE.PASSWORD))
-      AVE_COMMON_PASSWORD: ((AVE.PASSWORD))
-      AVE_SNMP_STRING: ((AVE.SNMP_STRING))
-      AVE_DATADOMAIN_HOST: ((AVE.DATADOMAIN_HOST))
-      AVE_DDBOOST_USER: ((AVE.DDBOOST_USER))
-      AVE_DDBOOST_USER_PWD: ((AVE.PASSWORD))
-      AVE_DDBOOST_USER_PWD_CF: ((AVE.PASSWORD))
-      AVE_DATADOMAIN_SYSADMIN: ((AVE.DATADOMAIN_SYSADMIN))
-      AVE_DATADOMAIN_SYSADMIN_PWD: ((AVE.DATADOMAIN_SYSADMIN_PWD))
-      AVE_TOMCAT_KEYSTORE_PASSWORD: ((AVE.PASSWORD)) 
-      AVE_AUTHC_ADMIN_PASSWORD: ((AVE.PASSWORD))
-      AVE_ADD_DATADOMAIN_CONFIG: true 
-
-- name: deploy-client-package
+      GOVC_VM: ((DPC.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((DPC.FOLDER))/((DPC.VMNAME))
+      DPC_FQDN: ((DPC.FQDN))
+      DPC_SETUP_PASSWORD: ((DPC.PASSWORD))  
+      DPC_TIMEZONE: "((DPC.TIMEZONE))"
+      DPC_ADMIN_PASSWORD_OS: ((DPC.PASSWORD)) 
+      DPC_ROOT_PASSWORD_OS: ((DPC.PASSWORD)) 
+#      DPC_SNMP_STRING: ((DPC.SNMP_STRING))
+#      DPC_DATADOMAIN_HOST: ((DPC.DATADOMAIN_HOST))
+#      DPC_STORAGE_PATH: ((DPC.STORAGE_PATH))
+#      DPC_DDBOOST_USER: ((DPC.DDBOOST_USER))
+ #     DPC_NEW_DDBOOST_USER: ((DPC.NEW_DDBOOST_USER))
+ #     DPC_DDBOOST_USER_PWD: ((DPC.PASSWORD))
+ #     DPC_DDBOOST_USER_PWD_CF: ((DPC.PASSWORD))
+ #     DPC_DATADOMAIN_SYSADMIN: ((DPC.DATADOMAIN_SYSADMIN))
+ #     DPC_DATADOMAIN_SYSADMIN_PWD: ((DPC.DATADOMAIN_SYSADMIN_PWD))
+ #     DPC_TOMCAT_KEYSTORE_PASSWORD: ((DPC.PASSWORD)) 
+ #     DPC_AUTHC_ADMIN_PASSWORD: ((DPC.PASSWORD))
+            
+- name: upgrade-dpc
   plan:
   - in_parallel:
+    - get: dpc-upgrade
+      tags: ((tags))
+      trigger: true
     - get: one-time-trigger
       passed: 
-      - configure-avamar   
-      trigger: true
+      - configure-dpc 
     - get: dps-automation-image
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
-  - task: deploy-avamar-client-package
+  - task: deploy-dpc-upgrade
     tags: ((tags))
     image: dps-automation-image
-    file: dps-modules/ci/tasks/deploy-avamar-client-avp.yml
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
     input_mapping:
       dps-modules: dps-modules
+      avi_package: dpc-upgrade
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
       GOVC_USERNAME: ((GOVC.USERNAME))
-      GOVC_VM: ((AVE.VMNAME))   
-      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
-      AVE_FQDN: ((AVE.FQDN))
-      AVE_USERNAME: root
-      AVE_PASSWORD: ((AVE.PASSWORD))  
-      AVE_UPGRADE_CLIENT_DOWNLOADS_PACKAGE: ((AVE.UPGRADE_CLIENT_DOWNLOADS_PACKAGE))
-      AVE_UPGRADE_CLIENT_DOWNLOADS_URL: ((AVE.UPGRADE_CLIENT_DOWNLOADS_URL))
-           
-- name: delete-avamar-vm
+      GOVC_VM: ((DPC.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((DPC.FOLDER))/((DPC.VMNAME))
+
+- name: delete-dpc
   plan:
   - in_parallel:
-    - get: one-time-trigger
-      passed: [ deploy-avamar-ova ]
     - get: dps-automation-image
+      params:
+        unpack: true
       tags: ((tags))
-      passed:          
+      passed: [ deploy-dpc-ova ]              
     - get: dps-modules
       tags: ((tags))
-  - task: delete-avamar
+  - task: delete-dpc
     tags: ((tags))
     image: dps-automation-image
-    file: dps-modules/ci/tasks/delete-vm.yml
+    file: dps-modules/ci/tasks/delete-dpc.yml
     input_mapping:
       dps-modules: dps-modules
     params:
@@ -239,4 +260,4 @@ jobs:
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
-      VMNAME: ((AVE.VMNAME))
+      DPC_VMNAME: ((DPC.VMNAME))
