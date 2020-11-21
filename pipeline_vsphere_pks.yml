@@ -1346,7 +1346,7 @@ jobs:
       tags: ((tags))
       params:
         unpack: true    
-  - task: request_new_certs_from _pfsense
+  - task: request-new-certs-from-pfsense
     image: platform-automation-image
     file: pfsense_modules/ci/tasks/renew_cert.yml
     params:
@@ -1382,7 +1382,7 @@ jobs:
       tags: ((tags))
       params:
         unpack: true    
-  - task: get_current_certs
+  - task: get-current-certs
     image: platform-automation-image
     file: pfsense_modules/ci/tasks/request_cert.yml
     params:
@@ -1422,7 +1422,7 @@ jobs:
   - across:
     - var: endpoints
       values: [vmw.control.home.labbuildr.com, vmw.control.stackpoc.labbuildr.com]      
-    task: check_expiration
+    task: check-expiration
     image: platform-automation-image
     file: pfsense_modules/ci/tasks/check_cert_expiration.yml
     params:
@@ -1449,7 +1449,7 @@ jobs:
       tags: ((tags))
       params:
         unpack: true    
-  - task: check_expiration
+  - task: check-expiration
     image: platform-automation-image
     file: pfsense_modules/ci/tasks/check_cert_expiration.yml
     params:
@@ -1474,7 +1474,7 @@ jobs:
       tags: ((tags))
       params:
         unpack: true    
-  - task: check_expiration
+  - task: check-expiration
     image: platform-automation-image
     file: pfsense_modules/ci/tasks/check_cert_expiration.yml
     params:
