@@ -216,7 +216,7 @@ resources:
     uri: ((template-repo))
     private_key: ((template-deploy-key.private_key))
     branch: master
-- name: pfsense_modules
+- name: pfsense-modules
   icon: github
   type: git  
   source:
@@ -1342,7 +1342,7 @@ jobs:
     - get: one-time-trigger
       tags: ((tags))
       trigger: false
-    - get: pfsense_modules
+    - get: pfsense-modules
       tags: ((tags))
       params:
         unpack: true    
@@ -1359,7 +1359,7 @@ jobs:
       PFSENSE_USERNAME: ((pfsense_user.username)) 
       PFSENSE_PASSWORD: ((pfsense_user.password))
     input_mapping:
-      pfsense_modules: pfsense_modules
+      pfsense_modules: pfsense-modules
     output_mapping: {certificates: certificates}
   - put: certstate
     tags: ((tags))      
@@ -1378,7 +1378,7 @@ jobs:
     - get: daily-trigger
       tags: ((tags))
       trigger: true
-    - get: pfsense_modules
+    - get: pfsense-modules
       tags: ((tags))
       params:
         unpack: true    
@@ -1395,7 +1395,7 @@ jobs:
       PFSENSE_USERNAME: ((pfsense_user.username)) 
       PFSENSE_PASSWORD: ((pfsense_user.password))
     input_mapping:
-      pfsense_modules: pfsense_modules
+      pfsense_modules: pfsense-modules
     output_mapping: {certificates: certificates}
   - put: certstate
     tags: ((tags))      
@@ -1415,7 +1415,7 @@ jobs:
     - get: daily-trigger
       tags: ((tags))
       trigger: true
-    - get: pfsense_modules
+    - get: pfsense-modules
       tags: ((tags))
       params:
         unpack: true  
@@ -1430,7 +1430,7 @@ jobs:
       PORT: "443"
       EXPIRE_DAYS: "15"
     input_mapping:
-      pfsense_modules: pfsense_modules
+      pfsense_modules: pfsense-modules
 
 
 - name: get-harbor-cert-expiration
@@ -1445,7 +1445,7 @@ jobs:
     - get: daily-trigger
       tags: ((tags))
       trigger: true
-    - get: pfsense_modules
+    - get: pfsense-modules
       tags: ((tags))
       params:
         unpack: true    
@@ -1457,7 +1457,7 @@ jobs:
       PORT: "443"
       EXPIRE_DAYS: "15"
     input_mapping:
-      pfsense_modules: pfsense_modules
+      pfsense_modules: pfsense-modules
 - name: get-pks-api-cert-expiration
   serial: true
   serial_groups: [ install ]
@@ -1470,7 +1470,7 @@ jobs:
     - get: daily-trigger
       tags: ((tags))
       trigger: true
-    - get: pfsense_modules
+    - get: pfsense-modules
       tags: ((tags))
       params:
         unpack: true    
@@ -1482,7 +1482,7 @@ jobs:
       PORT: "9021"
       EXPIRE_DAYS: "15"
     input_mapping:
-      pfsense_modules: pfsense_modules
+      pfsense_modules: pfsense-modules
 groups:
 - name: full
   jobs:
