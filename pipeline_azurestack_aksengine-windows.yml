@@ -150,24 +150,6 @@ resources:
     bucket: ((aks.bucket))
     regexp: ((aks.resource_group))/apimodel-(.*).json   
 
-#- name: platform-automation-pivnet
-#  tags: ((tags))
-#  icon: cloudfoundry
-#  type: pivnet
-#  source:
-#    api_token: ((pivnet-token))
-#    product_slug: platform-automation
-#    product_version: 5\.(.*)
-#    sort_by: semver
-
-#- name: platform-automation-tasks
-#  tags: ((tags))
-#  icon: cloud-download
-#  type: s3
-#  source:
-#    <<: *s3_env
-#    bucket: ((buckets_pivnet_tasks))
-#    regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
   tags: ((tags))

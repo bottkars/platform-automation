@@ -71,7 +71,15 @@ resources:
     - domain: harbor.pks.home.labbuildr.com
       cert: ((pksdemo/pks_cert.ca))
 
-
+- name: avi-automation-image
+  icon: docker
+  type: docker-image
+  source:
+    repository: harbor.pks.home.labbuildr.com/bottkars/avi-automation-image
+    tag: 0.2.0
+    ca_certs:
+    - domain: harbor.pks.home.labbuildr.com
+      cert: ((pksdemo/pks_cert.ca))
 - name: dps-modules
   tags: ((tags))
   icon: git
@@ -79,24 +87,66 @@ resources:
   check_every: 10m  
   source:  
     uri: https://github.com/bottkars/dps-modules.git
-    branch: master
+    branch: main
 
 ## product resources
 - name: avamar
   type: s3
+  check_every: 10m  
   icon: folder-move
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
     regexp: avamar/((AVE.BASEVER))/AVE-(.*).ova
-
-- name: UpgradeClientDownloads
+- name: upgrade-client-plugin-catalog
   type: s3
+  check_every: 10m  
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((AVE.BASEVER))/UpgradeClientPluginCatalog-(.*).avp
+
+
+- name: upgrade-client-downloads
+  type: s3
+  check_every: 10m  
   icon: folder-move
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
     regexp: avamar/((AVE.BASEVER))/UpgradeClientDownloads-(.*).avp
+
+- name: avamar-client-installers
+  type: s3
+  check_every: 10m  
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((AVE.BASEVER))/Avamar_Client_Installers-(.*).avp
+
+
+- name: avamar-upgrade
+  type: s3
+  check_every: 10m  
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((AVE.UPGRADEVER))/AvamarUpgrade-(.*).avp
+
+
+- name: av-platform-os-rollup
+  type: s3
+  check_every: 10m  
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/rollups/AvPlatformOsRollup_(.*)-*.avp  
+    #                      AvPlatformOsRollup_2020-R4-v8.avp
+    #                      AvPlatformOsRollup_(.*)-*.avp    
 jobs:
 #- name: get-platform-automation
 #  plan:
@@ -186,14 +236,17 @@ jobs:
       AVE_BASEVER: ((AVE.BASEVER))
 
 - name: deploy-client-package-((AVE.VMNAME))
+  serial: true
+  serial_groups: [ package-install ]
   plan:
   - in_parallel:
-    - get: UpgradeClientDownloads
+    - get: upgrade-client-downloads
       tags: ((tags))
+      trigger: true
     - get: one-time-trigger
       passed: 
       - configure-avamar-((AVE.VMNAME))   
-      trigger: true
+      trigger: false
     - get: dps-automation-image
       tags: ((tags))        
     - get: dps-modules
@@ -201,10 +254,252 @@ jobs:
   - task: deploy-avamar-client-package
     tags: ((tags))
     image: dps-automation-image
-    file: dps-modules/ci/tasks/deploy-avamar-client-avp-rest.yml
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
     input_mapping:
       dps-modules: dps-modules
-      avamar_client_package: UpgradeClientDownloads
+      avi_package: upgrade-client-downloads
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((AVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
+      AVI_FQDN: ((AVE.FQDN))
+      AVI_USERNAME: root
+      AVI_PASSWORD: ((AVE.PASSWORD)) 
+      WORKFLOW: upgrade-client-downloads
+      AVI_PACKAGE: UpgradeClientDownloads
+
+- name: deploy-upgrade-client-plugin-catalog-((AVE.VMNAME))
+  serial: true
+  serial_groups: [ package-install ]
+  plan:
+  - in_parallel:
+    - get: upgrade-client-plugin-catalog
+      tags: ((tags))
+      trigger: true
+    - get: one-time-trigger
+      passed: 
+      - configure-avamar-((AVE.VMNAME))   
+      trigger: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-upgrade-client-plugin-catalog
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
+    input_mapping:
+      dps-modules: dps-modules
+      avi_package: upgrade-client-plugin-catalog
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((AVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
+      AVI_FQDN: ((AVE.FQDN))
+      AVI_USERNAME: root
+      AVI_PASSWORD: ((AVE.PASSWORD))
+      WORKFLOW: upgrade-client-plugin-catalog
+      AVI_PACKAGE: UpgradeClientPluginCatalog
+
+- name: deploy-avamar-upgrade-((AVE.VMNAME))
+  serial: true
+  serial_groups: [ package-install ]
+  plan:
+  - in_parallel:
+    - get: avamar-upgrade
+      tags: ((tags))
+      trigger: true
+    - get: one-time-trigger
+      passed: 
+      - configure-avamar-((AVE.VMNAME))   
+      trigger: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-avamar-upgrade
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
+    input_mapping:
+      dps-modules: dps-modules
+      avi_package: avamar-upgrade
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((AVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
+      AVI_FQDN: ((AVE.FQDN))
+      AVI_USERNAME: root
+      AVI_PASSWORD: ((AVE.PASSWORD))
+      WORKFLOW: "AvamarUpgrade"
+      AVI_PACKAGE: AvamarUpgrade
+      DATA: '{"linux_root_password":"((AVE.PASSWORD))","linux_admin_password":"((AVE.PASSWORD))"}'
+
+- name: cdm-cli-history
+  plan:
+  - get: avi-automation-image
+    tags: ((tags))
+  - task: get-history
+    image: avi-automation-image
+    config:
+      platform: linux
+      params:
+        DP_SERVER: ((AVE.FQDN))
+        DP_USER: root
+        DP_PASSWORD: ((AVE.PASSWORD))
+      run: 
+        path: bash 
+        args: 
+        - "-c"
+        - |
+          cdm-cli history
+- name: cdm-cli-monitor
+  plan:
+  - get: avi-automation-image
+    tags: ((tags))
+  - task: monitor
+    image: avi-automation-image
+    config:
+      platform: linux
+      params:
+        DP_SERVER: ((AVE.FQDN))
+        DP_USER: root
+        DP_PASSWORD: ((AVE.PASSWORD))
+      run: 
+        path: bash 
+        args: 
+        - "-c"
+        - |
+          cdm-cli monitor
+- name: cdm-cli-continue
+  plan:
+  - get: avi-automation-image
+    tags: ((tags))
+  - task: continue
+    image: avi-automation-image
+    config:
+      platform: linux
+      params:
+        DP_SERVER: ((AVE.FQDN))
+        DP_USER: root
+        DP_PASSWORD: ((AVE.PASSWORD))
+      run: 
+        path: bash 
+        args: 
+        - "-c"
+        - |
+          cdm-cli continue
+
+
+- name: upgrade-avamar-proxies-((AVE.VMNAME))
+  serial: true
+  serial_groups: [ package-install ]
+  plan:
+  - in_parallel:
+    - get: avamar-upgrade
+      tags: ((tags))
+      trigger: true
+      params:
+        skip_download: "true"
+      passed: 
+      - deploy-avamar-upgrade-((AVE.VMNAME)) 
+    - get: one-time-trigger
+      passed: 
+      - deploy-avamar-upgrade-((AVE.VMNAME))  
+      trigger: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-avamar-proxy-upgrade
+    attempts: 2
+    timeout: 10m    
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/upgrade-avamar-proxy.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      DEBUG: "FALSE"
+      AVAMAR_FQDN: ((AVE.FQDN))
+      AVE_PASSWORD: ((AVE.PASSWORD))
+      AVE_USERNAME: root
+      DATACENTER_NAME: ((GOVC.DATACENTER))
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      VCENTER_NAME: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((AVE.VMNAME))   
+
+
+
+- name: deploy-avamar-client-installers-((AVE.VMNAME))
+  serial: true
+  serial_groups: [ package-install ]
+  plan:
+  - in_parallel:
+    - get: avamar-client-installers
+      tags: ((tags))
+      trigger: false
+    - get: one-time-trigger
+      passed: 
+      - configure-avamar-((AVE.VMNAME))   
+      trigger: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-avamar-client-installers
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
+    input_mapping:
+      dps-modules: dps-modules
+      avi_package: avamar-client-installers
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((AVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
+      AVI_FQDN: ((AVE.FQDN))
+      AVI_USERNAME: root
+      AVI_PASSWORD: ((AVE.PASSWORD))
+      WORKFLOW: "Avamar ((AVE.BASEVER)) Client package"
+      AVI_PACKAGE: Avamar_Client_Installers
+  
+- name: deploy-avplatformosrollup-((AVE.VMNAME))
+  plan:
+  - in_parallel:
+    - get: av-platform-os-rollup
+      tags: ((tags))
+      trigger: true
+    - get: one-time-trigger
+      passed: 
+      - configure-avamar-((AVE.VMNAME))   
+      trigger: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-rollup
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-avamar-AVPlatformOsRollup-rest.yml
+    input_mapping:
+      dps-modules: dps-modules
+      avamar_package: av-platform-os-rollup
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
@@ -215,9 +510,8 @@ jobs:
       AVE_FQDN: ((AVE.FQDN))
       AVE_USERNAME: root
       AVE_PASSWORD: ((AVE.PASSWORD))  
-      AVE_UPGRADE_CLIENT_DOWNLOADS_PACKAGE: ((AVE.UPGRADE_CLIENT_DOWNLOADS_PACKAGE))
-      AVE_UPGRADE_CLIENT_DOWNLOADS_URL: ((AVE.UPGRADE_CLIENT_DOWNLOADS_URL))
-           
+
+
 - name: delete-avamar-vm-((AVE.VMNAME))
   plan:
   - in_parallel:

@@ -116,6 +116,7 @@ resources:
     - domain: harbor.pks.home.labbuildr.com
       cert: ((pksdemo/pks_cert.ca))
 
+
 - name: dps-modules
   tags: ((tags))
   icon: git
@@ -123,7 +124,7 @@ resources:
   check_every: 10m  
   source:  
     uri: https://github.com/bottkars/dps-modules.git
-    branch: master
+    branch: main
 
 ## product resources
 - name: powerprotect
@@ -132,8 +133,17 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: powerprotect/dellemc-ppdm-sw-(([1-9]{0,2})\.([4567]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).ova #only release builds
+    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-sw-(([1-9]{0,2})\.([4567]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).ova #only release builds
 #    regexp: powerprotect/dellemc-ppdm-sw-(.*).ova   # any build
+
+
+- name: powerprotect-upgrade
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-upgrade-sw-(([1-9]{0,2})\.([4567]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).pkg #only release builds
 
 
 jobs:
@@ -177,7 +187,45 @@ jobs:
       PPDM_VMNAME: ((PPDM.VMNAME))
       PPDM_DNS: ((PPDM.DNS))
       PPDM_FOLDER: ((PPDM.FOLDER))
-       
+
+- name: upgrade-powerprotect
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+      passed: [ configure-ppdm ]
+    - get: powerprotect-upgrade
+      trigger: true
+      tags: ((tags))
+      params:
+        unpack: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: upload-ppdmsw-upgrade
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/upload-ppdm-upgrade.yml
+    input_mapping:
+      dps-modules: dps-modules
+      powerprotect-upgrade: powerprotect-upgrade
+    params:
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+  - task: upgrade-ppdmsw
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/do-ppdm-upgrade.yml
+    input_mapping:
+      dps-modules: dps-modules
+      powerprotect-upgrade: powerprotect-upgrade
+    params:
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))      
+
 - name: configure-ppdm
   plan:
   - in_parallel:

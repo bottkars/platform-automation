@@ -220,9 +220,9 @@ resources:
   icon: github
   type: git  
   source:
-    uri: git@github.com:bottkars/pfsense_modules.git
+    uri: git@github.com:bottkars/pfsense-modules.git
     private_key: ((template-deploy-key.private_key))
-    branch: master    
+    branch: main    
 - name: variable
   icon: github
   type: git  
@@ -1348,18 +1348,18 @@ jobs:
         unpack: true    
   - task: request-new-certs-from-pfsense
     image: platform-automation-image
-    file: pfsense_modules/ci/tasks/renew_cert.yml
+    file: pfsense-modules/ci/tasks/renew_cert.yml
     params:
       <<: *credhub_env
       CERT_ID: 1
-      CA_ID: 1
+      CA_ID: 2
       STORED_CERT: pks_cer
       SUBJECT: ((pks.fqdn))
       PFSENSE_FQDN: pfsense.home.labbuildr.com
       PFSENSE_USERNAME: ((pfsense_user.username)) 
       PFSENSE_PASSWORD: ((pfsense_user.password))
     input_mapping:
-      pfsense_modules: pfsense-modules
+      pfsense-modules: pfsense-modules
     output_mapping: {certificates: certificates}
   - put: certstate
     tags: ((tags))      
@@ -1384,18 +1384,18 @@ jobs:
         unpack: true    
   - task: get-current-certs
     image: platform-automation-image
-    file: pfsense_modules/ci/tasks/request_cert.yml
+    file: pfsense-modules/ci/tasks/request_cert.yml
     params:
       <<: *credhub_env
       CERT_ID: 1
-      CA_ID: 1
+      CA_ID: 2
       STORED_CERT: pks_cer
       SUBJECT: ((pks.fqdn))
       PFSENSE_FQDN: pfsense.home.labbuildr.com
       PFSENSE_USERNAME: ((pfsense_user.username)) 
       PFSENSE_PASSWORD: ((pfsense_user.password))
     input_mapping:
-      pfsense_modules: pfsense-modules
+      pfsense-modules: pfsense-modules
     output_mapping: {certificates: certificates}
   - put: certstate
     tags: ((tags))      
@@ -1424,13 +1424,13 @@ jobs:
       values: [vmw.control.home.labbuildr.com, vmw.control.stackpoc.labbuildr.com]      
     task: check-expiration
     image: platform-automation-image
-    file: pfsense_modules/ci/tasks/check_cert_expiration.yml
+    file: pfsense-modules/ci/tasks/check_cert_expiration.yml
     params:
       SUBJECT: ((.:endpoints))
       PORT: "443"
       EXPIRE_DAYS: "15"
     input_mapping:
-      pfsense_modules: pfsense-modules
+      pfsense-modules: pfsense-modules
 
 
 - name: get-harbor-cert-expiration
@@ -1451,13 +1451,13 @@ jobs:
         unpack: true    
   - task: check-expiration
     image: platform-automation-image
-    file: pfsense_modules/ci/tasks/check_cert_expiration.yml
+    file: pfsense-modules/ci/tasks/check_cert_expiration.yml
     params:
       SUBJECT: harbor.((pks.fqdn))
       PORT: "443"
       EXPIRE_DAYS: "15"
     input_mapping:
-      pfsense_modules: pfsense-modules
+      pfsense-modules: pfsense-modules
 - name: get-pks-api-cert-expiration
   serial: true
   serial_groups: [ install ]
@@ -1476,13 +1476,13 @@ jobs:
         unpack: true    
   - task: check-expiration
     image: platform-automation-image
-    file: pfsense_modules/ci/tasks/check_cert_expiration.yml
+    file: pfsense-modules/ci/tasks/check_cert_expiration.yml
     params:
       SUBJECT: api.((pks.fqdn))
       PORT: "9021"
       EXPIRE_DAYS: "15"
     input_mapping:
-      pfsense_modules: pfsense-modules
+      pfsense-modules: pfsense-modules
 groups:
 - name: full
   jobs:

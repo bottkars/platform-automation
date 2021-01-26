@@ -142,7 +142,8 @@ jobs:
       AVE_NETMASK: ((AVE.NETMASK))
       AVE_FQDN: ((AVE.FQDN))
       AVE_VMNAME: ((AVE.VMNAME))
-      AVE_DNS: ((AVE.DNS))       
+      AVE_DNS: ((AVE.DNS))  
+           
 - name: configure-avamar
   plan:
   - in_parallel:

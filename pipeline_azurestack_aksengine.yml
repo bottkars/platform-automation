@@ -6,19 +6,21 @@ s3_env: &s3_env
   secret_access_key: ((s3_secret_access_key))
 azure_env: &azure_env
   PROFILE: ((azs.arm_profile))
-  CA_CERT: ((azs_ca.certificate))
-  AZURE_CLI_CA_PATH: /opt/az/lib/python3.6/site-packages/certifi/cacert.pem
+  CA_CERT: ((azs.azs_ca.certificate))
+  AZURE_CLI_CA_PATH: /usr/lib/python3.8/site-packages/certifi/cacert.pem
   ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
   VAULT_DNS:  ((azs.vault_dns))
   SUFFIX_STORAGE_ENDPOINT: ((azs.suffix_storage_endpoint))
-  AZURE_TENANT_ID: ((tenant_id))
-  AZURE_CLIENT_ID: ((client_id))
-  AZURE_CLIENT_SECRET: ((client_secret))
-  AZURE_SUBSCRIPTION_ID: ((subscription_id))
+  AZURE_TENANT_ID: ((azs.tenant_id))
+  AZURE_CLIENT_ID: ((azs.client_id))
+  AZURE_CLIENT_SECRET: ((azs.client_secret))
+  AZURE_SUBSCRIPTION_ID: ((azs.subscription_id))
   RESOURCE_GROUP: ((aks.resource_group))
   LOCATION: ((azs.azurestack_region))
 aks_env: &aks_env
   AKS_ORCHESTRATOR_RELEASE: ((aks.orchestrator_release))
+  AKS_ORCHESTRATOR_TYPE: ((aks.orchestrator_type))
+  AKS_ORCHESTRATOR_VERSION: ((aks.orchestrator_version))
   AKS_MASTER_DNS_PREFIX: ((aks.master.dns_prefix))
   AKS_MASTER_VMSIZE: ((aks.master.vmsize))
   AKS_MASTER_NODE_COUNT: ((aks.master.node_count))
@@ -151,6 +153,16 @@ resources:
     <<: *s3_env
     bucket: ((aks.bucket))
     regexp: ((aks.resource_group))/kubeconfig-(.*).json  
+
+- name: k8stoken     
+  tags: ((tags))
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/ppdmk8stoken-(.*).json 
+
 - name: apimodel
   tags: ((tags))
   icon: cloud-download
@@ -159,44 +171,36 @@ resources:
     <<: *s3_env
     bucket: ((aks.bucket))
     regexp: ((aks.resource_group))/apimodel-(.*).json   
-
-#- name: platform-automation-pivnet
-#  tags: ((tags))
-#  icon: cloudfoundry
-#  type: pivnet
-#  source:
-#    api_token: ((pivnet-token))
-#    product_slug: platform-automation
-#    product_version: 5\.(.*)
-#    sort_by: semver
-
-#- name: platform-automation-tasks
-#  tags: ((tags))
-#  icon: cloud-download
-#  type: s3
-#  source:
-#    <<: *s3_env
-#    bucket: ((buckets_pivnet_tasks))
-#    regexp: platform-automation-tasks-(.*).zip
-
-- name: platform-automation-image
+- name: tmcmanifest
   tags: ((tags))
   icon: cloud-download
   type: s3
   source:
     <<: *s3_env
-    bucket: ((buckets_pivnet_image))
-    regexp: platform-automation-image-(.*).tgz
+    bucket: ((aks.bucket))
+    regexp: ((aks.resource_group))/k8s-attach-manifest-(.*).yaml  
 
-- name: yaml2json-release
+
+
+- name: dps-automation-image
   tags: ((tags))
-  icon: github
-  type: github-release
-  check_every: 10m  
-  source: 
-    owner: bronze1man
-    repository: yaml2json
+  icon: docker
+  type: docker-image
+  source:
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine
+    tag: latest
+    ca_certs:
+    - domain: harbor.pks.home.labbuildr.com
+      cert: ((pks_cert.ca))
 
+- name: dps-modules
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/dps_modules.git
+    branch: main  
 
 
 - name: sonobuoy-release
@@ -207,8 +211,6 @@ resources:
   source: 
     owner: vmware-tanzu
     repository: sonobuoy
-
-    
 
 
 - name: aks-engine-release
@@ -221,41 +223,6 @@ resources:
     repository: aks-engine
     tag_filter: ((aks.engine_tagfilter))
 
-- name: bosh-cli-release
-  tags: ((tags))
-  icon: github
-  type: github-release
-  check_every: 10m  
-  source: 
-    owner: cloudfoundry
-    repository: bosh-cli  
-
-- name: cf-values
-  tags: ((tags))
-  icon: cloud-download
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((aks.bucket))
-    regexp: ((aks.resource_group))/cf-values-(.*).yml  
-
-- name: cf-for-k8s-master
-  tags: ((tags))
-  type: git
-  icon: github-box
-  check_every: 10m  
-  source:
-    branch: master
-    uri: https://github.com/cloudfoundry/cf-for-k8s.git
-#- name: kubectl-release
-#  tags: ((tags))
-#  icon: github
-#  type: github-release
-#  check_every: 10m  
-#  source: 
-#    owner: kubernetes
-#    repository: kubectl
-#    tag_filter: "v0.17.3" #v?([0-9.]*)
 
 
 - name: apimodel-json
@@ -291,14 +258,14 @@ jobs:
         - aks-engine-*-linux-amd64.tar.gz
     - get: azs-concourse
       tags: ((tags))
-    - get: platform-automation-image
+    - get: dps-automation-image
       tags: ((tags))
       params:
         unpack: true
   - task: deploy-cluster
     tags: ((tags))
     file: azs-concourse/ci/tasks/deploy-aks.yml  
-    image: platform-automation-image
+    image: dps-automation-image
     input_mapping:
       aks-engine: aks-engine-release
     params:
@@ -335,14 +302,14 @@ jobs:
         - aks-engine-*-linux-amd64.tar.gz
     - get: azs-concourse
       tags: ((tags))
-    - get: platform-automation-image
+    - get: dps-automation-image
       tags: ((tags))
       params:
         unpack: true
   - task: query-aks-agent-pool
     tags: ((tags))
     file: azs-concourse/ci/tasks/query-aks-agent-pool.yml  
-    image: platform-automation-image
+    image: dps-automation-image
     input_mapping:
       aks-engine: aks-engine-release
       current-installation: installation
@@ -383,14 +350,14 @@ jobs:
       tags: ((tags))
       passed:
       - validate-aks-cluster      
-    - get: platform-automation-image
+    - get: dps-automation-image
       tags: ((tags))
       params:
         unpack: true
   - task: upgrade-cluster
     tags: ((tags))
     file: azs-concourse/ci/tasks/upgrade-aks.yml  
-    image: platform-automation-image
+    image: dps-automation-image
     input_mapping:
       aks-engine: aks-engine-release
       current-installation: installation
@@ -435,14 +402,14 @@ jobs:
       - validate-aks-cluster          
     - get: azs-concourse
       tags: ((tags))
-    - get: platform-automation-image
+    - get: dps-automation-image
       tags: ((tags))
       params:
         unpack: true
   - task: scale-cluster
     tags: ((tags))
     file: azs-concourse/ci/tasks/scale-aks.yml  
-    image: platform-automation-image
+    image: dps-automation-image
     input_mapping:
       aks-engine: aks-engine-release
       current-installation: installation
@@ -478,14 +445,12 @@ jobs:
         - sonobuoy_*_linux_amd64.tar.gz         
     - get: azs-concourse
       tags: ((tags))
-    - get: platform-automation-image
+    - get: dps-automation-image
       tags: ((tags))
-      params:
-        unpack: true        
   - task: validate-cluster
     tags: ((tags))
     file: azs-concourse/ci/tasks/validate-kubernetes-cluster.yml  
-    image: platform-automation-image
+    image: dps-automation-image
     params:
       SONOBUOY_MODE: quick #certified-conformance #  Valid modes are non-disruptive-conformance, quick, certified-conformance. (default non-disruptive-conformance)
   - put: sonobuoy-results
@@ -493,6 +458,29 @@ jobs:
     params:
       file: validation-report/*_sonobuoy_*.tar.gz   
 
+- name: attach-aks-cluster-to-tmc
+  serial: true
+  plan:
+  - in_parallel:
+    - get: kubeconfig
+      passed: 
+      - deploy-aks-cluster
+      trigger: false    
+    - get: dps-automation-image  
+    - get: dps-modules  
+  - task: attach-cluster-to-tmc
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/attach-k8s-to-tmc.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      DEBUG: "FALSE"
+      TMC_API_TOKEN: ((TMC.API_TOKEN))
+      TMC_CONTEXT: ((TMC.CONTEXT))
+      TMC_CLUSTERGROUP: ((TMC.CLUSTERGROUP))
+  - put: tmcmanifest
+    params:
+      file: tmcmanifest/k8s-attach-manifest-*.yaml
 
 
 - name: install-kubeapps
@@ -505,68 +493,46 @@ jobs:
 #    - get: kubectl-release          
     - get: azs-concourse
       tags: ((tags))
-    - get: platform-automation-image
+    - get: dps-automation-image
       tags: ((tags))
-      params:
-        unpack: true        
   - task: install-bitnami-kubeapps
     tags: ((tags))
     file: azs-concourse/ci/tasks/install-kubeapps.yml  
-    image: platform-automation-image
+    image: dps-automation-image
  
 
 - name: delete-aks-cluster
   plan:
   - get: azs-concourse
     tags: ((tags))
-  - get: platform-automation-image
+  - get: dps-automation-image
     tags: ((tags))
-    params:
-      unpack: true
   - task: delete-rg
     tags: ((tags))
-    image: platform-automation-image
+    image: dps-automation-image
     file: azs-concourse/ci/tasks/delete-resourcegroup.yml  
     params:
       <<: *azure_env 
     
-
-        
-- name: deploy-cf-for-k8s
+- name: configure-ppdm-aks-cluster
+  serial: true
   plan:
   - in_parallel:
     - get: kubeconfig
-      tags: ((tags))
-      passed:
-      - scale-aks-cluster
-      trigger: true      
-  - get: cf-for-k8s-master
-    tags: ((tags))
-  - get: azs-concourse
-    tags: ((tags))
-  - get: platform-automation-image
-    tags: ((tags))
-    params:
-      unpack: true
-  - get: bosh-cli-release
-    tags: ((tags))
-    params:
-      globs:
-      - bosh-cli-*-linux-amd64
-  - get: yaml2json-release
-    tags: ((tags))
-    params:
-      globs:
-      - "*_linux_amd64"        
-  - task: deploy-cf-for-k8s-master
-    tags: ((tags))
-    file: azs-concourse/ci/tasks/deploy-cf-for-k8s.yml  
-    image: platform-automation-image
+      passed: 
+      - deploy-aks-cluster    
+      trigger: false
+    - get: dps-automation-image  
+    - get: dps-modules
+  - task: configure-aks-cluster
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/configure-k8s-ppdm.yml
+    input_mapping:
+      dps-modules: dps-modules
     params:
       <<: *azure_env
-      DNS_DOMAIN: ((cf_k8s_domain))
-      GCR_CRED: ((gcr_cred))
-  - put: cf-values
-    tags: ((tags))
+      DEBUG: "FALSE"
+      RUN_PPDM_PLAYBOOK: "FALSE"
+  - put: k8stoken
     params:
-      file: cf-values/cf-values-*.yml 
+      file: k8stoken/ppdmk8stoken-*.json 
