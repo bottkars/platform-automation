@@ -8,7 +8,7 @@ azure_env: &azure_env
   PROFILE: ((azs.arm_profile))
   CA_CERT: ((azs.azs_ca.certificate))
   AZURE_CLI_CA_PATH: /usr/lib/python3.8/site-packages/certifi/cacert.pem
-  ENDPOINT_RESOURCE_MANAGER: ((endpoint-resource-manager)) 
+  ENDPOINT_RESOURCE_MANAGER: ((azs.endpoint-resource-manager)) 
   VAULT_DNS:  ((azs.vault_dns))
   SUFFIX_STORAGE_ENDPOINT: ((azs.suffix_storage_endpoint))
   AZURE_TENANT_ID: ((azs.tenant_id))

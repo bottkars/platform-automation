@@ -269,7 +269,7 @@ jobs:
       AVI_USERNAME: root
       AVI_PASSWORD: ((AVE.PASSWORD)) 
       WORKFLOW: upgrade-client-downloads
-      AVI_PACKAGE: UpgradeClientDownloads
+      AVI_PACKAGE: UpgradeClientDownloads-
 
 - name: deploy-upgrade-client-plugin-catalog-((AVE.VMNAME))
   serial: true
@@ -305,7 +305,7 @@ jobs:
       AVI_USERNAME: root
       AVI_PASSWORD: ((AVE.PASSWORD))
       WORKFLOW: upgrade-client-plugin-catalog
-      AVI_PACKAGE: UpgradeClientPluginCatalog
+      AVI_PACKAGE: UpgradeClientPluginCatalog-
 
 - name: deploy-avamar-upgrade-((AVE.VMNAME))
   serial: true
@@ -341,7 +341,7 @@ jobs:
       AVI_USERNAME: root
       AVI_PASSWORD: ((AVE.PASSWORD))
       WORKFLOW: "AvamarUpgrade"
-      AVI_PACKAGE: AvamarUpgrade
+      AVI_PACKAGE: AvamarUpgrade-
       DATA: '{"linux_root_password":"((AVE.PASSWORD))","linux_admin_password":"((AVE.PASSWORD))"}'
 
 - name: cdm-cli-history
@@ -477,9 +477,11 @@ jobs:
       AVI_USERNAME: root
       AVI_PASSWORD: ((AVE.PASSWORD))
       WORKFLOW: "Avamar ((AVE.BASEVER)) Client package"
-      AVI_PACKAGE: Avamar_Client_Installers
+      AVI_PACKAGE: Avamar_Client_Installers-
   
 - name: deploy-avplatformosrollup-((AVE.VMNAME))
+  serial: true
+  serial_groups: [ package-install ]
   plan:
   - in_parallel:
     - get: av-platform-os-rollup
@@ -493,13 +495,13 @@ jobs:
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
-  - task: deploy-rollup
+  - task: deploy-avplatformosrollup
     tags: ((tags))
     image: dps-automation-image
-    file: dps-modules/ci/tasks/deploy-avamar-AVPlatformOsRollup-rest.yml
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
     input_mapping:
       dps-modules: dps-modules
-      avamar_package: av-platform-os-rollup
+      avi_package: av-platform-os-rollup
     params:
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
@@ -507,9 +509,12 @@ jobs:
       GOVC_USERNAME: ((GOVC.USERNAME))
       GOVC_VM: ((AVE.VMNAME))   
       GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
-      AVE_FQDN: ((AVE.FQDN))
-      AVE_USERNAME: root
-      AVE_PASSWORD: ((AVE.PASSWORD))  
+      AVI_FQDN: ((AVE.FQDN))
+      AVI_USERNAME: root
+      AVI_PASSWORD: ((AVE.PASSWORD))
+      DATA: {"linux_root_password":"((AVE.PASSWORD))"}
+      WORKFLOW: "AvPlatformOsRollup_"
+      AVI_PACKAGE: AvPlatformOsRollup_
 
 
 - name: delete-avamar-vm-((AVE.VMNAME))
