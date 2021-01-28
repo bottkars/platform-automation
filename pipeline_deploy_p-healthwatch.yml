@@ -88,11 +88,7 @@ resource_types:
   source:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
-- name: slack-notification
-  tags: ((tags))
-  type: docker-image
-  source:
-    repository: cfcommunity/slack-notification-resource    
+
 resources:
 - name: additional-tasks
   icon: cloud-download
@@ -113,12 +109,7 @@ resources:
     interval: 24h
     location: Europe/Berlin 
 # notifications
-- name: notify
-  tags: ((tags))
-  icon: bell
-  type: slack-notification
-  source:
-    url: ((slack.webhook))
+
 - name: installation
   tags: ((tags))
   icon: cloud-download
@@ -156,7 +147,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((((foundation))/buckets_pivnet_products))
-    regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]healthwatch-.*.pivotal
+    regexp: p-healthwatch-product/\[p-healthwatch,(.*)\]p-healthwatch-.*.pivotal
 
 - name: p-healthwatch-stemcell
   tags: ((tags))
@@ -244,11 +235,6 @@ jobs:
 
 ## 
 - name: get-p-healthwatch
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
   serial: true
   serial_groups: [ get-products ]
   plan:
@@ -305,11 +291,6 @@ jobs:
 
 ##
 - name: upload-and-stage-p-healthwatch
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
   serial: true
   serial_groups:
   - apply
@@ -395,16 +376,6 @@ jobs:
 ##
 
 - name: configure-p-healthwatch
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
-
-#  serial_groups:
-#  - apply
-#  - configure-products
-#  serial: true
   plan:
   - in_parallel:
     - get: pipeline-lock
@@ -444,13 +415,6 @@ jobs:
 
 ##
 - name: apply-product-changes
-#  serial_groups: 
-#    - apply
-  on_failure:
-    put: notify
-    tags: ((tags))
-    params:
-      <<: *slack_failed_param
   serial: true
   plan:
   - in_parallel: 
