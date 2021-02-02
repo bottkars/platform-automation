@@ -478,6 +478,7 @@ jobs:
       AVI_PASSWORD: ((AVE.PASSWORD))
       WORKFLOW: "Avamar ((AVE.BASEVER)) Client package"
       AVI_PACKAGE: Avamar_Client_Installers-
+      DEPLOY: "false"
   
 - name: deploy-avplatformosrollup-((AVE.VMNAME))
   serial: true
