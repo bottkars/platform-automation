@@ -421,8 +421,8 @@ jobs:
     - get: dps-modules
       tags: ((tags))
   - task: deploy-avamar-proxy-upgrade
-    attempts: 2
-    timeout: 10m    
+    attempts: 10
+    timeout: 20m    
     tags: ((tags))
     image: dps-automation-image
     file: dps-modules/ci/tasks/upgrade-avamar-proxy.yml
@@ -450,7 +450,7 @@ jobs:
   - in_parallel:
     - get: avamar-client-installers
       tags: ((tags))
-      trigger: false
+      trigger: true
     - get: one-time-trigger
       passed: 
       - configure-avamar-((AVE.VMNAME))   

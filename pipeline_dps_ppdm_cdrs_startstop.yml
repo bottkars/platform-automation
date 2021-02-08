@@ -125,7 +125,7 @@ jobs:
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       PPDM_USERNAME: admin
       PPDM_QUERY: '*'
-      PPDM_FILTER: 'parentId eq null and category in ("CLOUD_PROTECT") and state in ("RUNNING", "QUEUED")'
+      PPDM_FILTER: 'category in ("CLOUD_PROTECT") and state in ("RUNNING")'
       CDRA_STATE_FILE: cdra-state-$timestamp.json
   - try:
       put: cdra-active 
