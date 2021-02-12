@@ -527,7 +527,7 @@ jobs:
     - get: kubeconfig
       passed: 
       - deploy-aks-cluster    
-      trigger: false
+      trigger: true
     - get: dps-automation-image  
     - get: dps-modules
   - task: configure-aks-cluster
