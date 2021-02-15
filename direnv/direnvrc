@@ -436,8 +436,13 @@ unset CREDHUB_SECRET
 }
 
 use_get-kubeconfig(){
-export_alias get-kubeconfig 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/kubeconfig | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./kubeconfig.json'
-chmod 600 ./kubeconfig.json
+export_alias get-kubeconfig 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/kubeconfig | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./kubeconfig.json
+chmod 600 ./kubeconfig.json'
+}
+
+use_get-ppdmtoken(){
+export_alias get-ppdmtoken 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/ppdmk8stoken | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./ppdmtoken.json
+chmod 600 ./ppdmtoken.json'
 }
 
 use_get-cfadmin(){
