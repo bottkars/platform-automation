@@ -203,7 +203,7 @@ resources:
   tags: ((tags))
   icon: git
   type: git
-  check_every: 10m  
+  check_every: 1h  
   source:  
     uri: https://github.com/bottkars/dps_modules.git
     branch: main  
@@ -213,8 +213,9 @@ resources:
   tags: ((tags))
   icon: github
   type: github-release
-  check_every: 10m  
+  check_every: 24h  
   source: 
+    private_key: ((((foundation))/template-deploy-key.private_key))
     owner: vmware-tanzu
     repository: sonobuoy
 
@@ -223,7 +224,7 @@ resources:
   tags: ((tags))
   icon: github
   type: github-release
-  check_every: 10m  
+  check_every: 24h  
   source: 
     owner: Azure
     repository: aks-engine
@@ -243,7 +244,7 @@ resources:
   tags: ((tags))
   icon: git
   type: git
-  check_every: 10m  
+  check_every: 1h
   source:  
     uri: https://github.com/bottkars/azs-concourse.git
     branch: ((azs_concourse_branch))
