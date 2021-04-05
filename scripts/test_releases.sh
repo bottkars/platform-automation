@@ -20,7 +20,8 @@ RELEASES="cloudfoundry, garden-runc-release,
             vito, grafana-boshrelease, 
             concourse, concourse-bosh-release, 
             pivotal, credhub-release,
-            minio, minio-boshrelease"
+            minio, minio-boshrelease,
+            cloudfoundry-incubator, backup-and-restore-sdk-release" 
 unset REPO RELEASE VERSION
 set -u
 while IFS=", " read -r REPO RELEASE; do
