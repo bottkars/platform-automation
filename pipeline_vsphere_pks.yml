@@ -136,7 +136,8 @@ resource_types:
 #  type: docker-image
 #  source:
 #    repository: cfcommunity/slack-notification-resource    
-
+display:
+  background_image: https://www.linux.com/wp-content/uploads/2019/08/kubernetes-cluster.jpg
 resources:
 # triggers
 - name: daily-trigger
@@ -1307,9 +1308,9 @@ jobs:
       tags: ((tags))
     - get: certstate  
       trigger: true
-      passed:
-      - issue-pks-cert-request
-      - get-certs-from-pfsense
+ #     passed:
+ #      - issue-pks-cert-request
+ #     - get-certs-from-pfsense
     - get: platform-automation-tasks
       tags: ((tags))
       params:
@@ -1351,8 +1352,8 @@ jobs:
     file: pfsense-modules/ci/tasks/renew_cert.yml
     params:
       <<: *credhub_env
-      CERT_ID: 1
-      CA_ID: 2
+      CERT_ID: 5eb01b9fb4a5c
+      CA_ID: 5fd18523bfac0
       STORED_CERT: pks_cer
       SUBJECT: ((pks.fqdn))
       PFSENSE_FQDN: pfsense.home.labbuildr.com
@@ -1387,8 +1388,8 @@ jobs:
     file: pfsense-modules/ci/tasks/request_cert.yml
     params:
       <<: *credhub_env
-      CERT_ID: 1
-      CA_ID: 2
+      CERT_ID: 5eb01b9fb4a5c
+      CA_ID: 5fd18523bfac0
       STORED_CERT: pks_cer
       SUBJECT: ((pks.fqdn))
       PFSENSE_FQDN: pfsense.home.labbuildr.com

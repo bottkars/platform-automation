@@ -146,6 +146,10 @@ resources:
     regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-upgrade-sw-(([1-9]{0,2})\.([4567]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).pkg #only release builds
 
 
+
+display:
+  background_image: https://corporate.delltechnologies.com/content/dam/delltechnologies/assets/corporate/images/newsroom/promos/powerprotect-x400.png
+  #  https://www.emc.com/content/dam/uwaem/production-design-assets/en/data-protection/dataprotectionsuite/images/leadspace-data-protection-family-large.jpg
 jobs:
 
 - name: deploy-powerprotect-ova
