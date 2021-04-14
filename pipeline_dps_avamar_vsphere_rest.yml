@@ -490,7 +490,7 @@ jobs:
   - in_parallel:
     - get: av-platform-os-rollup
       tags: ((tags))
-      trigger: true
+      trigger: FALSE
     - get: one-time-trigger
       passed: 
       - configure-avamar-((AVE.VMNAME))   
