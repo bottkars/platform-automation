@@ -143,7 +143,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-upgrade-sw-(([1-9]{0,2})\.([4567]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).pkg #only release builds
+    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-upgrade-sw-(([1-9]{0,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).pkg #only release builds
 
 
 
