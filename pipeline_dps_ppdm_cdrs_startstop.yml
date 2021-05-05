@@ -101,7 +101,8 @@ resources:
 
 jobs:
 - name: is-cdra-active
-  serial: true
+  serial_groups : 
+    - CDRS_STAGE
   plan:
   - in_parallel:
     - get: cdra-active
@@ -136,7 +137,8 @@ jobs:
         regexp: state\/(.*)-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
 
 - name: is-cdrs-active
-  serial: true
+  serial_groups : 
+    - CDRS_STAGE
   plan:
   - in_parallel:
     - get: dps-automation-image
@@ -167,7 +169,8 @@ jobs:
 
 
 - name: start-cdrs-services
-  serial: true
+  serial_groups : 
+    - CDRS_STAGE
   plan:
   - in_parallel:
     - get: one-time-trigger
@@ -200,7 +203,8 @@ jobs:
 
 
 - name: cdra-sessions-done 
-  serial: true
+  serial_groups : 
+    - CDRS_STAGE
   plan:
   - in_parallel:
     - get: one-time-trigger
@@ -234,7 +238,8 @@ jobs:
 #      file: cdra-state/*.json 
 
 - name: stop-cdrs-services
-  serial: true
+  serial_groups : 
+    - CDRS_STAGE
   plan:
   - in_parallel:
     - get: one-time-trigger
