@@ -448,7 +448,10 @@ chmod 600 ./ppdmtoken.json'
 use_get-cfadmin(){
 export_alias get-cfadmin 'bosh interpolate ${PWD}/cf-values.yml --path=/cf_admin_password'
 }
-
+use_tfalias (){
+local tfversion=$1
+export_alias terraform "terraform${tfversion} \$@"
+}
 use_get-cfvalues(){
 export_alias get-cfvalues 'mc cp ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/$(mc ls ${CONCOURSE_TARGET}/aks/${AKS_CLUSTER}/cf-val | sort | tail -n 1 | awk '"'"'{print $5}'"'"') ./cf-values.yml'        
 }
