@@ -248,7 +248,8 @@ resources:
   source:  
     uri: https://github.com/bottkars/azs-concourse.git
     branch: ((azs_concourse_branch))
-
+display:
+  background_image: https://azurecomcdn.azureedge.net/cvt-0ae2bfb185688cefc969d084e7e88d4937bf929a02f81389fb2d6bc0998fc171/images/page/services/kubernetes-service/accelerate.png
 
 jobs:
 - name: deploy-aks-cluster
