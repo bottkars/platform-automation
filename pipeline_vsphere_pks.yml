@@ -1422,7 +1422,7 @@ jobs:
         unpack: true  
   - across:
     - var: endpoints
-      values: [vmw.control.home.labbuildr.com, vmw.control.stackpoc.labbuildr.com]      
+      values: [vmw.control.home.labbuildr.com]      
     task: check-expiration
     image: platform-automation-image
     file: pfsense-modules/ci/tasks/check_cert_expiration.yml
