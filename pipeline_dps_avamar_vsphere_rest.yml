@@ -110,7 +110,7 @@ resources:
 
 - name: upgrade-client-downloads
   type: s3
-  check_every: 10m  
+  check_every: never  
   icon: folder-move
   source:
     <<: *s3_env
@@ -119,7 +119,7 @@ resources:
 
 - name: avamar-client-installers
   type: s3
-  check_every: 10m  
+  check_every: never  
   icon: folder-move
   source:
     <<: *s3_env
@@ -129,7 +129,7 @@ resources:
 
 - name: avamar-upgrade
   type: s3
-  check_every: 10m  
+  check_every: never  
   icon: folder-move
   source:
     <<: *s3_env
@@ -139,7 +139,7 @@ resources:
 
 - name: av-platform-os-rollup
   type: s3
-  check_every: 10m  
+  check_every: never  
   icon: folder-move
   source:
     <<: *s3_env
