@@ -86,7 +86,7 @@ resources:
   check_every: 10m  
   source:  
     uri: https://github.com/bottkars/dps-modules.git
-    branch: master
+    branch: main
 
 ## product resources
 - name: networker
@@ -95,7 +95,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: networker/((NVE.VERSION))/NVE-(.*).ova
+    regexp: networker/((NVE.BASEVER))/NVE-(.*).ova
 
 
 - name: networker-upgrade
@@ -104,7 +104,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: networker/((NVE.VERSION))/NveUpgrade-(.*).avp
+    regexp: networker/((NVE.UPGRADEVER))/NveUpgrade-(.*).avp
 
 jobs:
 #- name: get-platform-automation
