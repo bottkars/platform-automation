@@ -173,7 +173,7 @@ jobs:
   - task: configure-nve
     tags: ((tags))
     image: dps-automation-image
-    file: dps-modules/ci/tasks/configure-nve.yml
+    file: dps-modules/ci/tasks/configure-nve-rest.yml
     input_mapping:
       dps-modules: dps-modules
     params:
@@ -183,7 +183,7 @@ jobs:
       GOVC_USERNAME: ((GOVC.USERNAME))
       GOVC_VM: ((NVE.VMNAME))   
       GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
-      NVE_FQDN: ((NVE.FQDN))
+      AVI_FQDN: ((NVE.FQDN))
       NVE_SETUP_PASSWORD: ((NVE.PASSWORD))  
       NVE_TIMEZONE: "((NVE.TIMEZONE))"
       NVE_ADMIN_PASSWORD_OS: ((NVE.PASSWORD)) 
@@ -221,6 +221,7 @@ jobs:
       dps-modules: dps-modules
       avi_package: networker-upgrade
     params:
+      DEBUG: TRUE
       GOVC_INSECURE: ((GOVC.INSECURE))
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
@@ -228,9 +229,11 @@ jobs:
       GOVC_VM: ((NVE.VMNAME))   
       GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
       AVI_FQDN: ((NVE.FQDN))
-      AVI_USERNAME: ((NVE.USERNAME))
+      AVI_USERNAME: root
       AVI_PASSWORD: ((NVE.PASSWORD))  
-      AVI_PACKAGE: NveUpgrade
+      AVI_PACKAGE: "NveUpgrade-"
+      WORKFLOW: "NveUpgrade"
+      DATA: '{"linux_root_password":"((NVE.PASSWORD))","linux_admin_password":"((NVE.PASSWORD))"}'      
 - name: delete-nve
   plan:
   - in_parallel:

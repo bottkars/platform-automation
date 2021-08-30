@@ -14,12 +14,13 @@ credhub_env: &credhub_env
 
 
 
-resource_types:
-- name: pivnet
-  type: docker-image
-  source:
-    repository: pivotalcf/pivnet-resource
-    tag: latest-final
+
+#resource_types:
+#- name: pivnet
+#  type: docker-image
+#  source:
+#    repository: pivotalcf/pivnet-resource
+#    tag: latest-final
    
 
 resources:
@@ -30,6 +31,14 @@ resources:
 #  source:
 #    interval: 24h
 
+- name: dps-ansible
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: git@github.com:bottkars/ansible_dps.git
+    branch: main
+    private_key: ((((foundation))/ansible_dps_git.private_key))
 
 - name: one-time-trigger
   icon: calendar-clock
@@ -80,6 +89,8 @@ jobs:
   - in_parallel:
     - get: one-time-trigger
       trigger: true
+    - get: dps-ansible
+      tags: ((tags))      
     - get: ddve
       tags: ((tags))
       params:
@@ -97,6 +108,8 @@ jobs:
     input_mapping:
       dps-modules: dps-modules
       ddve: ddve
+    output_mapping:
+      ddve_ip: ddve_ip  
     params:
       DEBUG: "FALSE"
       GOVC_INSECURE: ((GOVC.INSECURE))
@@ -116,73 +129,29 @@ jobs:
       PPDD_VMNAME: ((PPDD.VMNAME))
       PPDD_DNS: ((PPDD.DNS))
       PPDD_TYPE: ((PPDD.TYPE)) 
-      PPDD_FOLDER: ((PPDD.FOLDER))   
-- name: configure-ppdd
-  plan:
-  - in_parallel:
-    - get: one-time-trigger
-      trigger: true
-    - get: dps-automation-image
-      passed: [ deploy-ddve-ova ]
-      params:
-        unpack: true
-      tags: ((tags))        
-    - get: dps-modules
-      tags: ((tags))
-  - task: configure-ppdd
+      PPDD_FOLDER: ((PPDD.FOLDER))
+  - task: configure-ddve-management-network-ansible         
     tags: ((tags))
     image: dps-automation-image
-    file: dps-modules/ci/tasks/configure-ppdd.yml
+    file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
+      ddve_ip: ddve_ip
+      dps-ansible: dps-ansible
     params:
-      DEBUG: "FALSE"
-      GOVC_INSECURE: ((GOVC.INSECURE))
-      GOVC_PASSWORD: ((GOVC.PASSWORD))
-      GOVC_URL: ((GOVC.URL))
-      GOVC_USERNAME: ((GOVC.USERNAME))
-      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
-      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
-      GOVC_DATACENTER: ((GOVC.DATACENTER))       
+      PLAYBOOK: dps-ansible/ppdd/1.0-Playbook-configure-initial-network.yml
+      DEBUG: "TRUE"
+      DDVE_PASSWORD: ((PPDD.PASSWORD))
+      DDVE_USERNAME: ((PPDD.USERNAME))
+      DDVE_INITIAL_PASSWORD: ((PPDD.SETUP_PASSWORD))
       PPDD_NETWORK: ((PPDD.NETWORK))
       PPDD_ADDRESS: ((PPDD.ADDRESS))
       PPDD_GATEWAY: ((PPDD.GATEWAY))
       PPDD_NETMASK: ((PPDD.NETMASK))
-      PPDD_FQDN: ((PPDD.FQDN))
-      PPDD_VMNAME: ((PPDD.VMNAME))
-      PPDD_DNS: ((PPDD.DNS))
-      PPDD_SETUP_PASSWORD: ((PPDD.SETUP_PASSWORD))
-      PPDD_PASSWORD: ((PPDD.SETUP_PASSWORD))
-      PPDD_USERNAME: ((PPDD.USERNAME))
-      PPDD_FOLDER: ((PPDD.FOLDER))
-      PPDD_INTERFACE: ((PPDD.INTERFACE))
-      PPDD_NFS_PATH: ((PPDD.PATH.PATH_1)) 
-      PPDD_NFS_CLIENT: ((PPDM.FQDN))
-      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((PPDD.FOLDER))/((PPDD.VMNAME))
-- name: change-ppdd-password
-  plan:
-  - in_parallel:
-    - get: one-time-trigger
-      trigger: true
-    - get: dps-automation-image
-      passed: [ configure-ppdd ]
-      params:
-        unpack: true
-      tags: ((tags))        
-    - get: dps-modules
-      tags: ((tags))
-  - task: change-ppdd-password
-    tags: ((tags))
-    image: dps-automation-image
-    file: dps-modules/ci/tasks/change-ppdd-password.yml
-    input_mapping:
-      dps-modules: dps-modules
-    params:
-      DEBUG: "FALSE"
-      PPDD_FQDN: ((PPDD.FQDN))
-      PPDD_SETUP_PASSWORD: ((PPDD.SETUP_PASSWORD))
-      PPDD_PASSWORD: ((PPDD.PASSWORD))
-      PPDD_USERNAME: ((PPDD.USERNAME))
+#      PPDD_FQDN: ((PPDD.FQDN))
+
+
+
 - name: delete-ppdd
   plan:
   - in_parallel:
@@ -210,3 +179,48 @@ jobs:
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
       PPDD_VMNAME: ((PPDD.VMNAME))
+
+- name: ansible-configure-ddve
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      passed: [ deploy-ddve-ova ]
+      tags: ((tags))
+      trigger: true
+    - get: dps-modules
+      tags: ((tags))
+
+    - get: dps-ansible
+      tags: ((tags))
+
+  - task: configure-initial-password
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      ppdm-config: terraform-output
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdd/1.0-Playbook-configure-initial-password.yml
+      DEBUG: "TRUE"
+      DDVE_PASSWORD: ((PPDD.PASSWORD))
+      DDVE_USERNAME: ((PPDD.USERNAME))
+      DDVE_INITIAL_PASSWORD: ((PPDD.SETUP_PASSWORD))
+      DDVE_PUBLIC_FQDN: ((PPDD.FQDN))
+  - task: set-dd-license
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      ppdm-config: terraform-output
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: 3.0-Playbook-set-dd-license.yml --extra-vars ppdd_license_content=${PPDD.LICENSE}
+      DEBUG: "TRUE"
+      DDVE_PASSWORD: ((PPDD.PASSWORD))
+      DDVE_USERNAME: ((PPDD.USERNAME))
+      DDVE_INITIAL_PASSWORD: ((PPDD.SETUP_PASSWORD))
+      DDVE_PUBLIC_FQDN: ((PPDD.FQDN))      
