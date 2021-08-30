@@ -43,6 +43,7 @@ do_config_commit: &do_config_commit
     repository-commit: variable-commit
 
 do_state_commit: &do_state_commit
+  tags: ((tags))
   image: platform-automation-image
   file: platform-automation-tasks/tasks/make-git-commit.yml
   input_mapping:
@@ -840,6 +841,7 @@ jobs:
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
         - put: variable
+          tags: ((tags))
           params:
             repository: variable-commit
             merge: true          
@@ -1214,6 +1216,7 @@ jobs:
             FILE_DESTINATION_PATH: ((foundation))/state/state.yml
             <<: *git_commit_env
         - put: variable
+          tags: ((tags))
           params:
             repository: variable-commit
             merge: true    
@@ -1306,7 +1309,8 @@ jobs:
         unpack: true
     - get: one-time-trigger
       tags: ((tags))
-    - get: certstate  
+    - get: certstate
+      tags: ((tags))  
       trigger: true
  #     passed:
  #      - issue-pks-cert-request
