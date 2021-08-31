@@ -109,7 +109,7 @@ jobs:
       dps-modules: dps-modules
       ddve: ddve
     output_mapping:
-      ddve_ip: ddve_ip  
+      vars: vars  
     params:
       DEBUG: "FALSE"
       GOVC_INSECURE: ((GOVC.INSECURE))
@@ -136,7 +136,7 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      ddve_ip: ddve_ip
+      vars: vars
       dps-ansible: dps-ansible
     params:
       PLAYBOOK: dps-ansible/ppdd/1.0-Playbook-configure-initial-network.yml
