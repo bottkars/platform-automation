@@ -81,6 +81,8 @@ resources:
     <<: *s3_env
     bucket: ((buckets.dps_products))
     regexp: ddve/((PPDD.BASEVER))/ddve-(([78])\.([234567]{1,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{5,6})).ova #only release builds
+display:
+  background_image: https://www.delltechnologies.com/content/dam/uwaem/production-design-assets/en/data-protection/images/hero-300x600-social.jpg
 
 
 jobs:
@@ -130,6 +132,9 @@ jobs:
       PPDD_DNS: ((PPDD.DNS))
       PPDD_TYPE: ((PPDD.TYPE)) 
       PPDD_FOLDER: ((PPDD.FOLDER))
+      PPDD_ACTIVETIER_DISKS: ((PPDD.ACTIVETIER_DISKS))
+      PPDD_CLOUDTIER_DISKS: ((PPDD.CLOUDTIER_DISKS))
+
   - task: configure-ddve-management-network-ansible         
     tags: ((tags))
     image: dps-automation-image
@@ -140,7 +145,7 @@ jobs:
       dps-ansible: dps-ansible
     params:
       PLAYBOOK: dps-ansible/ppdd/1.0-Playbook-configure-initial-network.yml
-      DEBUG: "TRUE"
+      DEBUG: "FALSE"
       DDVE_PASSWORD: ((PPDD.PASSWORD))
       DDVE_USERNAME: ((PPDD.USERNAME))
       DDVE_INITIAL_PASSWORD: ((PPDD.SETUP_PASSWORD))
@@ -159,7 +164,7 @@ jobs:
       params:
         unpack: true
       tags: ((tags))
-      passed: [ deploy-ddve-ova ]              
+#      passed: [ deploy-ddve-ova ]              
     - get: dps-modules
       tags: ((tags))
   - task: delete-ddve
@@ -180,7 +185,7 @@ jobs:
       GOVC_NETWORK: ((GOVC.NETWORK))
       PPDD_VMNAME: ((PPDD.VMNAME))
 
-- name: ansible-configure-ddve
+- name: ansible-configure-ddve-initial-password
   serial_groups: [ansible]
   plan:
   - in_parallel:
@@ -190,10 +195,8 @@ jobs:
       trigger: true
     - get: dps-modules
       tags: ((tags))
-
     - get: dps-ansible
       tags: ((tags))
-
   - task: configure-initial-password
     tags: ((tags))
     image: dps-automation-image
@@ -204,11 +207,23 @@ jobs:
       dps-ansible: dps-ansible
     params:
       PLAYBOOK: dps-ansible/ppdd/1.0-Playbook-configure-initial-password.yml
-      DEBUG: "TRUE"
+      DEBUG: "FALSE"
       DDVE_PASSWORD: ((PPDD.PASSWORD))
       DDVE_USERNAME: ((PPDD.USERNAME))
       DDVE_INITIAL_PASSWORD: ((PPDD.SETUP_PASSWORD))
       DDVE_PUBLIC_FQDN: ((PPDD.FQDN))
+- name: ansible-configure-ddve-license
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      passed: [ ansible-configure-ddve-initial-password ]
+      tags: ((tags))
+      trigger: true
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible
+      tags: ((tags))    
   - task: set-dd-license
     tags: ((tags))
     image: dps-automation-image
@@ -218,9 +233,65 @@ jobs:
       ppdm-config: terraform-output
       dps-ansible: dps-ansible
     params:
-      PLAYBOOK: 3.0-Playbook-set-dd-license.yml --extra-vars ppdd_license_content=${PPDD.LICENSE}
-      DEBUG: "TRUE"
+      PLAYBOOK: dps-ansible/ppdd/3.0-Playbook-set-dd-license.yml # --extra-vars ppdd_license_content="{{ lookup('env','PPDD_LICENSE') }}"
+      DEBUG: "FALSE"
       DDVE_PASSWORD: ((PPDD.PASSWORD))
       DDVE_USERNAME: ((PPDD.USERNAME))
-      DDVE_INITIAL_PASSWORD: ((PPDD.SETUP_PASSWORD))
-      DDVE_PUBLIC_FQDN: ((PPDD.FQDN))      
+      DDVE_PUBLIC_FQDN: ((PPDD.FQDN))   
+      PPDD_LICENSE: ((PPDD.LICENSE))   
+- name: ansible-configure-ddve-storage
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      passed: [ ansible-configure-ddve-networks ]
+      tags: ((tags))
+      trigger: true
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible
+      tags: ((tags))    
+  - task: set-dd-storage-configuration
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdd/2.0-Playbook-configure-dd.yml # --extra-vars ppdd_license_content="{{ lookup('env','PPDD_LICENSE') }}"
+      DEBUG: "FALSE"
+      DDVE_PASSWORD: ((PPDD.PASSWORD))
+      DDVE_USERNAME: ((PPDD.USERNAME))
+      DDVE_PUBLIC_FQDN: ((PPDD.FQDN))  
+      PPDD_PATH: ((PPDD.PATH.PATH_1))
+      PPDM_HOSTNAME: ((PPDM.FQDN))
+
+
+- name: ansible-configure-ddve-networks
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      passed: [ ansible-configure-ddve-license ]
+      tags: ((tags))
+      trigger: true
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible
+      tags: ((tags))    
+  - task: set-dd-networks-configuration
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdd/3.1-Playbook-set-dd-networks.yml
+      DEBUG: "FALSE"
+      DDVE_PASSWORD: ((PPDD.PASSWORD))
+      DDVE_USERNAME: ((PPDD.USERNAME))
+      DDVE_PUBLIC_FQDN: ((PPDD.FQDN))  
+      DEPLOYMENT_DOMAIN: ((PPDD.SEARCHPATH))
+      PPDD_DNS: ((PPDD.DNS))
