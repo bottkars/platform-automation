@@ -295,3 +295,31 @@ jobs:
       DDVE_PUBLIC_FQDN: ((PPDD.FQDN))  
       DEPLOYMENT_DOMAIN: ((PPDD.SEARCHPATH))
       PPDD_DNS: ((PPDD.DNS))
+
+
+- name: ansible-set-passphrase
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      passed: [ ansible-configure-ddve-license ]
+      tags: ((tags))
+      trigger: true
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible
+      tags: ((tags))    
+  - task: set-dd-passphrase
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdd/2.1-Playbook-configure-ddpassphrase.yml
+      DEBUG: "FALSE"
+      DDVE_PASSWORD: ((PPDD.PASSWORD))
+      DDVE_USERNAME: ((PPDD.USERNAME))
+      DDVE_PUBLIC_FQDN: ((PPDD.FQDN))  
+      PPDD_PASSPHRASE: ((PPDD.PASSPHRASE))
