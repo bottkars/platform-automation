@@ -1356,8 +1356,8 @@ jobs:
     file: pfsense-modules/ci/tasks/renew_cert.yml
     params:
       <<: *credhub_env
-      CERT_ID: 5eb01b9fb4a5c
-      CA_ID: 5fd18523bfac0
+      CERT_ID: 613ef8fb888c5
+      CA_ID: 612f34262f087
       STORED_CERT: pks_cer
       SUBJECT: ((pks.fqdn))
       PFSENSE_FQDN: pfsense.home.labbuildr.com
@@ -1392,8 +1392,8 @@ jobs:
     file: pfsense-modules/ci/tasks/request_cert.yml
     params:
       <<: *credhub_env
-      CERT_ID: 5eb01b9fb4a5c
-      CA_ID: 5fd18523bfac0
+      CERT_ID: 613ef8fb888c5
+      CA_ID: 612f34262f087
       STORED_CERT: pks_cer
       SUBJECT: ((pks.fqdn))
       PFSENSE_FQDN: pfsense.home.labbuildr.com
