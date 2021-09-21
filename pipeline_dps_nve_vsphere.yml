@@ -145,10 +145,10 @@ jobs:
       GOVC_PASSWORD: ((GOVC.PASSWORD))
       GOVC_URL: ((GOVC.URL))
       GOVC_USERNAME: ((GOVC.USERNAME))
-      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
-      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
+      GOVC_RESOURCE_POOL: ((NVE.GOVC.RESOURCE_POOL))
+      GOVC_DATASTORE: ((NVE.GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER))
-      GOVC_NETWORK: ((GOVC.NETWORK))
+      GOVC_NETWORK: ((NVE.GOVC.NETWORK))
       GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
       NVE_FOLDER: ((NVE.FOLDER))
       NVE_NETWORK: ((NVE.NETWORK))
@@ -184,7 +184,7 @@ jobs:
       GOVC_VM: ((NVE.VMNAME))   
       GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
       AVI_FQDN: ((NVE.FQDN))
-      NVE_SETUP_PASSWORD: ((NVE.PASSWORD))  
+      NVE_SETUP_PASSWORD: ((NVE.SETUP_PASSWORD))  
       NVE_TIMEZONE: "((NVE.TIMEZONE))"
       NVE_ADMIN_PASSWORD_OS: ((NVE.PASSWORD)) 
       NVE_ROOT_PASSWORD_OS: ((NVE.PASSWORD)) 
@@ -241,7 +241,7 @@ jobs:
       params:
         unpack: true
       tags: ((tags))
-      passed: [ deploy-networker-ova ]              
+#      passed: [ deploy-networker-ova ]              
     - get: dps-modules
       tags: ((tags))
   - task: delete-nve
@@ -258,5 +258,5 @@ jobs:
       GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
       GOVC_DATASTORE: ((GOVC.DATASTORE)) 
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
-      GOVC_NETWORK: ((GOVC.NETWORK))
+#      GOVC_NETWORK: ((GOVC.NETWORK))
       NVE_VMNAME: ((NVE.VMNAME))

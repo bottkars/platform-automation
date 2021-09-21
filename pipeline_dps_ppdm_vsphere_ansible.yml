@@ -1,0 +1,498 @@
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+
+
+
+#resource_types:
+#- name: pivnet
+#  type: docker-image
+#  source:
+#    repository: pivotalcf/pivnet-resource
+#    tag: latest-final
+   
+
+resources:
+# triggers
+#- name: daily-trigger
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    interval: 24h
+
+- name: dps-ansible
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: git@github.com:bottkars/ansible_dps.git
+    branch: main
+    private_key: ((((foundation))/ansible_dps_git.private_key))
+
+- name: variable
+  tags: ((tags))
+  icon: github
+  type: git  
+  source:
+    uri: ((variable-repo))
+    private_key: ((private_key)) 
+    branch: master
+    paths:
+    - proxy.yml
+
+#- name: instant_access
+#  icon: github
+#  type: git  
+#  source:
+#    uri: ((variable-repo))
+#    private_key: ((private_key)) 
+#    branch: master
+#    paths:
+#    - instant_access.yml
+
+- name: instant-access-request
+  tags: ((tags))
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ppdm.restore
+    regexp: request/ppdm-instant-(?P<version>\d{4}\.\d{1,2}\.\d{1,2}-\d{1,9}).yml
+  check_every: 1m  
+  
+- name: instant-access-state
+  tags: ((tags))
+  type: s3
+  tags: ((tags))
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ppdm.restore
+    regexp: state/(.*)-(?P<version>([0-9]{4})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])\.(2[0-3]|[01][0-9])([0-5][0-9])\.([0-5][0-9])).json
+- name: one-time-trigger
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+#- name: after-midnight
+#  type: time
+#  source:
+#    start: 01:00 AM
+#    stop: ((after_midnight_end))
+#    interval: 24h
+#    location: Europe/Berlin 
+
+#- name: installation
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.installation))
+#    regexp: ((foundation))/installation-(.*).zip    
+#- name: platform-automation-pivnet
+#  type: pivnet
+#  source:
+#    api_token: ((((foundation))/pivnet-token))
+#    product_slug: platform-automation
+#    product_version: 4\.*\.(.*)
+#    sort_by: semver
+
+
+#- name: dps-automation-image
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.pivnet_image))
+#    regexp: platform-automation-image-(.*).tgz
+
+- name: dps-automation-image
+  tags: ((tags))
+  icon: docker
+  type: docker-image
+  source:
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine
+    tag: latest
+    ca_certs:
+    - domain: harbor.pks.home.labbuildr.com
+      cert: ((pksdemo/pks_cert.ca))
+
+
+- name: dps-modules
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/dps-modules.git
+    branch: main
+
+## product resources
+- name: powerprotect
+  tags: ((tags))
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-sw-(([1-9]{0,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).ova #only release builds
+#    regexp: powerprotect/dellemc-ppdm-sw-(.*).ova   # any build
+
+
+- name: powerprotect-upgrade
+  tags: ((tags))
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-upgrade-sw-(([1-9]{0,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).pkg #only release builds
+
+
+
+display:
+  background_image: https://corporate.delltechnologies.com/content/dam/delltechnologies/assets/corporate/images/newsroom/promos/powerprotect-x400.png
+  #  https://www.emc.com/content/dam/uwaem/production-design-assets/en/data-protection/dataprotectionsuite/images/leadspace-data-protection-family-large.jpg
+jobs:
+
+- name: deploy-powerprotect-ova
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+    - get: powerprotect
+      tags: ((tags))
+      params:
+        unpack: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-ova
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-ppdm.yml
+    input_mapping:
+      dps-modules: dps-modules
+      powerprotect: powerprotect
+    params:
+      DEBUG: "FALSE"
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((PPDM.FOLDER))/((PPDM.VMNAME))
+      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
+      GOVC_NETWORK: ((GOVC.NETWORK))
+      PPDM_NETWORK: ((PPDM.NETWORK))
+      PPDM_ADDRESS: ((PPDM.ADDRESS))
+      PPDM_GATEWAY: ((PPDM.GATEWAY))
+      PPDM_NETMASK: ((PPDM.NETMASK))
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_VMNAME: ((PPDM.VMNAME))
+      PPDM_DNS: ((PPDM.DNS))
+      PPDM_FOLDER: ((PPDM.FOLDER))
+
+- name: upgrade-powerprotect
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+      passed: [ ansible-configure-ppdm ]
+    - get: powerprotect-upgrade
+      trigger: true
+      tags: ((tags))
+      params:
+        unpack: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: upload-ppdmsw-upgrade
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/upload-ppdm-upgrade.yml
+    input_mapping:
+      dps-modules: dps-modules
+      powerprotect-upgrade: powerprotect-upgrade
+    params:
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+  - task: upgrade-ppdmsw
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/do-ppdm-upgrade.yml
+    input_mapping:
+      dps-modules: dps-modules
+      powerprotect-upgrade: powerprotect-upgrade
+    params:
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))      
+
+
+- name: ansible-configure-ppdm
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: true
+      passed: [ deploy-powerprotect-ova ]  
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: configure-ppdm
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      ppdm-config: terraform-output
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/1.0-playbook_configure_ppdm.yml 
+      DEBUG: "FALSE"
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
+      PPDM_SETUP_PASSWORD: ((PPDM.SETUP_PASSWORD)) 
+      PPDM_NTP_SERVERS: ((PPDM.NTP_SERVERS))
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_VMNAME: ((PPDM.VMNAME))
+      PPDM_DNS: ((PPDM.DNS))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PPDM_SETUP_PASSWORD: ((PPDM.SETUP_PASSWORD)) 
+      PPDM_FOLDER: ((PPDM.FOLDER))
+
+- name: ansible-set-ddve-inventory
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: one-time-trigger
+      tags: ((tags))   
+      passed: [ ansible-configure-ppdm ]
+      trigger: true      
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: set-ddve-inventory
+    attempts: 10
+    timeout: 10m   
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/2.0-playbook_set_ddve.yml
+      DEBUG: "FALSE"
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
+      PPDM_FQDN: ((PPDM.FQDN))
+      DDVE_USERNAME: ((PPDD.USERNAME))
+      DDVE_PASSWORD: ((PPDD.PASSWORD))
+      DDVE_PRIVATE_FQDN: ((PPDD.FQDN))
+      PPDD_PATH: ((PPDD.PATH.PATH_1))
+
+- name: ansible-set-ppdm-sdr
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: one-time-trigger
+      passed: [ ansible-set-ddve-inventory ]
+      trigger: true
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: set-ppdm-sdr-configuration
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/3.0-playbook_set_dr.yml
+      DEBUG: "FALSE"
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
+      PPDM_FQDN: ((PPDM.FQDN))      
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PPDD_PATH: ((PPDD.PATH.PATH_1))
+      DDVE_PRIVATE_FQDN: ((PPDD.FQDN))
+
+
+
+
+
+- name: ansible-set-vsphere-inventory
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: one-time-trigger
+      passed: [ ansible-configure-ppdm ]
+      trigger: false
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: set-vsphere-inventory
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/2.1-playbook_set_vsphere.yml
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
+      VCENTER_USERNAME: ((GOVC.USERNAME))
+      VCENTER_PASSWORD: ((GOVC.PASSWORD))
+      VCENTER_FQDN: ((GOVC.URL))
+#      INVENTORY_CREDENTIAL_TYPE: VCENTER
+#      INVENTORY_TYPE: VCENTER
+#      INVENTORY_PORT: 443
+- name: add-vpe-proxy
+  plan:
+  - in_parallel:
+    - get: variable
+      trigger: false
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: one-time-trigger  
+      passed: [ ansible-set-vsphere-inventory ]              
+    - get: dps-modules
+      tags: ((tags))
+  - task: add-proxy 
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/add-ppdm-vproxy.yml
+    input_mapping:
+      dps-modules: dps-modules
+      variable: variable
+    params:
+      DEBUG: "FALSE"
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PROXY_FILE: variable/proxy.yml
+
+
+- name: delete-vm-instant-access
+  plan:
+  - in_parallel:
+    - get: instant-access-state
+      passed: [ ppdm-vm-instant-access ]              
+#      trigger: true    
+    - get: one-time-trigger
+      passed: [ ansible-set-vsphere-inventory ]              
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+  - task: remove-instant-access 
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ppdm-delete-vm-instant-access.yml
+    input_mapping:
+      dps-modules: dps-modules
+      variable: instant-access-state
+    params:
+      DEBUG: "FALSE"
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+
+
+
+- name: ppdm-vm-instant-access
+  plan:
+  - in_parallel:
+    - get: instant-access-request
+#      passed: [ ansible-set-vsphere-inventory ]              
+#      trigger: true
+    - get: one-time-trigger
+      passed: [ ansible-set-vsphere-inventory ]              
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+  - task: instant-access 
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ppdm-vm-instant-access.yml
+    input_mapping:
+      dps-modules: dps-modules
+      variable: instant-access-request
+    params:
+      DEBUG: "FALSE"
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PROXY_FILE: variable/ppdm-instant-
+  - put: instant-access-state
+    tags: ((tags))
+    params:
+      file: instant_access/*.json
+- name: delete-ppdm
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: one-time-trigger  
+      passed: [ deploy-powerprotect-ova ]              
+  - task: delete-ppdm
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/delete-ppdm.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      DEBUG: "FALSE"
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
+      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
+      GOVC_NETWORK: ((GOVC.NETWORK))
+      PPDM_VMNAME: ((PPDM.VMNAME))
