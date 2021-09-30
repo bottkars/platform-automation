@@ -345,8 +345,87 @@ jobs:
       DDVE_PRIVATE_FQDN: ((PPDD.FQDN))
 
 
+- name: ansible-enable-cdr
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: one-time-trigger
+      passed: [ ansible-set-vsphere-inventory ]
+      trigger: false
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: set-cdra-enabled
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/2.2-playbook_set_cdra_enabled.yml
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
 
-
+- name: ansible-configure-clouddr-account
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: one-time-trigger
+      passed: [ ansible-enable-cdr ]
+      trigger: false
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: set-cdr-account
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/2.3-playbook_configure_cloud_dr_account.yml
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
+      AZURE_TENANT_ID: ((PPDM.CDR.AZURE_TENANT_ID))
+      AZURE_CLIENT_ID: ((PPDM.CDR.AZURE_CLIENT_ID))
+      AZURE_CLIENT_SECRET: ((PPDM.CDR.AZURE_CLIENT_SECRET))
+      AZURE_SUBSCRIPTION_ID: ((PPDM.CDR.AZURE_SUBSCRIPTION_ID))
+- name: ansible-set-clouddr-target
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: one-time-trigger
+      passed: [ ansible-configure-clouddr-account ]
+      trigger: false
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: set-cdr-target
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/2.4-playbook_set_cloud_dr_target.yml
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
+      AZURE_STORAGEACCOUNT: ((PPDM.CDR.AZURE_STORAGEACCOUNT))
 
 - name: ansible-set-vsphere-inventory
   serial_groups: [ansible]
@@ -356,7 +435,7 @@ jobs:
       tags: ((tags))
     - get: one-time-trigger
       passed: [ ansible-configure-ppdm ]
-      trigger: false
+      trigger: true
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))

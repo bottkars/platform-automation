@@ -13,10 +13,10 @@ credhub_env: &credhub_env
   CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
 
 azure_env: &azure_env
-  AZURE_TENANT_ID: ((azure_emc_tenant_id))
-  AZURE_CLIENT_ID: ((azure_emc_client_id))
-  AZURE_CLIENT_SECRET: ((azure_emc_client_secret))
-  AZURE_SUBSCRIPTION_ID: ((azure_emc_subscription_id))
+  AZURE_TENANT_ID: ((PPDM.CDR.AZURE_TENANT_ID))
+  AZURE_CLIENT_ID: ((PPDM.CDR.AZURE_CLIENT_ID))
+  AZURE_CLIENT_SECRET: ((PPDM.CDR.AZURE_CLIENT_SECRET))
+  AZURE_SUBSCRIPTION_ID: ((PPDM.CDR.AZURE_SUBSCRIPTION_ID))
 
 
 resource_types:
@@ -194,8 +194,8 @@ jobs:
     params:
       <<: *azure_env
       DEBUG: "FALSE"
-      CDRS_SERVER_ID: /subscriptions/8c21cadc-9e41-459e-bf4b-919aa2fad975/resourceGroups/CDRS-RESOURCEGROUP/providers/Microsoft.Compute/virtualMachines/CDRS-Instance
-      CDRS_MYSQL_ID: /subscriptions/8c21cadc-9e41-459e-bf4b-919aa2fad975/resourceGroups/CDRS-ResourceGroup/providers/Microsoft.DBforMySQL/servers/dbserverrm6agdkrxfkwe
+      CDRS_SERVER_ID: /subscriptions/((azure_dell_subscription_id))/resourceGroups/CDRS-RESOURCEGROUP/providers/Microsoft.Compute/virtualMachines/CDRS-Instance
+      CDRS_MYSQL_ID: /subscriptions/((azure_dell_subscription_id))/resourceGroups/CDRS-ResourceGroup/providers/Microsoft.DBforMySQL/servers/dbserverpwbhtbrqt6i3u
 #  - put: cdrs-state 
 #    tags: ((tags))
 #    params:
