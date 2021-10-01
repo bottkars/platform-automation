@@ -98,8 +98,8 @@ jobs:
       params:
         unpack: false
     - get: dps-automation-image
-      params:
-        unpack: true
+#      params:
+#       unpack: true
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
@@ -138,6 +138,7 @@ jobs:
   - task: configure-ddve-management-network-ansible         
     tags: ((tags))
     image: dps-automation-image
+    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -161,9 +162,9 @@ jobs:
   plan:
   - in_parallel:
     - get: dps-automation-image
-      params:
-        unpack: true
-      tags: ((tags))
+#      params:
+#        unpack: true
+#      tags: ((tags))
 #      passed: [ deploy-ddve-ova ]              
     - get: dps-modules
       tags: ((tags))
@@ -200,6 +201,7 @@ jobs:
   - task: configure-initial-password
     tags: ((tags))
     image: dps-automation-image
+    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -227,6 +229,7 @@ jobs:
   - task: set-dd-license
     tags: ((tags))
     image: dps-automation-image
+    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -254,6 +257,7 @@ jobs:
   - task: set-dd-storage-configuration
     tags: ((tags))
     image: dps-automation-image
+    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -283,6 +287,7 @@ jobs:
   - task: set-dd-networks-configuration
     tags: ((tags))
     image: dps-automation-image
+    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -312,6 +317,7 @@ jobs:
   - task: set-dd-passphrase
     tags: ((tags))
     image: dps-automation-image
+    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
