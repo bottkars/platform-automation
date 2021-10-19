@@ -194,8 +194,8 @@ jobs:
     params:
       <<: *azure_env
       DEBUG: "FALSE"
-      CDRS_SERVER_ID: /subscriptions/((azure_dell_subscription_id))/resourceGroups/CDRS-RESOURCEGROUP/providers/Microsoft.Compute/virtualMachines/CDRS-Instance
-      CDRS_MYSQL_ID: /subscriptions/((azure_dell_subscription_id))/resourceGroups/CDRS-ResourceGroup/providers/Microsoft.DBforMySQL/servers/dbserverpwbhtbrqt6i3u
+      CDRS_INSTANCE_NAME: CDRS-Instance 
+      CDRS_RESOURCE_GROUP: CDRS-ResourceGroup
 #  - put: cdrs-state 
 #    tags: ((tags))
 #    params:
