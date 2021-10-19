@@ -263,5 +263,5 @@ jobs:
     params:
       <<: *azure_env
       DEBUG: "FALSE"
-      CDRS_SERVER_ID: /subscriptions/8c21cadc-9e41-459e-bf4b-919aa2fad975/resourceGroups/CDRS-RESOURCEGROUP/providers/Microsoft.Compute/virtualMachines/CDRS-Instance
-      CDRS_MYSQL_ID: /subscriptions/8c21cadc-9e41-459e-bf4b-919aa2fad975/resourceGroups/CDRS-ResourceGroup/providers/Microsoft.DBforMySQL/servers/dbserverrm6agdkrxfkwe
+      CDRS_INSTANCE_NAME: CDRS-Instance 
+      CDRS_RESOURCE_GROUP: CDRS-ResourceGroup
