@@ -138,6 +138,7 @@ resources:
   source:  
     uri: https://github.com/bottkars/dps-modules.git
     branch: main
+    private_key: ((git_read.private_key))
 
 ## product resources
 - name: powerprotect
@@ -211,10 +212,10 @@ jobs:
   plan:
   - in_parallel:
     - get: one-time-trigger
-      trigger: true
+      trigger: false
       passed: [ ansible-configure-ppdm ]
     - get: powerprotect-upgrade
-      trigger: true
+      trigger: false
       tags: ((tags))
       params:
         unpack: false
@@ -379,7 +380,7 @@ jobs:
       tags: ((tags))
     - get: one-time-trigger
       passed: [ ansible-configure-ppdm ]
-      trigger: false
+      trigger: true
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
@@ -438,7 +439,7 @@ jobs:
       tags: ((tags))
     - get: one-time-trigger
       passed: [ ansible-configure-clouddr-account ]
-      trigger: false
+      trigger: true
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
@@ -665,3 +666,34 @@ jobs:
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
       PPDM_VMNAME: ((PPDM.VMNAME))
+
+
+
+
+
+
+- name: delete-cdrs-azure
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: one-time-trigger  
+      passed: 
+      - delete-ppdm
+      - ansible-deploy-cdrs-instance
+      trigger: true             
+  - task: delete-cdrs-azure
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/destroy-azure-rg.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      DEBUG: "FALSE"
+      AZURE_TENANT_ID: ((PPDM.CDR.AZURE_TENANT_ID))
+      AZURE_CLIENT_ID: ((PPDM.CDR.AZURE_CLIENT_ID))
+      AZURE_CLIENT_SECRET: ((PPDM.CDR.AZURE_CLIENT_SECRET))
+      AZURE_SUBSCRIPTION_ID: ((PPDM.CDR.AZURE_SUBSCRIPTION_ID))
+      RESOURCE_GROUP: CDRS-ResourceGroup

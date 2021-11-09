@@ -87,6 +87,7 @@ resources:
   source:  
     uri: https://github.com/bottkars/dps-modules.git
     branch: main
+    private_key: ((git_read.private_key))
 
 ## product resources
 - name: networker
