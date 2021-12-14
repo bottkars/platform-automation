@@ -400,9 +400,6 @@ jobs:
       PPDM_PRIVATE_KEY: ((PPDM.PRIVATE_KEY))
       PPDM_CERTIFICATE_CHAIN: ((PPDM.CERTIFICATE_CHAIN))
 
-
-
-
 - name: ansible-configure-clouddr-account
   serial_groups: [ansible]
   plan:
