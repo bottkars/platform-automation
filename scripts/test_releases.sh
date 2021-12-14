@@ -13,15 +13,11 @@ RELEASES="cloudfoundry, garden-runc-release,
             cloudfoundry, bosh-dns-aliases-release, 
             cloudfoundry, postgres-release, 
             cloudfoundry, garden-runc-release, 
-            cloudfoundry-incubator, windows-utilities-release, 
-            cloudfoundry-incubator, garden-windows-bosh-release, 
-            cloudfoundry, windows-tools-release, 
-            cloudfoundry, winc-release, 
             vito, grafana-boshrelease, 
             concourse, concourse-bosh-release, 
             pivotal, credhub-release,
-            minio, minio-boshrelease,
-            cloudfoundry-incubator, backup-and-restore-sdk-release" 
+            minio, minio-boshrelease" #,
+#            cloudfoundry-incubator, backup-and-restore-sdk-release" 
 unset REPO RELEASE VERSION
 set -u
 while IFS=", " read -r REPO RELEASE; do
@@ -56,3 +52,8 @@ RELEASE=stemcell-release
 
 # https://bosh.io/d/github.com/cloudfoundry/garden-runc-release?v=1.19.10
 # https://bosh.io/d/github.com/cloudfoundry/garden-runc-release?v=1.19.10
+#           cloudfoundry-incubator, windows-utilities-release, 
+#            cloudfoundry-incubator, garden-windows-bosh-release, 
+#	                cloudfoundry, windows-tools-release, 
+#			            cloudfoundry, winc-release, 
+
