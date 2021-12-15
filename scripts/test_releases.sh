@@ -13,11 +13,15 @@ RELEASES="cloudfoundry, garden-runc-release,
             cloudfoundry, bosh-dns-aliases-release, 
             cloudfoundry, postgres-release, 
             cloudfoundry, garden-runc-release, 
+            cloudfoundry, windows-utilities-release,
+            cloudfoundry-incubator, garden-windows-bosh-release,
+            cloudfoundry, windows-tools-release,
+            cloudfoundry, winc-release,
             vito, grafana-boshrelease, 
             concourse, concourse-bosh-release, 
             pivotal, credhub-release,
-            minio, minio-boshrelease" #,
-#            cloudfoundry-incubator, backup-and-restore-sdk-release" 
+            minio, minio-boshrelease,
+            cloudfoundry, backup-and-restore-sdk-release" 
 unset REPO RELEASE VERSION
 set -u
 while IFS=", " read -r REPO RELEASE; do
