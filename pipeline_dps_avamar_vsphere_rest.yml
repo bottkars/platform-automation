@@ -91,6 +91,7 @@ resources:
 
 ## product resources
 - name: avamar
+  tags: ((tags))
   type: s3
   check_every: 10m  
   icon: folder-move
@@ -99,6 +100,7 @@ resources:
     bucket: ((buckets.dps_products))
     regexp: avamar/((AVE.BASEVER))/AVE-(.*).ova
 - name: upgrade-client-plugin-catalog
+  tags: ((tags))
   type: s3
   check_every: 10m  
   icon: folder-move
@@ -109,6 +111,7 @@ resources:
 
 
 - name: upgrade-client-downloads
+  tags: ((tags))
   type: s3
   check_every: never  
   icon: folder-move
@@ -118,6 +121,7 @@ resources:
     regexp: avamar/((AVE.BASEVER))/UpgradeClientDownloads-(.*).avp
 
 - name: avamar-client-installers
+  tags: ((tags))
   type: s3
   check_every: never  
   icon: folder-move
@@ -128,6 +132,7 @@ resources:
 
 
 - name: avamar-upgrade
+  tags: ((tags))
   type: s3
   check_every: never  
   icon: folder-move
@@ -138,6 +143,7 @@ resources:
 
 
 - name: av-platform-os-rollup
+  tags: ((tags))
   type: s3
   check_every: never  
   icon: folder-move

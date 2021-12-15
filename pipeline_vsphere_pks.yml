@@ -303,12 +303,15 @@ jobs:
     - get: after-midnight
       trigger: true
     - get: platform-automation-pivnet
+      tags: ((tags))
       trigger: true
   - in_parallel:
     - put: platform-automation-tasks
+      tags: ((tags))
       params:
         file: platform-automation-pivnet/*tasks*.zip
     - put: platform-automation-image
+      tags: ((tags))
       params:
         file: platform-automation-pivnet/*image*.tgz
 - name: get-opsman
@@ -318,15 +321,19 @@ jobs:
     - get: after-midnight
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-opsman-pivnet
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     input_mapping:
@@ -335,6 +342,7 @@ jobs:
       CONFIG_FILE: download-product-configs/((pks.version))/((iaas))/download-opsman.yml
   - in_parallel:
     - put: opsman-product
+      tags: ((tags))
       params:
         file: downloaded-product/*
 
@@ -346,15 +354,19 @@ jobs:
     - get: after-midnight
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-pivotal-container-service-product-and-stemcell
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
@@ -364,9 +376,11 @@ jobs:
     output_mapping: {downloaded-stemcell: pivotal-container-service-stemcell}
   - in_parallel:
     - put: pivotal-container-service-product
+      tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
     - put: pivotal-container-service-stemcell
+      tags: ((tags))
       params:
         file: pivotal-container-service-stemcell/*.tgz
 
@@ -378,12 +392,15 @@ jobs:
     # - get: after-midnight
     #  trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-pivotal-container-service-cli
@@ -407,15 +424,19 @@ jobs:
     - get: after-midnight
       trigger: true
     - get: platform-automation-image
+      tags: ((tags))
       params:
         unpack: true
     - get: platform-automation-tasks
+      tags: ((tags))
       params:
         unpack: true
     - get: templates
+      tags: ((tags))
   - task: interpolate-product-downloads
     <<: *interpolate-product-downloads
   - task: download-harbor-container-registry-product-and-stemcell
+    tags: ((tags))
     image: platform-automation-image
     file: platform-automation-tasks/tasks/download-product.yml
     params:
@@ -425,9 +446,11 @@ jobs:
     output_mapping: {downloaded-stemcell: harbor-container-registry-stemcell}
   - in_parallel:
     - put: harbor-container-registry-product
+      tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
     - put: harbor-container-registry-stemcell
+      tags: ((tags))
       params:
         file: harbor-container-registry-stemcell/*.tgz
 
@@ -544,7 +567,7 @@ jobs:
       tags: ((tags))      
       params:
         unpack: true
-      passed: [ install-opsman]
+#      passed: [ install-opsman]
     - get: platform-automation-tasks
       tags: ((tags))      
       params:
@@ -749,6 +772,7 @@ jobs:
       params:
         unpack: true    
     - get: templates
+      tags: ((tags))
     - get: variable
   - task: interpolate-product-templates
     <<: *interpolate-product-templates                
