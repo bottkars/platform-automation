@@ -129,6 +129,7 @@ interpolate-om-configuration: &interpolate-om-configuration
 
 resource_types:
 - name: pivnet
+  tags: ((tags))  
   type: docker-image
   source:
     repository: pivotalcf/pivnet-resource
@@ -142,6 +143,7 @@ display:
 resources:
 # triggers
 - name: daily-trigger
+  tags: ((tags))  
   icon: calendar-clock
   type: time
   source:
@@ -149,12 +151,14 @@ resources:
 
 
 - name: one-time-trigger
+  tags: ((tags))  
   icon: calendar-clock
   type: time
   source:
     interval: 999999h
 
 - name: after-midnight
+  tags: ((tags))  
   type: time
   source:
     start: 01:00 AM
@@ -166,6 +170,7 @@ resources:
 #  source:
 #    url: ((slack-webhook))
 - name: installation
+  tags: ((tags))  
   icon: cloud-download
   type: s3
   source:
@@ -173,6 +178,7 @@ resources:
     bucket: ((buckets_installation))
     regexp: ((foundation))/installation-(.*).zip    
 - name: certstate
+  tags: ((tags))  
   icon: cloud-download
   type: s3
   source:
@@ -180,6 +186,7 @@ resources:
     bucket: ((buckets_installation))
     regexp: ((foundation))/((pks.fqdn))-(.*).pem   
 - name: platform-automation-pivnet
+  tags: ((tags))  
   type: pivnet
   source:
     api_token: ((pivnet-token))
@@ -188,6 +195,7 @@ resources:
     sort_by: semver
 
 - name: platform-automation-tasks
+  tags: ((tags))  
   icon: cloud-download
   type: s3
   source:
@@ -196,6 +204,7 @@ resources:
     regexp: platform-automation-tasks-(.*).zip
 
 - name: platform-automation-image
+  tags: ((tags))  
   icon: cloud-download
   type: s3
   source:
@@ -204,6 +213,7 @@ resources:
     regexp: platform-automation-image-(.*).tgz
 
 - name: additional-tasks
+  tags: ((tags))  
   icon: cloud-download
   type: s3
   source:
@@ -213,12 +223,14 @@ resources:
 ## core resources
 - name: templates
   icon: github
+  tags: ((tags))  
   type: git  
   source:
     uri: ((template-repo))
     private_key: ((template-deploy-key.private_key))
     branch: master
 - name: pfsense-modules
+  tags: ((tags))  
   icon: github
   type: git  
   source:
@@ -226,6 +238,7 @@ resources:
     private_key: ((template-deploy-key.private_key))
     branch: main    
 - name: variable
+  tags: ((tags))  
   icon: github
   type: git  
   source:
@@ -241,6 +254,7 @@ resources:
 
 ## product resources
 - name: opsman-product
+  tags: ((tags))  
   type: s3
   source:
     <<: *s3_env
@@ -248,6 +262,7 @@ resources:
     regexp: \[ops-manager,(.*)\].*.ova
 
 - name: pivotal-container-service-stemcell
+  tags: ((tags))  
   icon: cloud-download
   type: s3
   source:
@@ -257,6 +272,7 @@ resources:
 
 - name: pivotal-container-service-stemcell-windows
   icon: cloud-download
+  tags: ((tags))  
   type: s3
   source:
     <<: *s3_env
@@ -266,6 +282,7 @@ resources:
 
 - name: pivotal-container-service-product
   icon: cloud-download
+  tags: ((tags))  
   type: s3
   source:
     <<: *s3_env
@@ -274,6 +291,7 @@ resources:
 
 - name: pivotal-container-service-cli
   icon: cloud-download
+  tags: ((tags))  
   type: s3
   source:
     <<: *s3_env
@@ -282,6 +300,7 @@ resources:
 # pks-linux-amd64-1.4.0-build.230
 - name: harbor-container-registry-stemcell
   icon: cloud-download
+  tags: ((tags))  
   type: s3
   source:
     <<: *s3_env
@@ -290,6 +309,7 @@ resources:
 
 - name: harbor-container-registry-product
   icon: cloud-download
+  tags: ((tags))  
   type: s3
   source:
     <<: *s3_env

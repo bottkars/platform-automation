@@ -21,6 +21,7 @@ azure_env: &azure_env
 
 resource_types:
 - name: pivnet
+  tags: ((tags))
   type: docker-image
   source:
     repository: pivotalcf/pivnet-resource
@@ -53,6 +54,7 @@ resources:
     bucket: cdr
     regexp: state/cdrs-state-(?P<version>([0-9]+)\.([0-9]+)\.([0-9]+)).json
 - name: one-time-trigger
+  tags: ((tags))  
   icon: calendar-clock
   type: time
   source:
@@ -60,6 +62,7 @@ resources:
 
 - name: after-midnight
   type: time
+  tags: ((tags))  
   source:
     start: 01:00 AM
     stop: 11:00 PM
@@ -81,6 +84,7 @@ resources:
 - name: dps-automation-image
   icon: docker
   type: docker-image
+  tags: ((tags))  
   source:
     repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine
     tag: latest
@@ -100,6 +104,7 @@ resources:
 
 
 
+
 jobs:
 - name: is-cdra-active
   serial_groups : 
@@ -107,10 +112,13 @@ jobs:
   plan:
   - in_parallel:
     - get: cdra-active
+      tags: ((tags))  
     - get: one-time-trigger
       trigger: true
+      tags: ((tags))  
     - get: after-midnight
       trigger: true  
+      tags: ((tags))  
     - get: dps-automation-image
       tags: ((tags))
     - get: dps-modules

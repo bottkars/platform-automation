@@ -16,6 +16,7 @@ credhub_env: &credhub_env
 
 resource_types:
 - name: pivnet
+  tags: ((tags))  
   type: docker-image
   source:
     repository: pivotalcf/pivnet-resource
@@ -32,6 +33,7 @@ resources:
 
 
 - name: one-time-trigger
+  tags: ((tags))  
   icon: calendar-clock
   type: time
   source:
@@ -172,6 +174,7 @@ jobs:
   plan:
   - in_parallel:
     - get: one-time-trigger
+      tags: ((tags))  
       trigger: true
     - get: avamar
       tags: ((tags))
