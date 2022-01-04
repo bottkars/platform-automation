@@ -23,12 +23,11 @@ credhub_env: &credhub_env
    
 
 resources:
-# triggers
-#- name: daily-trigger
-#  icon: calendar-clock
-#  type: time
-#  source:
-#    interval: 24h
+- name: daily-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 24h
 
 - name: dps-ansible
   tags: ((tags))
@@ -109,14 +108,21 @@ resources:
 #    product_version: 4\.*\.(.*)
 #    sort_by: semver
 
-
-#- name: dps-automation-image
-#  icon: cloud-download
-#  type: s3
-#  source:
-#    <<: *s3_env
-#    bucket: ((buckets.pivnet_image))
-#    regexp: platform-automation-image-(.*).tgz
+- name: pfsense-modules
+  tags: ((tags))  
+  icon: github
+  type: git  
+  source:
+    uri: git@github.com:bottkars/pfsense-modules.git
+    private_key: ((((foundation))/template-deploy-key.private_key))
+    branch: main 
+- name: platform-automation-image
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: ((buckets.pivnet_image))
+    regexp: platform-automation-image-(.*).tgz
 
 - name: dps-automation-image
   tags: ((tags))
@@ -150,6 +156,15 @@ resources:
     bucket: ((buckets.dps_products))
     regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-sw-(([1-9]{0,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).ova #only release builds
 #    regexp: powerprotect/dellemc-ppdm-sw-(.*).ova   # any build
+
+- name: certstate
+  tags: ((tags))  
+  icon: cloud-download
+  type: s3
+  source:
+    <<: *s3_env
+    bucket: certificates
+    regexp: ((PPDM.FQDN))-(.*).pem
 
 
 - name: powerprotect-upgrade
@@ -386,6 +401,9 @@ jobs:
       tags: ((tags))
     - get: dps-ansible    
       tags: ((tags))
+    - get: certstate    
+      tags: ((tags))
+      trigger: true   
   - task: set-certificates
     image: dps-automation-image
     tags: ((tags))
@@ -549,6 +567,36 @@ jobs:
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
       PPDM_LICENSE_KEY: ((PPDM.LICENSE_KEY))
 
+- name: ansible-set-ppdm-smtp
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: one-time-trigger
+      passed: [ ansible-configure-ppdm ]
+      trigger: true
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: configure-smtp
+    image: dps-automation-image
+    tags: ((tags))
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/3.1-playbook_set_smtp.yml
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
+      PPDM_SMTP_SERVER: ((PPDM.SMTP_SERVER))
+      PPDM_SMTP_FROM: ((PPDM.SMTP_FROM))
+      PPDM_SMTP_PORT: ((PPDM.SMTP_PORT))
+
 - name: add-vpe-proxy
   plan:
   - in_parallel:
@@ -697,3 +745,104 @@ jobs:
       AZURE_CLIENT_SECRET: ((PPDM.CDR.AZURE_CLIENT_SECRET))
       AZURE_SUBSCRIPTION_ID: ((PPDM.CDR.AZURE_SUBSCRIPTION_ID))
       RESOURCE_GROUP: CDRS-ResourceGroup
+
+
+- name: get-certs-from-pfsense
+  serial: true
+  # serial_groups: [ install ]
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense-modules
+      tags: ((tags))
+      params:
+        unpack: true    
+  - task: get-current-certs
+    tags: ((tags))  
+    image: platform-automation-image
+    file: pfsense-modules/ci/tasks/request_cert.yml
+    params:
+      <<: *credhub_env
+      CERT_ID: 612f4ae55f2f0
+      CA_ID: 612f34262f087
+      STORED_CERT: ppdm_cert
+      SUBJECT: ((PPDM.FQDN))
+      PFSENSE_FQDN: pfsense.home.labbuildr.com
+      PFSENSE_USERNAME: ((pfsense_user.username)) 
+      PFSENSE_PASSWORD: ((pfsense_user.password))
+    input_mapping:
+      pfsense-modules: pfsense-modules
+    output_mapping: {certificates: certificates}
+  - put: certstate
+    tags: ((tags))      
+    params:
+      file: certificates/((PPDM.FQDN))*.pem
+
+- name: get-ppdm-cert-expiration
+  serial: true
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: daily-trigger
+      tags: ((tags))
+      trigger: true
+    - get: pfsense-modules
+      tags: ((tags))
+      params:
+        unpack: true  
+  - across:
+    - var: endpoints
+      values: [ppdm.home.labbuildr.com]      
+    task: check-expiration
+    image: platform-automation-image
+    file: pfsense-modules/ci/tasks/check_cert_expiration.yml
+    params:
+      SUBJECT: ((.:endpoints))
+      PORT: "443"
+      EXPIRE_DAYS: "15"
+    input_mapping:
+      pfsense-modules: pfsense-modules
+- name: issue-ppdm-cert-renewal
+  serial: true
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      tags: ((tags))
+      params:
+        unpack: true
+    - get: one-time-trigger
+      tags: ((tags))
+      trigger: false
+    - get: pfsense-modules
+      tags: ((tags))
+      params:
+        unpack: true    
+  - task: request-new-certs-from-pfsense
+    tags: ((tags))      
+    image: platform-automation-image
+    file: pfsense-modules/ci/tasks/renew_cert.yml
+    params:
+      <<: *credhub_env
+      CERT_ID: 612f4ae55f2f0
+      CA_ID: 612f34262f087
+      STORED_CERT: ppdm_cert
+      SUBJECT: ((PPDM.FQDN))
+      PFSENSE_FQDN: pfsense.home.labbuildr.com
+      PFSENSE_USERNAME: ((pfsense_user.username)) 
+      PFSENSE_PASSWORD: ((pfsense_user.password))
+    input_mapping:
+      pfsense-modules: pfsense-modules
+    output_mapping: {certificates: certificates}
+  - put: certstate
+    tags: ((tags))      
+    params:
+      file: certificates/((PPDM.FQDN))*.pem
