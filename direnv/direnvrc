@@ -156,6 +156,23 @@ use_fly-aliases(){
 	echo ${reset}
 }
 
+use_aws_env(){
+	local CONCOURSE_TARGET=${1}
+	local PIPELINE=${2}
+        #####################        
+        # Notes on jmespath ( az-cli)
+        # within az-cli, jamespath search for types with Dash (-)
+        # need to be escaped in \"type-with-dash\"
+        ######################
+#        export AZURE_CONFIG_DIR=$(pwd)/.azure
+#        mkdir -p ${AZURE_CONFIG_DIR}
+        echo "Reading Azure Settings from lpass"
+         lpass status --quiet || :
+        export AWS_SECRET_ACCESS_KEY=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AWS_ENV --field=aws_secret_access_key)
+        export AWS_ACCESS_KEY_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AWS_ENV --field=aws_access_key_id)
+        export AWS_DEFAULT_REGION=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AWS_ENV --field=aws_default_region)
+}
+
 use_azure(){
 	local CONCOURSE_TARGET=${1}
 	local PIPELINE=${2}
