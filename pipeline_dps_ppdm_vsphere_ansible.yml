@@ -154,7 +154,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-sw-(([1-9]{0,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).ova #only release builds
+    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-sw-((PPDM.VERSION_REGEX)).ova #only release builds
 #    regexp: powerprotect/dellemc-ppdm-sw-(.*).ova   # any build
 
 - name: certstate
@@ -174,7 +174,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-upgrade-sw-(([1-9]{0,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{1,2})).pkg #only release builds
+    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-upgrade-sw-((PPDM.VERSION_REGEX)).pkg #only release builds
 
 
 
@@ -223,14 +223,21 @@ jobs:
       PPDM_DNS: ((PPDM.DNS))
       PPDM_FOLDER: ((PPDM.FOLDER))
 
-- name: upgrade-powerprotect
+- name: upload-powerprotect-update
+  serial_groups: [ansible, upgrade]
   plan:
   - in_parallel:
     - get: one-time-trigger
       trigger: false
-      passed: [ ansible-configure-ppdm ]
+      passed: 
+        - ansible-configure-ppdm
+        - ansible-set-ddve-inventory
+        - ansible-set-ppdm-certificates
+        - ansible-set-vsphere-inventory
+        - ansible-set-ppdm-license      
     - get: powerprotect-upgrade
-      trigger: false
+
+      trigger: true
       tags: ((tags))
       params:
         unpack: false
@@ -249,18 +256,105 @@ jobs:
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_PASSWORD: ((PPDM.PASSWORD))
-  - task: upgrade-ppdmsw
+
+##########
+# the ansible code for above. blocked due to limitations in httplib uloading large files
+#  plan:
+#  - in_parallel:
+#    - get: one-time-trigger
+#      trigger: false
+#      passed: [ ansible-configure-ppdm ]
+#    - get: powerprotect-upgrade
+#      trigger: false
+#      tags: ((tags))
+#      params:
+#        unpack: false
+#    - get: dps-automation-image
+#      tags: ((tags))        
+#    - get: dps-modules
+#      tags: ((tags))
+#    - get: dps-ansible    
+#      tags: ((tags))
+#  - task: ansible-ppdmsw-upgrade
+#    tags: ((tags))
+#    image: dps-automation-image
+#    tags: ((tags))
+#    file: dps-modules/ci/tasks/ansible-playbook.yml
+#    input_mapping:
+#      dps-modules: dps-modules
+#      dps-ansible: dps-ansible
+#      files: powerprotect-upgrade
+#    params:
+#      PLAYBOOK: dps-ansible/ppdm/9.9-playbook_upload_update_ppdm.yml 
+#      DEBUG: "FALSE"
+#      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
+#      PPDM_FQDN: ((PPDM.FQDN))   
+
+
+- name: precheck-powerprotect-update
+  serial_groups: [ansible, upgrade]
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: false
+      passed: [ ansible-configure-ppdm ]
+    - get: powerprotect-upgrade
+      passed: [ upload-powerprotect-update ]    
+      trigger: true
+      tags: ((tags))
+      params:
+        unpack: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))      
+  - task: ansible-check-sw-update
     tags: ((tags))
     image: dps-automation-image
-    file: dps-modules/ci/tasks/do-ppdm-upgrade.yml
+    tags: ((tags))
+    file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      powerprotect-upgrade: powerprotect-upgrade
+      dps-ansible: dps-ansible
     params:
+      PLAYBOOK: dps-ansible/ppdm/9.9-playbook_precheck_update_ppdm.yml
       DEBUG: "FALSE"
-      PPDM_FQDN: ((PPDM.FQDN))
-      PPDM_PASSWORD: ((PPDM.PASSWORD))      
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
+      PPDM_FQDN: ((PPDM.FQDN)) 
 
+- name: execute-powerprotect-update
+  serial_groups: [ansible, upgrade]
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: false
+    - get: powerprotect-upgrade
+      passed: [ precheck-powerprotect-update ]    
+      trigger: true
+      tags: ((tags))
+      params:
+        unpack: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))       
+  - task: ansible-execute-sw-update
+    tags: ((tags))
+    image: dps-automation-image
+    tags: ((tags))
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/9.9-playbook_install_update_ppdm.yml
+      DEBUG: "FALSE"
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
+      PPDM_FQDN: ((PPDM.FQDN)) 
 
 - name: ansible-configure-ppdm
   serial_groups: [ansible]
@@ -329,7 +423,7 @@ jobs:
       DDVE_PRIVATE_FQDN: ((PPDD.FQDN))
       PPDD_PATH: ((PPDD.PATH.PATH_1))
 
-- name: ansible-set-ppdm-sdr
+- name: ansible-set-ppdm-sdr-for-new-config
   serial_groups: [ansible]
   plan:
   - in_parallel:
@@ -351,14 +445,45 @@ jobs:
       dps-modules: dps-modules
       dps-ansible: dps-ansible
     params:
-      PLAYBOOK: dps-ansible/ppdm/3.0-playbook_set_dr.yml
+      PLAYBOOK: dps-ansible/ppdm/3.0-playbook_set_sdr.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))      
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       PPDD_PATH: ((PPDD.PATH.PATH_1))
       DDVE_PRIVATE_FQDN: ((PPDD.FQDN))
+      PPDM_SDR_PATH: ((PPDM.SDR_PATH))
 
+- name: ansible-set-ppdm-sdr-for-existing-boost
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: one-time-trigger
+      passed: [ ansible-set-ddve-inventory ]
+      trigger: false
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: set-ppdm-sdr-configuration
+    image: dps-automation-image
+    tags: ((tags))
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/3.0-playbook_set_sdr_existing_unit.yml
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))      
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
+      PPDM_PASSWORD: ((PPDM.PASSWORD))
+      PPDD_PATH: ((PPDD.PATH.PATH_1))
+      DDVE_PRIVATE_FQDN: ((PPDD.FQDN))
+      PPDM_SDR_PATH: ((PPDM.SDR_PATH))
 
 - name: ansible-enable-cdr
   serial_groups: [ansible]
@@ -769,9 +894,9 @@ jobs:
     file: pfsense-modules/ci/tasks/request_cert.yml
     params:
       <<: *credhub_env
-      CERT_ID: 612f4ae55f2f0
-      CA_ID: 612f34262f087
-      STORED_CERT: ppdm_cert
+      CERT_ID: ((PPDM.CERT_ID))
+      CA_ID: ((PPDM.CA_ID))
+      STORED_CERT: ((PPDM.STORED_CERT))
       SUBJECT: ((PPDM.FQDN))
       PFSENSE_FQDN: pfsense.home.labbuildr.com
       PFSENSE_USERNAME: ((pfsense_user.username)) 
@@ -792,6 +917,9 @@ jobs:
       tags: ((tags))
       params:
         unpack: true
+    - get: one-time-trigger
+      tags: ((tags))   
+      passed: [ ansible-configure-ppdm ]        
     - get: daily-trigger
       tags: ((tags))
       trigger: true
@@ -832,9 +960,9 @@ jobs:
     file: pfsense-modules/ci/tasks/renew_cert.yml
     params:
       <<: *credhub_env
-      CERT_ID: 612f4ae55f2f0
-      CA_ID: 612f34262f087
-      STORED_CERT: ppdm_cert
+      CERT_ID: ((PPDM.CERT_ID))
+      CA_ID: ((PPDM.CA_ID))
+      STORED_CERT: ((PPDM.STORED_CERT))
       SUBJECT: ((PPDM.FQDN))
       PFSENSE_FQDN: pfsense.home.labbuildr.com
       PFSENSE_USERNAME: ((pfsense_user.username)) 

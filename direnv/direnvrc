@@ -168,7 +168,7 @@ use_azure(){
         mkdir -p ${AZURE_CONFIG_DIR}
         echo "Reading Azure Settings from lpass"
          lpass status --quiet || :
-        export PROFILE="2019-03-01-hybrid"
+        export PROFILE="2020-09-01-hybrid"
         export CLOUDPROFILE=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=ENDPOINT)
         export ARM_TENANT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=TENANT_ID)
         export ARM_CLIENT_ID=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURE_ENV --field=CLIENT_ID)
@@ -239,7 +239,7 @@ use_azurestack-env(){
         mkdir -p ${AZURE_CONFIG_DIR}
         echo "Reading Azurestack Settings from lpass"
         lpass status --quiet || :
-        export PROFILE="2019-03-01-hybrid"
+        export PROFILE="2020-09-01-hybrid"
         export ENDPOINT=$(lpass show ${CONCOURSE_TARGET}\\${PIPELINE}/AZURESTACK_ENV --field=ENDPOINT)
         # CA_CERT: cert/root.pem
         export ENDPOINT_RESOURCE_MANAGER="https://management.${ENDPOINT}"
@@ -321,7 +321,7 @@ use_pas4k8s-env(){
 }
 
 use_pks-admin-env(){
-        export_alias pks '/usr/local/bin/tkgi $@'
+        export_alias pks 'tkgi $@'
 	echo "Retrieving PKS API Endpoint from Pipeline Config"
         export PKS_API_ENDPOINT=$(\
         cat "./${PIPELINE}/vars/pivotal-container-service-vars.yml" | \
