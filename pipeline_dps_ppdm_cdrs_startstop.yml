@@ -65,12 +65,20 @@ resources:
   tags: ((tags))  
   source:
     start: 01:00 AM
-    stop: 11:00 PM
+    stop: 06:00 PM
 #    stop: ((after_midnight_end))
     interval: 1h
     location: Europe/Berlin 
 
-
+- name: weekly
+  type: time
+  tags: ((tags))  
+  source:
+    start: 06:00 AM
+    stop: 09:00 AM
+#    stop: ((after_midnight_end))
+    interval: 1h
+    location: Europe/Berlin 
 #- name: platform-automation-image
 #  tags: ((tags))
 #  icon: cloud-download
@@ -274,3 +282,29 @@ jobs:
       DEBUG: "FALSE"
       CDRS_INSTANCE_NAME: CDRS-Instance 
       CDRS_RESOURCE_GROUP: CDRS-ResourceGroup
+
+
+- name: service-stop-cdrs
+  serial_groups : 
+  plan:
+  - in_parallel:
+    - get: weekly
+      trigger: true
+    - get: one-time-trigger
+    - get: dps-automation-image
+      tags: ((tags)) 
+      params:
+        unpack: true      
+    - get: dps-modules
+      tags: ((tags))
+  - task: stop-cdrs-and-mysql
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/stop-cdrs-services.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      <<: *azure_env
+      DEBUG: "FALSE"
+      CDRS_INSTANCE_NAME: CDRS-Instance 
+      CDRS_RESOURCE_GROUP: CDRS-ResourceGroup      

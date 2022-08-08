@@ -463,16 +463,16 @@ jobs:
       CONFIG_FILE: download-product-configs/((pks.version))/download-harbor-container-registry.yml
     input_mapping:
       config: interpolated-product-downloads
-    output_mapping: {downloaded-stemcell: harbor-container-registry-stemcell}
+#    output_mapping: {downloaded-stemcell: harbor-container-registry-stemcell}
   - in_parallel:
     - put: harbor-container-registry-product
       tags: ((tags))
       params:
         file: downloaded-product/*.pivotal
-    - put: harbor-container-registry-stemcell
-      tags: ((tags))
-      params:
-        file: harbor-container-registry-stemcell/*.tgz
+#    - put: harbor-container-registry-stemcell
+#      tags: ((tags))
+#      params:
+#        file: harbor-container-registry-stemcell/*.tgz
 
 ### get staged configs
 - name: staged-pivotal-container-service-config
@@ -746,7 +746,7 @@ jobs:
       config: interpolated-product-downloads
     output_mapping:
       downloaded-product: harbor-container-registry-product
-      downloaded-stemcell: harbor-container-registry-stemcell
+ #     downloaded-stemcell: harbor-container-registry-stemcell
   - task: upload-product
     tags: ((tags))
     image: platform-automation-image
@@ -756,15 +756,15 @@ jobs:
       env: variable
     params:
       ENV_FILE: ((foundation))/env/env.yml
-  - task: upload-harbor-container-registry-stemcell
-    tags: ((tags))
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      env: variable
-      stemcell: harbor-container-registry-stemcell
-    params:
-      ENV_FILE: ((foundation))/env/env.yml
+#  - task: upload-harbor-container-registry-stemcell
+#    tags: ((tags))
+#    image: platform-automation-image
+#    file: platform-automation-tasks/tasks/upload-stemcell.yml
+#    input_mapping:
+#      env: variable
+#      stemcell: harbor-container-registry-stemcell
+#    params:
+#      ENV_FILE: ((foundation))/env/env.yml
   - task: stage-product
     tags: ((tags))
     image: platform-automation-image
