@@ -311,7 +311,6 @@ jobs:
     - get: dps-ansible    
       tags: ((tags))      
   - task: ansible-check-sw-update
-    tags: ((tags))
     image: dps-automation-image
     tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
@@ -345,7 +344,6 @@ jobs:
   - task: ansible-execute-sw-update
     tags: ((tags))
     image: dps-automation-image
-    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -372,7 +370,6 @@ jobs:
   - task: configure-ppdm
     tags: ((tags))
     image: dps-automation-image
-    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules

@@ -201,7 +201,6 @@ jobs:
   - task: configure-initial-password
     tags: ((tags))
     image: dps-automation-image
-    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -229,7 +228,6 @@ jobs:
   - task: set-dd-license
     tags: ((tags))
     image: dps-automation-image
-    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -257,7 +255,6 @@ jobs:
   - task: set-dd-storage-configuration
     tags: ((tags))
     image: dps-automation-image
-    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -287,7 +284,6 @@ jobs:
   - task: set-dd-networks-configuration
     tags: ((tags))
     image: dps-automation-image
-    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -317,7 +313,6 @@ jobs:
   - task: set-dd-passphrase
     tags: ((tags))
     image: dps-automation-image
-    tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
