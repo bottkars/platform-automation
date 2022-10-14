@@ -841,7 +841,7 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      vars: restore-request
+      varsfile: restore-request
       dps-ansible: dps-ansible    
     params:
       PLAYBOOK: dps-ansible/ppdm/40.1-playbook_restore_vm_asset_copies.yml
