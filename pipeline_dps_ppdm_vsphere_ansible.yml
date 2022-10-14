@@ -69,7 +69,17 @@ resources:
     bucket: ppdm.restore
     regexp: request/ppdm-instant-(?P<version>\d{4}\.\d{1,2}\.\d{1,2}-\d{1,9}).yml
   check_every: 1m  
-  
+
+- name: restore-request
+  tags: ((tags))
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ppdm.restore
+    regexp: request/ppdm-restore-(?P<version>\d{4}\.\d{1,2}\.\d{1,2}-\d{1,9}).yml
+  check_every: 1m  
+
 - name: instant-access-state
   tags: ((tags))
   type: s3
@@ -78,13 +88,14 @@ resources:
     <<: *s3_env
     bucket: ppdm.restore
     regexp: state/(.*)-(?P<version>([0-9]{4})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])\.(2[0-3]|[01][0-9])([0-5][0-9])\.([0-5][0-9])).json
+
+
 - name: one-time-trigger
   tags: ((tags))
   icon: calendar-clock
   type: time
   source:
     interval: 999999h
-
 #- name: after-midnight
 #  type: time
 #  source:
@@ -810,6 +821,39 @@ jobs:
     tags: ((tags))
     params:
       file: instant_access/*.json
+- name: ppdm-vm-restore
+  plan:
+  - in_parallel:
+    - get: restore-request
+#      passed: [ ansible-set-vsphere-inventory ]              
+#      trigger: true
+    - get: one-time-trigger
+      passed: [ ansible-set-vsphere-inventory ]              
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: restore-vm
+    image: dps-automation-image
+    tags: ((tags))
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      vars: restore-request
+      dps-ansible: dps-ansible    
+    params:
+      PLAYBOOK: dps-ansible/ppdm/40.1-playbook_restore_vm_asset_copies.yml
+      DEBUG: "FALSE"
+      PPDM_FQDN: ((PPDM.FQDN))
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
+      PPDM_SMTP_SERVER: ((PPDM.SMTP_SERVER))
+      PPDM_SMTP_FROM: ((PPDM.SMTP_FROM))
+      PPDM_SMTP_PORT: ((PPDM.SMTP_PORT))      
+
+
+
 - name: delete-ppdm
   plan:
   - in_parallel:
