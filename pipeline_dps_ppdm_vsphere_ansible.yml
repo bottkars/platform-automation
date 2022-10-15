@@ -826,7 +826,7 @@ jobs:
   - in_parallel:
     - get: restore-request
 #      passed: [ ansible-set-vsphere-inventory ]              
-#      trigger: true
+      trigger: true
     - get: one-time-trigger
       passed: [ ansible-set-vsphere-inventory ]              
     - get: dps-automation-image
