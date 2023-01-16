@@ -42,7 +42,7 @@ stemcells=$(curl -s https://bosh.io/api/v1/stemcells/bosh-azure-hyperv-ubuntu-xe
 
 VERSION=$(echo $stemcells |jq -r '[.[] | select(.version|test("621."))][0].version')
 RELEASE=stemcell-release
-    echo "Checking Stemcell Releases"
+    echo "Checking Xenial Stemcell Releases"
     OLD_VERSION=$(grep -A0 ${RELEASE} $VERSIONS_FILE | cut -d ':' -f2 | tr -d ' "')
     if [[ ${VERSION} != ${OLD_VERSION} ]]
         then
@@ -52,7 +52,19 @@ RELEASE=stemcell-release
     else
         echo "Already at Stemcell version ${VERSION}"
     fi
-
+stemcells=$(curl -s https://bosh.io/api/v1/stemcells/bosh-azure-hyperv-ubuntu-jammy-go_agent)
+VERSION=$(echo $stemcells |jq -r '[.[] | select(.version|test("1."))][0].version')
+RELEASE=jammy-release
+    echo "Checking Jammy Stemcell Releases"
+    OLD_VERSION=$(grep -A0 ${RELEASE} $VERSIONS_FILE | cut -d ':' -f2 | tr -d ' "')
+    if [[ ${VERSION} != ${OLD_VERSION} ]]
+        then
+        echo "new stemcell ${VERSION} found at bosh.io"
+            echo "Replacing ${RELEASE} version ${OLD_VERSION} with \"${VERSION}\" in $VERSIONS_FILE"
+            sed -i'.bak' "/${RELEASE}/s/.*/${RELEASE}: \"${VERSION}\"/" ${VERSIONS_FILE}
+    else
+        echo "Already at Stemcell version ${VERSION}"
+    fi    
 
 # https://bosh.io/d/github.com/cloudfoundry/garden-runc-release?v=1.19.10
 # https://bosh.io/d/github.com/cloudfoundry/garden-runc-release?v=1.19.10

@@ -67,8 +67,8 @@ resources:
   source:
     <<: *s3_env
     bucket: ppdm.restore
-    regexp: request/ppdm-instant-(?P<version>\d{4}\.\d{1,2}\.\d{1,2}-\d{1,9}).yml
-  check_every: 1m  
+    regexp: request/ppdm-instant-(?P<version>([0-9]{4})\.(0[1-9]|1[0-2])\.(0[1-9]|[1-2][0-9]|3[0-1])-([0-9][0-9][0-9])).yml
+  check_every: 5m  
 
 - name: restore-request
   tags: ((tags))
@@ -77,7 +77,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ppdm.restore
-    regexp: request/ppdm-restore-(?P<version>\d{4}\.\d{1,2}\.\d{1,2}-\d{1,9}).yml
+    regexp: request/ppdm-restore-(?P<version>([0-9]{4})\.(0[1-9]|1[0-2])\.(0[1-9]|[1-2][0-9]|3[0-1])-([0-9][0-9][0-9])).yml
   check_every: 1m  
 
 - name: instant-access-state
@@ -104,20 +104,6 @@ resources:
 #    interval: 24h
 #    location: Europe/Berlin 
 
-#- name: installation
-#  icon: cloud-download
-#  type: s3
-#  source:
-#    <<: *s3_env
-#    bucket: ((buckets.installation))
-#    regexp: ((foundation))/installation-(.*).zip    
-#- name: platform-automation-pivnet
-#  type: pivnet
-#  source:
-#    api_token: ((((foundation))/pivnet-token))
-#    product_slug: platform-automation
-#    product_version: 4\.*\.(.*)
-#    sort_by: semver
 
 - name: pfsense-modules
   tags: ((tags))  
@@ -165,8 +151,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-sw-((PPDM.VERSION_REGEX)).ova #only release builds
-#    regexp: powerprotect/dellemc-ppdm-sw-(.*).ova   # any build
+    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-sw-((PPDM.VERSION_REGEX)).ova
 
 - name: certstate
   tags: ((tags))  
@@ -185,7 +170,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-upgrade-sw-((PPDM.VERSION_REGEX)).pkg #only release builds
+    regexp: powerprotect/((PPDM.VERSION))/dellemc-ppdm-upgrade-sw-((PPDM.VERSION_REGEX)).pkg 
 
 
 
@@ -668,9 +653,7 @@ jobs:
       VCENTER_USERNAME: ((GOVC.USERNAME))
       VCENTER_PASSWORD: ((GOVC.PASSWORD))
       VCENTER_FQDN: ((GOVC.URL))
-#      INVENTORY_CREDENTIAL_TYPE: VCENTER
-#      INVENTORY_TYPE: VCENTER
-#      INVENTORY_PORT: 443
+
 
 - name: ansible-set-ppdm-license
   serial_groups: [ansible]
@@ -764,7 +747,6 @@ jobs:
   - in_parallel:
     - get: instant-access-state
       passed: [ ppdm-vm-instant-access ]              
-#      trigger: true    
     - get: one-time-trigger
       passed: [ ansible-set-vsphere-inventory ]              
     - get: dps-automation-image
@@ -793,8 +775,7 @@ jobs:
   plan:
   - in_parallel:
     - get: instant-access-request
-#      passed: [ ansible-set-vsphere-inventory ]              
-#      trigger: true
+      trigger: true
     - get: one-time-trigger
       passed: [ ansible-set-vsphere-inventory ]              
     - get: dps-automation-image
@@ -825,7 +806,6 @@ jobs:
   plan:
   - in_parallel:
     - get: restore-request
-#      passed: [ ansible-set-vsphere-inventory ]              
       trigger: true
     - get: one-time-trigger
       passed: [ ansible-set-vsphere-inventory ]              
@@ -880,12 +860,6 @@ jobs:
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
       GOVC_NETWORK: ((GOVC.NETWORK))
       PPDM_VMNAME: ((PPDM.VMNAME))
-
-
-
-
-
-
 - name: delete-cdrs-azure
   plan:
   - in_parallel:
@@ -1015,3 +989,52 @@ jobs:
     tags: ((tags))      
     params:
       file: certificates/((PPDM.FQDN))*.pem
+
+
+
+groups:
+- name: full
+  jobs:
+  - deploy-powerprotect-ova
+  - upload-powerprotect-update
+  - precheck-powerprotect-update
+  - execute-powerprotect-update
+  - ansible-configure-ppdm
+  - ansible-set-ddve-inventory
+  - ansible-set-ppdm-sdr-for-new-config
+  - ansible-set-ppdm-sdr-for-existing-boost
+  - ansible-enable-cdr
+  - ansible-set-ppdm-certificates
+  - ansible-configure-clouddr-account
+  - ansible-set-clouddr-target
+  - ansible-deploy-cdrs-instance
+  - ansible-set-vsphere-inventory
+  - ansible-set-ppdm-license
+  - ansible-set-ppdm-smtp
+  - add-vpe-proxy
+  - delete-vm-instant-access
+  - ppdm-vm-instant-access
+  - ppdm-vm-restore
+  - delete-ppdm
+  - delete-cdrs-azure
+  - get-certs-from-pfsense
+  - get-ppdm-cert-expiration
+  - issue-ppdm-cert-renewal
+
+- name: restore
+  jobs:
+  - ppdm-vm-restore
+- name: instant-access
+  jobs:
+  - delete-vm-instant-access
+  - ppdm-vm-instant-access
+- name: certificate-management
+  jobs:
+  - get-certs-from-pfsense
+  - get-ppdm-cert-expiration
+  - issue-ppdm-cert-renewal  
+- name: update-management
+  jobs:
+  - upload-powerprotect-update
+  - precheck-powerprotect-update
+  - execute-powerprotect-update      

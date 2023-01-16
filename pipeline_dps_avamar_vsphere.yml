@@ -73,7 +73,6 @@ resources:
 
 
 - name: dps-modules
-  tags: ((tags))
   icon: git
   type: git
   check_every: 10m  
@@ -109,18 +108,15 @@ jobs:
     - get: one-time-trigger
       trigger: true
     - get: avamar
-      tags: ((tags))
-      params:
+          params:
         unpack: false
     - get: dps-automation-image
       params:
         unpack: true
       tags: ((tags))        
     - get: dps-modules
-      tags: ((tags))
-  - task: deploy-ova
-    tags: ((tags))
-    image: dps-automation-image
+      - task: deploy-ova
+      image: dps-automation-image
     file: dps-modules/ci/tasks/deploy-ave.yml
     input_mapping:
       dps-modules: dps-modules
@@ -153,10 +149,8 @@ jobs:
       trigger: true
     - get: dps-automation-image
     - get: dps-modules
-      tags: ((tags))
-  - task: configure-avamar
-    tags: ((tags))
-    image: dps-automation-image
+      - task: configure-avamar
+      image: dps-automation-image
     file: dps-modules/ci/tasks/configure-ave-vsphere.yml
     input_mapping:
       dps-modules: dps-modules
@@ -195,10 +189,8 @@ jobs:
     - get: dps-automation-image
       tags: ((tags))        
     - get: dps-modules
-      tags: ((tags))
-  - task: deploy-avamar-client-package
-    tags: ((tags))
-    image: dps-automation-image
+      - task: deploy-avamar-client-package
+      image: dps-automation-image
     file: dps-modules/ci/tasks/deploy-avamar-client-avp.yml
     input_mapping:
       dps-modules: dps-modules
@@ -221,13 +213,10 @@ jobs:
     - get: one-time-trigger
       passed: [ deploy-avamar-ova ]
     - get: dps-automation-image
-      tags: ((tags))
-      passed:          
+          passed:          
     - get: dps-modules
-      tags: ((tags))
-  - task: delete-avamar
-    tags: ((tags))
-    image: dps-automation-image
+      - task: delete-avamar
+      image: dps-automation-image
     file: dps-modules/ci/tasks/delete-vm.yml
     input_mapping:
       dps-modules: dps-modules

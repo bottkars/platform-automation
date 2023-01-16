@@ -48,13 +48,13 @@ resources:
 
 
 
-- name: plstform-automation-image
-  icon: cloud-download
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((buckets.pivnet_image))
-    regexp: platform-automation-image-(.*).tgz
+#- name: platform-automation-image
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((buckets.pivnet_image))
+#    regexp: platform-automation-image-(.*).tgz
 - name: dps-automation-image
   icon: docker
   type: docker-image
@@ -80,7 +80,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets.dps_products))
-    regexp: ddve/((PPDD.BASEVER))/ddve-(([78])\.([234567]{1,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{5,7})).ova #only release builds
+    regexp: ddve/((PPDD.BASEVER))/ddve-(([78])\.([23456789]{1,2})\.([0-9]{1,2})\.([0-9]{1,2})-([0-9]{5,7})).ova #only release builds
 display:
   background_image: https://www.delltechnologies.com/content/dam/uwaem/production-design-assets/en/data-protection/images/hero-300x600-social.jpg
 
