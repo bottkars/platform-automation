@@ -1,9 +1,9 @@
 ---
 s3_env: &s3_env
-  access_key_id: ((s3_access_key_id))
-  endpoint:  ((s3_endpoint))
-  region_name: ((s3_region_name))
-  secret_access_key: ((s3_secret_access_key))
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
 azure_env: &azure_env
   PROFILE: ((azs.arm_profile))
   CA_CERT: ((azs.azs_ca.certificate))
@@ -134,14 +134,14 @@ resources:
 #    url: ((slack.webhook))
 #
 
-- name: sonobuoy-results
-  tags: ((tags))
-  icon: cloud-download
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((aks.bucket))
-    regexp: ((aks.resource_group))/((2[0-9]{3})(0[1-9]|1[012])([123]0|[012][1-9]|31))(([01][0-9]|2[0-3])((([0-5][0-9]))){1,2})_sonobuoy_(.*).tar.gz
+#- name: sonobuoy-results
+#  tags: ((tags))
+#  icon: cloud-download
+#  type: s3
+#  source:
+#    <<: *s3_env
+#    bucket: ((aks.bucket))
+#    regexp: ((aks.resource_group))/((2[0-9]{3})(0[1-9]|1[012])([123]0|[012][1-9]|31))(([01][0-9]|2[0-3])((([0-5][0-9]))){1,2})_sonobuoy_(.*).tar.gz
 
 - name: installation
   tags: ((tags))
@@ -160,14 +160,14 @@ resources:
     bucket: ((aks.bucket))
     regexp: ((aks.resource_group))/kubeconfig-(.*).json  
 
-- name: k8stoken     
-  tags: ((tags))
-  icon: cloud-download
-  type: s3
-  source:
-    <<: *s3_env
-    bucket: ((aks.bucket))
-    regexp: ((aks.resource_group))/ppdmk8stoken-(.*).json 
+#- name: k8stoken     
+#  tags: ((tags))
+#  icon: cloud-download
+#  type: s3#
+#  source:
+#    <<: *s3_env
+#    bucket: ((aks.bucket))
+#    regexp: ((aks.resource_group))/ppdmk8stoken-(.*).json 
 
 - name: apimodel
   tags: ((tags))
@@ -197,7 +197,7 @@ resources:
     tag: latest
     ca_certs:
     - domain: harbor.pks.home.labbuildr.com
-      cert: ((pks_cert.ca))
+      cert: ((pksdemo/pks_cert.ca))
 
 - name: dps-modules
   tags: ((tags))
@@ -209,15 +209,15 @@ resources:
     branch: main  
 
 
-- name: sonobuoy-release
-  tags: ((tags))
-  icon: github
-  type: github-release
-  check_every: 24h  
-  source: 
-    private_key: ((((foundation))/template-deploy-key.private_key))
-    owner: vmware-tanzu
-    repository: sonobuoy
+#- name: sonobuoy-release
+#  tags: ((tags))
+#  icon: github
+#  type: github-release
+#  check_every: 24h  
+#  source: 
+#    private_key: ((((foundation))/template-deploy-key.private_key))
+#    owner: vmware-tanzu
+#    repository: sonobuoy
 
 
 - name: aks-engine-release
@@ -357,7 +357,7 @@ jobs:
     - get: azs-concourse
       tags: ((tags))
       passed:
-      - validate-aks-cluster      
+      - deploy-aks-cluster      
     - get: dps-automation-image
       tags: ((tags))
       params:
@@ -403,11 +403,11 @@ jobs:
         unpack: true
         globs:
         - aks-engine-*-linux-amd64.tar.gz
-    - get: sonobuoy-results
-      tags: ((tags))
-      trigger: true
-      passed:
-      - validate-aks-cluster          
+#    - get: sonobuoy-results
+#      tags: ((tags))
+#      trigger: true
+#      passed:
+#      - validate-aks-cluster          
     - get: azs-concourse
       tags: ((tags))
     - get: dps-automation-image
@@ -438,33 +438,33 @@ jobs:
     params:
       file: kubeconfig/kubeconfig-*.json     
 
-- name: validate-aks-cluster
-  plan:
-  - in_parallel:
-    - get: kubeconfig
-      tags: ((tags))
-      passed: [ deploy-aks-cluster ]
-      trigger: true
-    - get: sonobuoy-release
-      tags: ((tags))
-      params:
-        unpack: true   
-        globs:
-        - sonobuoy_*_linux_amd64.tar.gz         
-    - get: azs-concourse
-      tags: ((tags))
-    - get: dps-automation-image
-      tags: ((tags))
-  - task: validate-cluster
-    tags: ((tags))
-    file: azs-concourse/ci/tasks/validate-kubernetes-cluster.yml  
-    image: dps-automation-image
-    params:
-      SONOBUOY_MODE: quick #certified-conformance #  Valid modes are non-disruptive-conformance, quick, certified-conformance. (default non-disruptive-conformance)
-  - put: sonobuoy-results
-    tags: ((tags))
-    params:
-      file: validation-report/*_sonobuoy_*.tar.gz   
+#- name: validate-aks-cluster
+#  plan:
+#  - in_parallel:
+#    - get: kubeconfig
+#      tags: ((tags))
+#      passed: [ deploy-aks-cluster ]
+#      trigger: true
+##    - get: sonobuoy-release
+#      tags: ((tags))
+#      params:
+#        unpack: true   
+#        globs:
+#        - sonobuoy_*_linux_amd64.tar.gz         
+#    - get: azs-concourse
+#      tags: ((tags))
+#    - get: dps-automation-image
+#      tags: ((tags))
+#  - task: validate-cluster
+#    tags: ((tags))
+#    file: azs-concourse/ci/tasks/validate-kubernetes-cluster.yml  
+#    image: dps-automation-image#
+#    params:
+#      SONOBUOY_MODE: quick #certified-conformance #  Valid modes are non-disruptive-conformance, quick, certified-conformance. (default non-disruptive-conformance)
+#  - put: sonobuoy-results
+#    tags: ((tags))
+#    params:
+#      file: validation-report/*_sonobuoy_*.tar.gz   
 
 - name: attach-aks-cluster-to-tmc
   serial: true
@@ -496,7 +496,7 @@ jobs:
   - in_parallel:
     - get: kubeconfig
       tags: ((tags))
-      passed: [ validate-aks-cluster ]
+      passed: [ deploy-aks-cluster ]
       trigger: true 
 #    - get: kubectl-release          
     - get: azs-concourse
@@ -522,25 +522,25 @@ jobs:
     params:
       <<: *azure_env 
     
-- name: configure-ppdm-aks-cluster
-  serial: true
-  plan:
-  - in_parallel:
-    - get: kubeconfig
-      passed: 
-      - deploy-aks-cluster    
-      trigger: true
-    - get: dps-automation-image  
-    - get: dps-modules
-  - task: configure-aks-cluster
-    image: dps-automation-image
-    file: dps-modules/ci/tasks/configure-k8s-ppdm.yml
-    input_mapping:
-      dps-modules: dps-modules
-    params:
-      <<: *azure_env
-      DEBUG: "FALSE"
-      RUN_PPDM_PLAYBOOK: "FALSE"
-  - put: k8stoken
-    params:
-      file: k8stoken/ppdmk8stoken-*.json 
+#- name: configure-ppdm-aks-cluster
+#  serial: true
+#  plan:
+#  - in_parallel:
+#    - get: kubeconfig
+#      passed: 
+#      - deploy-aks-cluster    
+#      trigger: true
+#    - get: dps-automation-image  
+#    - get: dps-modules
+#  - task: configure-aks-cluster
+#    image: dps-automation-image
+#    file: dps-modules/ci/tasks/configure-k8s-ppdm.yml
+#    input_mapping:
+#      dps-modules: dps-modules
+#    params:
+#      <<: *azure_env
+#      DEBUG: "FALSE"
+#      RUN_PPDM_PLAYBOOK: "FALSE"
+#  - put: k8stoken
+#    params:
+#      file: k8stoken/ppdmk8stoken-*.json 
