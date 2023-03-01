@@ -97,6 +97,14 @@ resources:
     <<: *s3_env
     bucket: ((buckets.dps_products))
     regexp: networker/((NVE.BASEVER))/NVE-(.*).ova
+- name: vproxy
+  type: s3
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: networker/((NVE.BASEVER))/vproxy-installer-(.*).ova
+
 
 
 - name: networker-upgrade
@@ -242,7 +250,7 @@ jobs:
       params:
         unpack: true
       tags: ((tags))
-#      passed: [ deploy-networker-ova ]              
+      passed: [ deploy-networker-ova ]              
     - get: dps-modules
       tags: ((tags))
   - task: delete-nve
@@ -261,3 +269,109 @@ jobs:
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
 #      GOVC_NETWORK: ((GOVC.NETWORK))
       NVE_VMNAME: ((NVE.VMNAME))
+
+- name: delete-nve
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))
+#      passed: [ deploy-networker-ova ]              
+    - get: dps-modules
+      tags: ((tags))
+  - task: delete-nve
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/delete-vm.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
+      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
+#      GOVC_NETWORK: ((GOVC.NETWORK))
+      VMNAME: ((NVE.VMNAME))
+- name: deploy-vproxy-ova
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      passed: 
+      - configure-nve 
+    - get: vproxy
+      tags: ((tags))
+      params:
+        unpack: false
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-ova
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-nw-vproxy.yml
+    input_mapping:
+      dps-modules: dps-modules
+      vproxy: vproxy
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_RESOURCE_POOL: ((NVE.GOVC.RESOURCE_POOL))
+      GOVC_DATASTORE: ((NVE.GOVC.DATASTORE)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER))
+      GOVC_NETWORK: ((NVE.GOVC.NETWORK))
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VPROXY0.VMNAME))
+      VPROXY_DNS: ((NVE.DNS))
+      VPROXY_SEARCHDOMAIN: ((NVE.SEARCHPATHS))
+      VPROXY_FQDN: ((NVE.VPROXY0.FQDN))
+      VPROXY_IP0: ((NVE.VPROXY0.IP0))
+      VPROXY_NETMASK0: ((NVE.VPROXY0.NETMASK0))
+      VPROXY_GATEWAY: ((NVE.VPROXY0.GATEWAY))
+#      VPROXY_FQDN1:
+#      VPROXY_IP1:
+#      VPROXY_NETMASK1:
+#      VPROXY_GATEWAY1:
+      VPROXY_TIMEZONE: "((NVE.TIMEZONE))"
+      VPROXY_NTP: ((NVE.NTP))
+      VPROXY_ROOT_PASSWORD: ((NVE.PASSWORD))
+      VPROXY_ADMIN_PASSWORD: ((NVE.PASSWORD))
+      VPROXY_FOLDER: ((NVE.VPROXY0.FOLDER))
+      VPROXY_NETWORK0: ((NVE.VPROXY0.NETWORK0))
+#      VPROXY_NETWORK1: 
+      VPROXY_VMNAME: ((NVE.VPROXY0.VMNAME))
+
+
+- name: delete-vproxy
+  plan:
+  - in_parallel:
+    - get: dps-automation-image
+      params:
+        unpack: true
+      tags: ((tags))
+#      passed: [ deploy-vproxy-ova ]              
+    - get: dps-modules
+      tags: ((tags))
+  - task: delete-nve
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/delete-vm.yml
+    input_mapping:
+      dps-modules: dps-modules
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
+      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
+      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
+#      GOVC_NETWORK: ((GOVC.NETWORK))
+      VMNAME: ((NVE.VPROXY0.VMNAME))
