@@ -228,7 +228,7 @@ resources:
   source: 
     owner: Azure
     repository: aks-engine
-    tag_filter: ((aks.engine_tagfilter))
+    tag_filter: ((aks.engine_release))
 
 
 
@@ -237,7 +237,9 @@ resources:
   icon: cloud-braces
   type: file-url
   source:
-    url: https://raw.githubusercontent.com/Azure/aks-engine/master/examples/azure-stack/kubernetes-azurestack.json  
+  # ((aks.engine_tagfilter))
+    #url: https://github.com/Azure/aks-engine/blob/release-((aks.engine_release))/examples/azure-stack/kubernetes-azurestack.json
+    url: https://raw.githubusercontent.com/Azure/aks-engine/release-((aks.engine_release))/examples/azure-stack/kubernetes-azurestack.json
     filename: kubernetes-azurestack.json 
 
 - name: azs-concourse
@@ -497,7 +499,7 @@ jobs:
     - get: kubeconfig
       tags: ((tags))
       passed: [ deploy-aks-cluster ]
-      trigger: true 
+      trigger: false 
 #    - get: kubectl-release          
     - get: azs-concourse
       tags: ((tags))
