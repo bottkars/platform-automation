@@ -269,33 +269,6 @@ jobs:
       GOVC_DATACENTER: ((GOVC.DATACENTER)) 
 #      GOVC_NETWORK: ((GOVC.NETWORK))
       NVE_VMNAME: ((NVE.VMNAME))
-
-- name: delete-nve
-  plan:
-  - in_parallel:
-    - get: dps-automation-image
-      params:
-        unpack: true
-      tags: ((tags))
-#      passed: [ deploy-networker-ova ]              
-    - get: dps-modules
-      tags: ((tags))
-  - task: delete-nve
-    tags: ((tags))
-    image: dps-automation-image
-    file: dps-modules/ci/tasks/delete-vm.yml
-    input_mapping:
-      dps-modules: dps-modules
-    params:
-      GOVC_INSECURE: ((GOVC.INSECURE))
-      GOVC_PASSWORD: ((GOVC.PASSWORD))
-      GOVC_URL: ((GOVC.URL))
-      GOVC_USERNAME: ((GOVC.USERNAME))
-      GOVC_RESOURCE_POOL: ((GOVC.RESOURCE_POOL))
-      GOVC_DATASTORE: ((GOVC.DATASTORE)) 
-      GOVC_DATACENTER: ((GOVC.DATACENTER)) 
-#      GOVC_NETWORK: ((GOVC.NETWORK))
-      VMNAME: ((NVE.VMNAME))
 - name: deploy-vproxy-ova
   plan:
   - in_parallel:
@@ -359,7 +332,7 @@ jobs:
 #      passed: [ deploy-vproxy-ova ]              
     - get: dps-modules
       tags: ((tags))
-  - task: delete-nve
+  - task: delete-vm
     tags: ((tags))
     image: dps-automation-image
     file: dps-modules/ci/tasks/delete-vm.yml
