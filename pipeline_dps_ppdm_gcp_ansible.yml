@@ -1,0 +1,165 @@
+s3_env: &s3_env
+  access_key_id: ((((foundation))/s3_access_key_id))
+  endpoint:  ((((foundation))/s3_endpoint))
+  region_name: ((((foundation))/s3_region_name))
+  secret_access_key: ((((foundation))/s3_secret_access_key))
+
+
+credhub_env: &credhub_env
+  CREDHUB_CLIENT: ((((foundation))/credhub-client))
+  CREDHUB_SECRET: ((((foundation))/credhub-secret))
+  CREDHUB_SERVER: ((credhub-server))
+  PREFIX: /concourse/main/((foundation))
+  CREDHUB_CA_CERT: ((((foundation))/credhub-ca-cert.certificate))
+
+resource_types:
+- name: terraform
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: 1.4.5    
+#resource_types:
+#- name: pivnet
+#  type: docker-image
+#  source:
+#    repository: pivotalcf/pivnet-resource
+#    tag: latest-final
+resources:
+#- name: daily-trigger
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    interval: 24h
+
+- name: dps-ansible
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: git@github.com:bottkars/ansible_dps.git
+    branch: main
+    private_key: ((((foundation))/ansible_dps_git.private_key))
+
+#- name: variable
+#  tags: ((tags))
+#  icon: github
+ # type: git  
+ # source:
+ ##   uri: ((variable-repo))
+ #   private_key: ((private_key)) 
+ #   branch: master
+  #  paths:
+  ##  - proxy.yml
+
+- name: one-time-trigger
+  tags: ((tags))
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 999999h
+
+- name: dps-automation-image
+  tags: ((tags))
+  icon: docker
+  type: docker-image
+  source:
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine
+    tag: latest
+    ca_certs:
+    - domain: harbor.pks.home.labbuildr.com
+      cert: ((pksdemo/pks_cert.ca))
+
+
+- name: dps-modules
+  tags: ((tags))
+  icon: git
+  type: git
+  check_every: 10m  
+  source:  
+    uri: https://github.com/bottkars/dps-modules.git
+    branch: main
+    private_key: ((git_read.private_key))
+
+- name: terraform-state
+  type: terraform
+  source:
+    env_name: ((ENV))
+    backend_type: s3
+    backend_config:
+      access_key: ((((foundation))/s3_access_key_id))
+      endpoint:  ((((foundation))/s3_endpoint))
+      region: ((((foundation))/s3_region_name))
+      secret_key: ((((foundation))/s3_secret_access_key))
+      key: terraforming-dps/terraforming-gcp/terraform.tfstate
+      bucket: terraform      
+      skip_credentials_validation: true
+      skip_metadata_api_check: true
+      skip_region_validation: true
+      force_path_style  : true
+
+#- name: terraform-vars
+#  type: s3
+#  icon: folder-move
+#  source:
+#    access_key_id: ((((foundation))/s3_access_key_id))
+#    endpoint:  ((((foundation))/s3_endpoint))
+#    region_name: ((((foundation))/s3_region_name))
+#    secret_access_key: ((((foundation))/s3_secret_access_key))
+ #   regexp: terraforming-dps/terraforming-gcp/terraform_(?P<version>([0-9]{4})\.(0[1-9]|1[0-2])\.(0[1-9]|[1-2][0-9]|3[0-1])\.([0-9]{4})).auto.tfvars.json
+ ##   bucket: terraform     
+
+#- name: terraforming-dps
+#  icon: git
+ # type: git
+#  check_every: 10m  
+#  source:  
+#    uri: https://github.com/bottkars/terraforming-dps.git
+#    branch: main
+
+display:
+  background_image: https://corporate.delltechnologies.com/content/dam/delltechnologies/assets/corporate/images/newsroom/promos/powerprotect-x400.png
+  #  https://www.emc.com/content/dam/uwaem/production-design-assets/en/data-protection/dataprotectionsuite/images/leadspace-data-protection-family-large.jpg
+
+jobs:
+
+- name: terraform-show
+  plan:
+  - get: one-time-trigger  
+  - get: terraform-state
+    trigger: false
+
+
+
+- name: ansible-configure-ppdm
+  serial_groups: [ansible]
+  plan:
+  - in_parallel:
+    - get: one-time-trigger
+      trigger: false
+      passed: [ terraform-show ]  
+    - get: terraform-state
+      trigger: false      
+    - get: dps-automation-image
+      tags: ((tags))
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ansible    
+      tags: ((tags))
+  - task: configure-ppdm
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/ansible-playbook.yml
+    input_mapping:
+      dps-modules: dps-modules
+      ppdm-config: terraform-state
+      dps-ansible: dps-ansible
+    params:
+      PLAYBOOK: dps-ansible/ppdm/1.0-playbook_configure_ppdm.yml 
+      DEBUG: "FALSE"
+      PPDM_INITIAL_PASSWORD: Change_Me12345_ # to become password 
+      PPDM_NTP_SERVERS: ((GCP.PPDM.NTP_SERVERS))
+      PPDM_SETUP_PASSWORD: admin
+
+
+

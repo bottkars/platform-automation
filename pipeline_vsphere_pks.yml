@@ -268,7 +268,7 @@ resources:
   source:
     <<: *s3_env
     bucket: ((buckets_pivnet_products))
-    regexp: pivotal-container-service-stemcell/\[stemcells-ubuntu-xenial,(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
+    regexp: pivotal-container-service-stemcell/\[stemcells-ubuntu-((pks.stemcell_default)),(.*)\]bosh-stemcell-.*-((iaas)).*\.tgz
 
 - name: pivotal-container-service-stemcell-windows
   icon: cloud-download

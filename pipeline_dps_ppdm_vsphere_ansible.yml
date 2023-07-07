@@ -29,15 +29,15 @@ resources:
   source:
     interval: 24h
 
-- name: dps-ansible
+- name: dps-ppdm
   tags: ((tags))
   icon: git
   type: git
   check_every: 10m  
   source:  
-    uri: git@github.com:bottkars/ansible_dps.git
+    uri: git@github.com:bottkars/ansible_ppdm.git
     branch: main
-    private_key: ((((foundation))/ansible_dps_git.private_key))
+    private_key: ((((foundation))/ansible_ppdm_git.private_key))
 
 - name: variable
   tags: ((tags))
@@ -232,7 +232,6 @@ jobs:
         - ansible-set-vsphere-inventory
         - ansible-set-ppdm-license      
     - get: powerprotect-upgrade
-
       trigger: true
       tags: ((tags))
       params:
@@ -269,7 +268,7 @@ jobs:
 #      tags: ((tags))        
 #    - get: dps-modules
 #      tags: ((tags))
-#    - get: dps-ansible    
+#    - get: dps-ppdm   
 #      tags: ((tags))
 #  - task: ansible-ppdmsw-upgrade
 #    tags: ((tags))
@@ -278,10 +277,10 @@ jobs:
 #    file: dps-modules/ci/tasks/ansible-playbook.yml
 #    input_mapping:
 #      dps-modules: dps-modules
-#      dps-ansible: dps-ansible
+#      dps-ansible: dps-ppdm
 #      files: powerprotect-upgrade
 #    params:
-#      PLAYBOOK: dps-ansible/ppdm/9.9-playbook_upload_update_ppdm.yml 
+#      PLAYBOOK: dps-ansible/9.9-playbook_upload_update_ppdm.yml 
 #      DEBUG: "FALSE"
 #      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
 #      PPDM_FQDN: ((PPDM.FQDN))   
@@ -300,11 +299,12 @@ jobs:
       tags: ((tags))
       params:
         unpack: false
+        skip_download: "true"
     - get: dps-automation-image
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm    
       tags: ((tags))      
   - task: ansible-check-sw-update
     image: dps-automation-image
@@ -312,9 +312,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/9.9-playbook_precheck_update_ppdm.yml
+      PLAYBOOK: dps-ansible/9.9-playbook_precheck_update_ppdm.yml
       DEBUG: "FALSE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_FQDN: ((PPDM.FQDN)) 
@@ -331,11 +331,12 @@ jobs:
       tags: ((tags))
       params:
         unpack: false
+        skip_download: "true"
     - get: dps-automation-image
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))       
   - task: ansible-execute-sw-update
     tags: ((tags))
@@ -343,9 +344,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/9.9-playbook_install_update_ppdm.yml
+      PLAYBOOK: dps-ansible/9.9-playbook_install_update_ppdm.yml
       DEBUG: "FALSE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_FQDN: ((PPDM.FQDN)) 
@@ -361,7 +362,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: configure-ppdm
     tags: ((tags))
@@ -370,9 +371,9 @@ jobs:
     input_mapping:
       dps-modules: dps-modules
       ppdm-config: terraform-output
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/1.0-playbook_configure_ppdm.yml 
+      PLAYBOOK: dps-ansible/1.0-playbook_configure_ppdm.yml 
       DEBUG: "FALSE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_NTP_SERVERS: ((PPDM.NTP_SERVERS))
@@ -395,7 +396,7 @@ jobs:
       trigger: true      
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: set-ddve-inventory
     attempts: 10
@@ -405,9 +406,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/2.0-playbook_set_ddve.yml
+      PLAYBOOK: dps-ansible/2.0-playbook_set_ddve.yml
       DEBUG: "FALSE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_FQDN: ((PPDM.FQDN))
@@ -428,7 +429,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: set-ppdm-sdr-configuration
     image: dps-automation-image
@@ -436,9 +437,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/3.0-playbook_set_sdr.yml
+      PLAYBOOK: dps-ansible/3.0-playbook_set_sdr.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))      
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
@@ -459,7 +460,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: set-ppdm-sdr-configuration
     image: dps-automation-image
@@ -467,9 +468,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/3.0-playbook_set_sdr_existing_unit.yml
+      PLAYBOOK: dps-ansible/3.0-playbook_set_sdr_existing_unit.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))      
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
@@ -490,7 +491,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: set-cdra-enabled
     image: dps-automation-image
@@ -498,9 +499,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/2.2-playbook_set_cdra_enabled.yml
+      PLAYBOOK: dps-ansible/2.2-playbook_set_cdra_enabled.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
@@ -517,7 +518,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
     - get: certstate    
       tags: ((tags))
@@ -528,9 +529,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/9.0-playbook_replace_certs.yml
+      PLAYBOOK: dps-ansible/9.0-playbook_replace_certs.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
@@ -549,7 +550,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: set-cdr-account
     image: dps-automation-image
@@ -557,9 +558,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/2.3-playbook_configure_cloud_dr_account.yml
+      PLAYBOOK: dps-ansible/2.3-playbook_configure_cloud_dr_account.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
@@ -579,7 +580,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: set-cdr-target
     image: dps-automation-image
@@ -587,9 +588,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/2.4-playbook_set_cloud_dr_target.yml
+      PLAYBOOK: dps-ansible/2.4-playbook_set_cloud_dr_target.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
@@ -607,7 +608,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: set-cdrs-deployment
     image: dps-automation-image
@@ -615,9 +616,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/2.5-playbook_set_cdrs_deployment.yml
+      PLAYBOOK: dps-ansible/2.5-playbook_set_cdrs_deployment.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
@@ -636,7 +637,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: set-vsphere-inventory
     image: dps-automation-image
@@ -644,9 +645,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/2.1-playbook_set_vsphere.yml
+      PLAYBOOK: dps-ansible/2.1-playbook_set_vsphere.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
@@ -667,7 +668,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: replace-licenses
     image: dps-automation-image
@@ -675,9 +676,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/9.1-playbook_replace_license.yml
+      PLAYBOOK: dps-ansible/9.1-playbook_replace_license.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
@@ -695,7 +696,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: configure-smtp
     image: dps-automation-image
@@ -703,9 +704,9 @@ jobs:
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
-      dps-ansible: dps-ansible
+      dps-ansible: dps-ppdm
     params:
-      PLAYBOOK: dps-ansible/ppdm/3.1-playbook_set_smtp.yml
+      PLAYBOOK: dps-ansible/3.1-playbook_set_smtp.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
@@ -813,7 +814,7 @@ jobs:
       tags: ((tags))
     - get: dps-modules
       tags: ((tags))
-    - get: dps-ansible    
+    - get: dps-ppdm   
       tags: ((tags))
   - task: restore-vm
     image: dps-automation-image
@@ -822,9 +823,9 @@ jobs:
     input_mapping:
       dps-modules: dps-modules
       varsfile: restore-request
-      dps-ansible: dps-ansible    
+      dps-ansible: dps-ppdm    
     params:
-      PLAYBOOK: dps-ansible/ppdm/40.1-playbook_restore_vm_asset_copies.yml
+      PLAYBOOK: dps-ansible/40.1-playbook_restore_vm_asset_copies.yml
       DEBUG: "FALSE"
       PPDM_FQDN: ((PPDM.FQDN))
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD))
@@ -944,16 +945,42 @@ jobs:
         unpack: true  
   - across:
     - var: endpoints
-      values: [ppdm.home.labbuildr.com]      
-    task: check-expiration
-    image: platform-automation-image
-    file: pfsense-modules/ci/tasks/check_cert_expiration.yml
-    params:
-      SUBJECT: ((.:endpoints))
-      PORT: "443"
-      EXPIRE_DAYS: "15"
-    input_mapping:
-      pfsense-modules: pfsense-modules
+      values: [((PPDM.FQDN))]   
+    try: 
+        do:      
+          - task: check-expiration
+            image: platform-automation-image
+            file: pfsense-modules/ci/tasks/check_cert_expiration.yml
+            params:
+              SUBJECT: ((.:endpoints))
+              PORT: "443"
+              EXPIRE_DAYS: "15"
+            input_mapping:
+              pfsense-modules: pfsense-modules
+            on_failure:
+              do:
+              - task: request-new-certs-from-pfsense
+                tags: ((tags))      
+                image: platform-automation-image
+                file: pfsense-modules/ci/tasks/renew_cert.yml
+                params:
+                  <<: *credhub_env
+                  CERT_ID: ((PPDM.CERT_ID))
+                  CA_ID: ((PPDM.CA_ID))
+                  STORED_CERT: ((PPDM.STORED_CERT))
+                  SUBJECT: ((PPDM.FQDN))
+                  PFSENSE_FQDN: pfsense.home.labbuildr.com
+                  PFSENSE_USERNAME: ((pfsense_user.username)) 
+                  PFSENSE_PASSWORD: ((pfsense_user.password))
+                input_mapping:
+                  pfsense-modules: pfsense-modules
+                output_mapping: {certificates: certificates}
+              - put: certstate
+                tags: ((tags))      
+                params:
+                  file: certificates/((PPDM.FQDN))*.pem
+
+
 - name: issue-ppdm-cert-renewal
   serial: true
   plan:
@@ -1038,3 +1065,9 @@ groups:
   - upload-powerprotect-update
   - precheck-powerprotect-update
   - execute-powerprotect-update      
+
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: powerprotect
