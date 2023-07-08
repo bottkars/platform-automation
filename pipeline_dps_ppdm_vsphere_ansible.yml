@@ -132,7 +132,17 @@ resources:
     - domain: harbor.pks.home.labbuildr.com
       cert: ((pksdemo/pks_cert.ca))
 
-
+- name: dps-automation-image-testing
+  tags: ((tags))
+  icon: docker
+  type: docker-image
+  source:
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine-testing
+    tag: latest
+    ca_certs:
+    - domain: harbor.pks.home.labbuildr.com
+      cert: ((pksdemo/pks_cert.ca))
+  
 - name: dps-modules
   tags: ((tags))
   icon: git
@@ -1017,7 +1027,28 @@ jobs:
     params:
       file: certificates/((PPDM.FQDN))*.pem
 
-
+- name: test-k8s-broker
+  plan:
+  - in_parallel:
+    - get: dps-automation-image-testing
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+    - get: dps-ppdm    
+      tags: ((tags))      
+  - task: ansible-check-sw-update
+    image: dps-automation-image-testing
+    tags: ((tags))
+    file: dps-modules/ci/tasks/ansible-playbook.yml   
+    input_mapping:
+      dps-modules: dps-modules
+      dps-ansible: dps-ppdm
+    params:
+      PLAYBOOK: dps-ansible/99_playbook_get_k8s_info.yml
+      DEBUG: "TRUE"
+      PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
+      PPDM_FQDN: ((PPDM.FQDN)) 
+      KUBECOFIG: "leer"
 
 groups:
 - name: full
@@ -1066,8 +1097,6 @@ groups:
   - precheck-powerprotect-update
   - execute-powerprotect-update      
 
-spec:
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: powerprotect
+- name: k8sbroker
+  jobs:
+  - test-k8s-broker  
