@@ -135,13 +135,13 @@ resources:
 - name: dps-automation-image-testing
   tags: ((tags))
   icon: docker
-  type: docker-image
+  type: registry-image
   source:
     repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine-testing
-    tag: latest
+    tag: v1.3
     ca_certs:
-    - domain: harbor.pks.home.labbuildr.com
-      cert: ((pksdemo/pks_cert.ca))
+    - |
+     ((pksdemo/pks_cert.ca))
   
 - name: dps-modules
   tags: ((tags))
@@ -1036,7 +1036,7 @@ jobs:
       tags: ((tags))
     - get: dps-ppdm    
       tags: ((tags))      
-  - task: ansible-check-sw-update
+  - task: ansible-check-kubernetes-state
     image: dps-automation-image-testing
     tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml   
@@ -1048,7 +1048,7 @@ jobs:
       DEBUG: "TRUE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_FQDN: ((PPDM.FQDN)) 
-      KUBECOFIG: "leer"
+      KUBE_CONFIG: ((pksdemo/csi))
 
 groups:
 - name: full
