@@ -138,7 +138,7 @@ resources:
   type: registry-image
   source:
     repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine-testing
-    tag: v1.3
+    tag: v1.4
     ca_certs:
     - |
      ((pksdemo/pks_cert.ca))
@@ -1027,7 +1027,7 @@ jobs:
     params:
       file: certificates/((PPDM.FQDN))*.pem
 
-- name: test-k8s-broker
+- name: set-kubernetes-clusters
   plan:
   - in_parallel:
     - get: dps-automation-image-testing
@@ -1100,4 +1100,4 @@ groups:
 
 - name: k8sbroker
   jobs:
-  - test-k8s-broker  
+  - set-kubernetes-clusters
