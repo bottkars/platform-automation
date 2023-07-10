@@ -29,6 +29,13 @@ resources:
   source:
     interval: 24h
 
+
+- name: hourly-trigger
+  icon: calendar-clock
+  type: time
+  source:
+    interval: 1h
+
 - name: dps-ppdm
   tags: ((tags))
   icon: git
@@ -138,7 +145,7 @@ resources:
   type: registry-image
   source:
     repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine-testing
-    tag: v1.4
+    tag: v1.5
     ca_certs:
     - |
      ((pksdemo/pks_cert.ca))
@@ -1030,13 +1037,19 @@ jobs:
 - name: set-kubernetes-clusters
   plan:
   - in_parallel:
+    - get: hourly-trigger
+      tags: ((tags))
+      trigger: true  
     - get: dps-automation-image-testing
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
     - get: dps-ppdm    
-      tags: ((tags))      
-  - task: ansible-check-kubernetes-state
+      tags: ((tags))
+  - across:
+    - var: cluster
+      values: ((PPDM.KUBERNETES.CLUSTERS))              
+    task: ansible-ensure-kubernetes-ppdm-config
     image: dps-automation-image-testing
     tags: ((tags))
     file: dps-modules/ci/tasks/ansible-playbook.yml   
@@ -1045,13 +1058,14 @@ jobs:
       dps-ansible: dps-ppdm
     params:
       PLAYBOOK: dps-ansible/playbook_rbac_add_k8s_to_ppdm_reg_cred.yml
-      DEBUG: "TRUE"
+      DEBUG: "FALSE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_FQDN: ((PPDM.FQDN)) 
-      KUBE_CONFIG: ((pksdemo/csi))
-      EXTRA_VARS: rbac_source=https://raw.githubusercontent.com/bottkars/ppdm-rbac/19.14/,dockerconfigjson=eyJhdXRocyI6eyJoYXJib3IucGtzLmhvbWUubGFiYnVpbGRyLmNvbSI6eyJ1c2VybmFtZSI6InJvYm90JHBwZG1fYWNjb3VudCIsInBhc3N3b3JkIjoiTnJVU2ZWMGVPVFFmVGN0RHVienhNblV1a3IwRDBXbnkiLCJhdXRoIjoiY205aWIzUWtjSEJrYlY5aFkyTnZkVzUwT2s1eVZWTm1WakJsVDFSUlpsUmpkRVIxWW5wNFRXNVZkV3R5TUVRd1YyNTUifX19
-      EXTRA_VARS_JSON: {"details":{"k8s":{"configurations":[{"type":"CONTROLLER_CONFIG","key":"k8s.ppdm.vspherecsi.use.fsagent","value":"true"},{"type":"CONTROLLER_CONFIG","key":"k8s.docker.registry","value":"harbor.pks.home.labbuildr.com"},{"type":"CONTROLLER_CONFIG","key":"k8s.image.pullsecrets","value":"regcred"},{"type":"POD_CONFIG","key":"VELERO","value":"c3BlYzoKICB0ZW1wbGF0ZToKICAgIG1ldGFkYXRhOgogICAgICBsYWJlbHM6CiAgICAgICAgYXBwLmt1YmVybmV0ZXMuaW8vbmFtZTogdmVsZXJvLXBwZG0KICAgIHNwZWM6CiAgICAgIGltYWdlUHVsbFNlY3JldHM6CiAgICAgICAtIG5hbWU6IHJlZ2NyZWQ="}]}}}
-groups:
+      KUBE_CONFIG: ((pksdemo/((.:cluster))/kubeconfig))
+      EXTRA_VARS: ((pksdemo/((.:cluster))/extra_vars))
+      EXTRA_VARS_JSON: ((pksdemo/((.:cluster))/extra_vars_json))
+      K8S_AUTH_VERIFY_SSL: ((pksdemo/((.:cluster))/k8s_auth_verify_ssl))
+groups:      
 - name: full
   jobs:
   - deploy-powerprotect-ova
@@ -1079,6 +1093,7 @@ groups:
   - get-certs-from-pfsense
   - get-ppdm-cert-expiration
   - issue-ppdm-cert-renewal
+  - set-kubernetes-clusters
 
 - name: restore
   jobs:
