@@ -145,7 +145,7 @@ resources:
   type: registry-image
   source:
     repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine-testing
-    tag: v1.5
+    tag: v1.8
     ca_certs:
     - |
      ((pksdemo/pks_cert.ca))
@@ -349,7 +349,7 @@ jobs:
       params:
         unpack: false
         skip_download: "true"
-    - get: dps-automation-image
+    - get:  dps-automation-image-testing
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
@@ -357,7 +357,7 @@ jobs:
       tags: ((tags))       
   - task: ansible-execute-sw-update
     tags: ((tags))
-    image: dps-automation-image
+    image: dps-automation-image-testing
     file: dps-modules/ci/tasks/ansible-playbook.yml
     input_mapping:
       dps-modules: dps-modules
@@ -366,7 +366,8 @@ jobs:
       PLAYBOOK: dps-ansible/9.9-playbook_install_update_ppdm.yml
       DEBUG: "FALSE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
-      PPDM_FQDN: ((PPDM.FQDN)) 
+      PPDM_FQDN: ((PPDM.FQDN))
+      ANSIBLE_JINJA2_NATIVE: True 
 
 - name: ansible-configure-ppdm
   serial_groups: [ansible]
