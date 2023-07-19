@@ -364,7 +364,7 @@ jobs:
       dps-ansible: dps-ppdm
     params:
       PLAYBOOK: dps-ansible/9.9-playbook_install_update_ppdm.yml
-      DEBUG: "FALSE"
+      DEBUG: "TRUE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_FQDN: ((PPDM.FQDN))
       ANSIBLE_JINJA2_NATIVE: True 
@@ -1066,6 +1066,8 @@ jobs:
       EXTRA_VARS: ((pksdemo/((.:cluster))/extra_vars))
       EXTRA_VARS_JSON: ((pksdemo/((.:cluster))/extra_vars_json))
       K8S_AUTH_VERIFY_SSL: ((pksdemo/((.:cluster))/k8s_auth_verify_ssl))
+      ANSIBLE_JINJA2_NATIVE: True 
+
 groups:      
 - name: full
   jobs:
