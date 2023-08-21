@@ -364,7 +364,7 @@ jobs:
       dps-ansible: dps-ppdm
     params:
       PLAYBOOK: dps-ansible/9.9-playbook_install_update_ppdm.yml
-      DEBUG: "TRUE"
+      DEBUG: "FALSE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_FQDN: ((PPDM.FQDN))
       ANSIBLE_JINJA2_NATIVE: True 
@@ -401,6 +401,7 @@ jobs:
       PPDM_PASSWORD: ((PPDM.PASSWORD))
       PPDM_SETUP_PASSWORD: ((PPDM.SETUP_PASSWORD)) 
       PPDM_FOLDER: ((PPDM.FOLDER))
+      PPDM_TIMEZONE: ((PPDM.TIMEZONE))
 
 - name: ansible-set-ddve-inventory
   serial_groups: [ansible]
@@ -434,7 +435,7 @@ jobs:
       DDVE_PASSWORD: ((PPDD.PASSWORD))
       DDVE_PRIVATE_FQDN: ((PPDD.FQDN))
       PPDD_PATH: ((PPDD.PATH.PATH_1))
-
+      ANSIBLE_JINJA2_NATIVE: True 
 - name: ansible-set-ppdm-sdr-for-new-config
   serial_groups: [ansible]
   plan:
