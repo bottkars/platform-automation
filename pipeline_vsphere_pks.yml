@@ -1477,7 +1477,7 @@ jobs:
     params:
       SUBJECT: ((.:endpoints))
       PORT: "443"
-      EXPIRE_DAYS: "15"
+      EXPIRE_DAYS: "30"
     input_mapping:
       pfsense-modules: pfsense-modules
 
@@ -1504,7 +1504,7 @@ jobs:
     params:
       SUBJECT: harbor.((pks.fqdn))
       PORT: "443"
-      EXPIRE_DAYS: "15"
+      EXPIRE_DAYS: "30"
     input_mapping:
       pfsense-modules: pfsense-modules
 - name: get-pks-api-cert-expiration
@@ -1529,7 +1529,7 @@ jobs:
     params:
       SUBJECT: api.((pks.fqdn))
       PORT: "9021"
-      EXPIRE_DAYS: "15"
+      EXPIRE_DAYS: "30"
     input_mapping:
       pfsense-modules: pfsense-modules
 groups:
