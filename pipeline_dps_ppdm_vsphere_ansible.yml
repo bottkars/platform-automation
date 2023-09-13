@@ -1060,7 +1060,7 @@ jobs:
       dps-ansible: dps-ppdm
     params:
       PLAYBOOK: dps-ansible/playbook_rbac_add_k8s_to_ppdm_reg_cred.yml
-      DEBUG: "FALSE"
+      DEBUG: "TRUE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_FQDN: ((PPDM.FQDN)) 
       KUBE_CONFIG: ((pksdemo/((.:cluster))/kubeconfig))
