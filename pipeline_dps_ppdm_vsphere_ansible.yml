@@ -29,12 +29,19 @@ resources:
   source:
     interval: 24h
 
-
-- name: hourly-trigger
-  icon: calendar-clock
+- name: after-noon
   type: time
   source:
     interval: 1h
+    start: 07:00 AM
+    stop: 07:00 PM
+    location: Europe/Berlin
+
+#- name: hourly-trigger
+#  icon: calendar-clock
+#  type: time
+#  source:
+#    interval: 1h
 
 - name: dps-ppdm
   tags: ((tags))
@@ -1039,7 +1046,7 @@ jobs:
 - name: set-kubernetes-clusters
   plan:
   - in_parallel:
-    - get: hourly-trigger
+    - get: after-noon
       tags: ((tags))
       trigger: true  
     - get: dps-automation-image-testing
@@ -1060,7 +1067,7 @@ jobs:
       dps-ansible: dps-ppdm
     params:
       PLAYBOOK: dps-ansible/playbook_rbac_add_k8s_to_ppdm_reg_cred.yml
-      DEBUG: "TRUE"
+      DEBUG: "FALSE"
       PPDM_INITIAL_PASSWORD: ((PPDM.PASSWORD)) 
       PPDM_FQDN: ((PPDM.FQDN)) 
       KUBE_CONFIG: ((pksdemo/((.:cluster))/kubeconfig))
