@@ -353,8 +353,8 @@ jobs:
       AVI_PASSWORD: ((AVE.PASSWORD))
       WORKFLOW: "AvamarUpgrade"
       AVI_PACKAGE: AvamarUpgrade-
-      DATA: '{"linux_root_password":"((AVE.PASSWORD))","linux_admin_password":"((AVE.PASSWORD))"}'
-
+      # DATA: '{"linux_root_password":"((AVE.PASSWORD))","linux_admin_password":"((AVE.PASSWORD))"}'
+      DATA: '{"linux_root_password":"((AVE.PASSWORD))","linux_admin_password":"((AVE.PASSWORD))","password_Expiry":"999","warning_days":"99","check_mcpassword":"((AVE.PASSWORD))","check_serverpassword":"((AVE.PASSWORD))"}'
 - name: cdm-cli-history
   plan:
   - get: avi-automation-image
