@@ -138,13 +138,13 @@ resources:
 - name: dps-automation-image
   tags: ((tags))
   icon: docker
-  type: docker-image
+  type: registry-image
   source:
-    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine-testing
     tag: latest
     ca_certs:
-    - domain: harbor.pks.home.labbuildr.com
-      cert: ((pksdemo/pks_cert.ca))
+    - |
+     ((pksdemo/pks_cert.ca))
 
 - name: dps-automation-image-testing
   tags: ((tags))
@@ -152,7 +152,7 @@ resources:
   type: registry-image
   source:
     repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine-testing
-    tag: v1.8
+    tag: v2.0
     ca_certs:
     - |
      ((pksdemo/pks_cert.ca))
@@ -739,7 +739,7 @@ jobs:
       PPDM_SMTP_SERVER: ((PPDM.SMTP_SERVER))
       PPDM_SMTP_FROM: ((PPDM.SMTP_FROM))
       PPDM_SMTP_PORT: ((PPDM.SMTP_PORT))
-
+      ANSIBLE_JINJA2_NATIVE: True 
 - name: add-vpe-proxy
   plan:
   - in_parallel:

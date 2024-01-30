@@ -64,14 +64,15 @@ resources:
 
 
 - name: dps-automation-image
+  tags: ((tags))
   icon: docker
-  type: docker-image
+  type: registry-image
   source:
-    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine-testing
     tag: latest
     ca_certs:
-    - domain: harbor.pks.home.labbuildr.com
-      cert: ((pksdemo/pks_cert.ca))
+    - |
+     ((pksdemo/pks_cert.ca))
 
 - name: avi-automation-image
   icon: docker
@@ -181,8 +182,6 @@ jobs:
       params:
         unpack: false
     - get: dps-automation-image
-      params:
-        unpack: true
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))

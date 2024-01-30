@@ -824,6 +824,8 @@ jobs:
   - in_parallel:
 #    - get: opsman-product
  #     tags: ((tags))
+    - get: certstate
+      tags: ((tags)) 
     - get: platform-automation-image
       tags: ((tags))
       params:
@@ -911,7 +913,18 @@ jobs:
 #    params:
 #      ENV_FILE: ((foundation))/env/env.yml
 #      CERTIFICATE_PEM: ((pks_cert.certificate))
-#      KEY_PEM: ((pks_cert.private_key))    
+#      KEY_PEM: ((pks_cert.private_key))
+  - task: update-om-configuration
+    tags: ((tags))
+    attempts: 3     
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-opsman.yml
+    input_mapping:
+      env: variable
+      config: interpolated-om-configuration
+    params:
+      OPSMAN_CONFIG_FILE: ((foundation))/config/opsman.yml
+      ENV_FILE: ((foundation))/env/env.yml    
   - task: configure-director
     tags: ((tags))
     attempts: 3    
@@ -998,6 +1011,7 @@ jobs:
     tags: ((tags))      
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-director-changes.yml
+    attempts: 30
     input_mapping:
       env: variable
     params:
