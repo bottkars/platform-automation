@@ -802,7 +802,7 @@ jobs:
   plan:
   - in_parallel:
     - get: instant-access-request
-      trigger: true
+      trigger: false
     - get: one-time-trigger
       passed: [ ansible-set-vsphere-inventory ]              
     - get: dps-automation-image
@@ -833,7 +833,7 @@ jobs:
   plan:
   - in_parallel:
     - get: restore-request
-      trigger: true
+      trigger: false
     - get: one-time-trigger
       passed: [ ansible-set-vsphere-inventory ]              
     - get: dps-automation-image

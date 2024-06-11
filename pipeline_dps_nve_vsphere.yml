@@ -70,14 +70,15 @@ resources:
 #    regexp: platform-automation-image-(.*).tgz
 
 - name: dps-automation-image
+  tags: ((tags))
   icon: docker
-  type: docker-image
+  type: registry-image
   source:
-    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine
+    repository: harbor.pks.home.labbuildr.com/bottkars/dps-automation-image-alpine-testing
     tag: latest
     ca_certs:
-    - domain: harbor.pks.home.labbuildr.com
-      cert: ((pksdemo/pks_cert.ca))
+    - |
+     ((pksdemo/pks_cert.ca))
 
 - name: dps-modules
   tags: ((tags))
@@ -137,8 +138,6 @@ jobs:
       params:
         unpack: false
     - get: dps-automation-image
-      params:
-        unpack: true
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
@@ -174,8 +173,6 @@ jobs:
       trigger: true
     - get: dps-automation-image
       passed: [ deploy-networker-ova ]
-      params:
-        unpack: true
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
@@ -242,13 +239,11 @@ jobs:
       AVI_PASSWORD: ((NVE.PASSWORD))  
       AVI_PACKAGE: "NveUpgrade-"
       WORKFLOW: "NveUpgrade"
-      DATA: '{"linux_root_password":"((NVE.PASSWORD))","linux_admin_password":"((NVE.PASSWORD))"}'      
+      DATA: '{"rootid_password":"ChangeMe12345","linux_root_password":"((NVE.PASSWORD))","linux_admin_password":"((NVE.PASSWORD))"}'      
 - name: delete-nve
   plan:
   - in_parallel:
     - get: dps-automation-image
-      params:
-        unpack: true
       tags: ((tags))
       passed: [ deploy-networker-ova ]              
     - get: dps-modules
@@ -280,8 +275,6 @@ jobs:
       params:
         unpack: false
     - get: dps-automation-image
-      params:
-        unpack: true
       tags: ((tags))        
     - get: dps-modules
       tags: ((tags))
@@ -326,8 +319,6 @@ jobs:
   plan:
   - in_parallel:
     - get: dps-automation-image
-      params:
-        unpack: true
       tags: ((tags))
 #      passed: [ deploy-vproxy-ova ]              
     - get: dps-modules

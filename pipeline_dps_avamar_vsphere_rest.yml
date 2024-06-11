@@ -144,6 +144,15 @@ resources:
     bucket: ((buckets.dps_products))
     regexp: avamar/((AVE.UPGRADEVER))/AvamarUpgrade-(.*).avp
 
+- name: avamar-patch
+  tags: ((tags))
+  type: s3
+  check_every: never  
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: avamar/((AVE.UPGRADEVER))/AvamarPatch-(.*).avp
 
 - name: av-platform-os-rollup
   tags: ((tags))
@@ -355,6 +364,46 @@ jobs:
       AVI_PACKAGE: AvamarUpgrade-
       # DATA: '{"linux_root_password":"((AVE.PASSWORD))","linux_admin_password":"((AVE.PASSWORD))"}'
       DATA: '{"linux_root_password":"((AVE.PASSWORD))","linux_admin_password":"((AVE.PASSWORD))","password_Expiry":"999","warning_days":"99","check_mcpassword":"((AVE.PASSWORD))","check_serverpassword":"((AVE.PASSWORD))"}'
+
+- name: deploy-avamar-patch-((AVE.VMNAME))
+  serial: true
+  serial_groups: [ package-install ]
+  plan:
+  - in_parallel:
+    - get: avamar-patch
+      tags: ((tags))
+      trigger: true
+    - get: one-time-trigger
+      passed: 
+      - configure-avamar-((AVE.VMNAME))   
+      trigger: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-avamar-patch
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
+    input_mapping:
+      dps-modules: dps-modules
+      avi_package: avamar-patch
+    params:
+      GOVC_INSECURE: ((GOVC.INSECURE))
+      GOVC_PASSWORD: ((GOVC.PASSWORD))
+      GOVC_URL: ((GOVC.URL))
+      GOVC_USERNAME: ((GOVC.USERNAME))
+      GOVC_VM: ((AVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((AVE.FOLDER))/((AVE.VMNAME))
+      AVI_FQDN: ((AVE.FQDN))
+      AVI_USERNAME: root
+      AVI_PASSWORD: ((AVE.PASSWORD))
+      WORKFLOW: "AvamarPatch"
+      AVI_PACKAGE: AvamarPatch-
+      # DATA: '{"linux_root_password":"((AVE.PASSWORD))","linux_admin_password":"((AVE.PASSWORD))"}'
+      # DATA: '{"linux_root_password":"((AVE.PASSWORD))","linux_admin_password":"((AVE.PASSWORD))","password_Expiry":"999","warning_days":"99","check_mcpassword":"((AVE.PASSWORD))","check_serverpassword":"((AVE.PASSWORD))"}'
+
+
 - name: cdm-cli-history
   plan:
   - get: avi-automation-image
