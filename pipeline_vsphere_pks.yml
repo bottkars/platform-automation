@@ -1415,7 +1415,7 @@ jobs:
     params:
       <<: *credhub_env
       CERT_ID: 613ef8fb888c5
-      CA_ID: 612f34262f087
+      CA_ID: 66b206fce7440
       STORED_CERT: pks_cer
       SUBJECT: ((pks.fqdn))
       PFSENSE_FQDN: pfsense.home.labbuildr.com
@@ -1451,7 +1451,7 @@ jobs:
     params:
       <<: *credhub_env
       CERT_ID: 613ef8fb888c5
-      CA_ID: 612f34262f087
+      CA_ID: 66b206fce7440
       STORED_CERT: pks_cer
       SUBJECT: ((pks.fqdn))
       PFSENSE_FQDN: pfsense.home.labbuildr.com

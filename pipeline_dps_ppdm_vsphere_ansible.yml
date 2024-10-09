@@ -47,11 +47,11 @@ resources:
   tags: ((tags))
   icon: git
   type: git
-  check_every: 10m  
+  check_every: 60m  
   source:  
-    uri: git@github.com:bottkars/ansible_ppdm.git
+    uri: git@github.com:dell-examples/ansible_ppdm.git
     branch: main
-    private_key: ((((foundation))/ansible_ppdm_git.private_key))
+#    private_key: ((((foundation))/ansible_ppdm_git.private_key))
 
 - name: variable
   tags: ((tags))
@@ -252,7 +252,7 @@ jobs:
       passed: 
         - ansible-configure-ppdm
         - ansible-set-ddve-inventory
-        - ansible-set-ppdm-certificates
+#        - ansible-set-ppdm-certificates
         - ansible-set-vsphere-inventory
         - ansible-set-ppdm-license      
     - get: powerprotect-upgrade
