@@ -51,7 +51,7 @@ resources:
   source:  
     uri: git@github.com:dell-examples/ansible_ppdm.git
     branch: main
-#    private_key: ((((foundation))/ansible_ppdm_git.private_key))
+    private_key: ((((foundation))/ansible_ppdm_git.private_key))
 
 - name: variable
   tags: ((tags))
