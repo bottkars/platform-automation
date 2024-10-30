@@ -106,7 +106,15 @@ resources:
     bucket: ((buckets.dps_products))
     regexp: networker/((NVE.BASEVER))/vproxy-installer-(.*).ova
 
-
+- name: av-platform-os-rollup
+  tags: ((tags))
+  type: s3
+  check_every: never  
+  icon: folder-move
+  source:
+    <<: *s3_env
+    bucket: ((buckets.dps_products))
+    regexp: networker/rollups/NvePlatformOsRollup_(.*)-*.avp  
 
 - name: networker-upgrade
   type: s3
@@ -207,6 +215,8 @@ jobs:
       NVE_AUTHC_ADMIN_PASSWORD: ((NVE.PASSWORD))
             
 - name: upgrade-nve
+  serial: TRUE
+  serial_groups: [ package-install ]
   plan:
   - in_parallel:
     - get: networker-upgrade
@@ -240,6 +250,41 @@ jobs:
       AVI_PACKAGE: "NveUpgrade-"
       WORKFLOW: "NveUpgrade"
       DATA: '{"rootid_password":"ChangeMe12345","linux_root_password":"((NVE.PASSWORD))","linux_admin_password":"((NVE.PASSWORD))"}'      
+
+- name: deploy-avplatformosrollup
+  serial: true
+  serial_groups: [ package-install ]
+  plan:
+  - in_parallel:
+    - get: av-platform-os-rollup
+      tags: ((tags))
+      trigger: FALSE
+    - get: one-time-trigger
+      passed: 
+      - configure-nve
+      trigger: false
+    - get: dps-automation-image
+      tags: ((tags))        
+    - get: dps-modules
+      tags: ((tags))
+  - task: deploy-avplatformosrollup
+    tags: ((tags))
+    image: dps-automation-image
+    file: dps-modules/ci/tasks/deploy-avi-package.yml
+    input_mapping:
+      dps-modules: dps-modules
+      avi_package: av-platform-os-rollup
+    params:
+      GOVC_VM: ((NVE.VMNAME))   
+      GOVC_VM_IPATH: ((GOVC.DATACENTER))/vm/((NVE.FOLDER))/((NVE.VMNAME))
+      AVI_FQDN: ((NVE.FQDN))
+      AVI_USERNAME: root
+      AVI_PASSWORD: ((NVE.PASSWORD))  
+      DATA: {"linux_root_password":"((AVE.PASSWORD))"}
+      WORKFLOW: "NvePlatformOsRollup_"
+      AVI_PACKAGE: NvePlatformOsRollup_
+
+
 - name: delete-nve
   plan:
   - in_parallel:
