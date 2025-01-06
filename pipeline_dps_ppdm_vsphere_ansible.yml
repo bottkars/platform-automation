@@ -29,12 +29,12 @@ resources:
   source:
     interval: 24h
 
-- name: after-noon
+- name: after-midnight
   type: time
   source:
     interval: 1h
     start: 07:00 AM
-    stop: 07:00 PM
+    stop: 09:00 AM
     location: Europe/Berlin
 
 #- name: hourly-trigger
@@ -1052,7 +1052,7 @@ jobs:
 - name: set-kubernetes-clusters
   plan:
   - in_parallel:
-    - get: after-noon
+    - get: after-midnight
       tags: ((tags))
       trigger: true  
     - get: dps-automation-image-testing
